@@ -23,7 +23,7 @@ Toplam süre 10-12 saat kadardır. Kurs, bir diferansiyel ifade sonuç tablosunu
 
 ## İnternetsiz kullanım
 
-Kursun tamamı, sağ taraftaki **Releases** bölümünde `biostat-intro.zip` dosyası olarak bulunmaktadır. Dosyayı indirip açtıktan sonra `index.html` dosyasına çift tıklamanız yeterlidir; her sayfa tek bir dosyadır ve internet bağlantısı gerektirmez.
+Kursun tamamı, sağ taraftaki **Releases** bölümünde yer alan son sürümün **Source code (zip)** dosyasında bulunmaktadır. Dosyayı indirip açtıktan sonra, klasördeki `index.html` dosyasına çift tıklamanız yeterlidir; her sayfa tek bir dosyadır ve internet bağlantısı gerektirmez.
 
 ## Lisans
 
