@@ -435,7 +435,7 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border
 
   <footer>
     <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 6. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
-    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik <span data-allow-dot>Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0)</span> lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
   </footer>
 </main>
 <script>
@@ -710,11 +710,23 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border
     p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
     p.axes = function (o) {
       o = o || {};
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      // Eksen adı (ylabel) y etiketlerinin soluna sığmalı; sığmıyorsa sol boşluk, eksenler ve x etiketleri çizilmeden önce genişletilir.
+      p.font(11);
+      var ylabels = [], maxTickW = 0;
+      for (i = 0; i < yt.length; i++) {
+        ylabels.push(typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0));
+        maxTickW = Math.max(maxTickW, ctx.measureText(ylabels[i]).width);
+      }
+      var ylabelX = 2;
+      if (o.ylabel) {
+        var needL = Math.ceil(ylabelX + 12 + 4 + maxTickW + 5);
+        if (P.l < needL) { P.l = needL; p.plotW = w - P.l - P.r; }
+      }
       ctx.strokeStyle = col.border; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
       if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
       ctx.fillStyle = col.text3; p.font(11);
-      var xt = o.xticks || [], yt = o.yticks || [], i;
       ctx.textAlign = "center"; ctx.textBaseline = "top";
       for (i = 0; i < xt.length; i++) {
         var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
@@ -724,13 +736,13 @@ footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border
       }
       ctx.textAlign = "right"; ctx.textBaseline = "middle";
       for (i = 0; i < yt.length; i++) {
-        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = ylabels[i];
         var yy = p.sy(yv);
         if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
         ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
       }
       if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
-      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+      if (o.ylabel) { ctx.save(); ctx.translate(ylabelX, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
     };
     p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
     p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
