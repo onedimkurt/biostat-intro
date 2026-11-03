@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 5: Hipotez testi ve karar</title>
+<meta name="description" content="Sıfır ve alternatif hipotez; permütasyon testi; p-değeri; t-testi; Tip I ve Tip II hata; güç ve örneklem büyüklüğü; etki büyüklüğü ve pratik anlamlılık.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .perm canvas { height: 200px; }
+  .perm .groups canvas { height: 150px; }
+  .power canvas { height: 220px; }
+  .es canvas { height: 200px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u04-ornekleme/index.html">Önceki: Ünite 4</a><a href="../index.html">Dizin</a><a href="../u06-kategorik/index.html">Sonraki: Ünite 6</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 5 · yaklaşık 80 dakika</p>
+    <h1>Hipotez testi ve karar</h1>
+    <p class="lead">Bu ünitede, iki grup arasında gördüğümüz bir farkın yalnızca rastlantıyla açıklanıp açıklanamayacağına karar verebilmek amacıyla hipotez testine bakıyoruz. Permütasyon testi, p-değerinin anlamını formülsüz gösterir; t-testi aynı soruyu bir formülle yanıtlar; güç ve etki büyüklüğü ise "anlamlı" sözcüğünün sınırlarını çizer.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>Bir biyolojik soruyu sıfır ve alternatif hipotez biçiminde ifade edebilirsiniz.</li>
+      <li>Permütasyon testinin p-değerini nasıl ürettiğini adım adım anlatabilirsiniz.</li>
+      <li>p-değerinin ne olduğunu ve ne olmadığını ayırt edebilir, t-testinin ne zaman uygun olduğunu söyleyebilirsiniz.</li>
+      <li>Tip I ve Tip II hatayı, gücü ve etki büyüklüğünü ilişkilendirebilir; "istatistiksel olarak anlamlı" ile "biyolojik olarak önemli" arasındaki farkı açıklayabilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Sıfır hipotezi ve permütasyon testi</a></li>
+      <li><a href="#b2">p-değeri ve t-testi</a></li>
+      <li><a href="#b3">Hata türleri, güç ve örneklem büyüklüğü</a></li>
+      <li><a href="#b4">Etki büyüklüğü ve pratik anlamlılık</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Permütasyon ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Sıfır hipotezi ve permütasyon testi</h2>
+    <p>Bu bölümde, iki grup arasındaki bir farkın "gerçek" olup olmadığını sorgulayabilmek amacıyla hipotez testinin mantığına bakıyoruz. Bir ilacın bir genin ifadesini değiştirip değiştirmediğini merak ettiğimizde iki olasılık vardır: ya ilacın hiçbir etkisi yoktur ve gördüğümüz fark yalnızca örnekleme değişkenliğinden gelmektedir, ya da ilacın gerçek bir etkisi vardır. Birinci olasılığa <span class="term">sıfır hipotezi</span> <span class="en">(null hypothesis, H₀)</span>, ikincisine <span class="term">alternatif hipotez</span> <span class="en">(alternative hypothesis, H₁)</span> denir. Test, sıfır hipotezinin doğru olduğunu varsayarak başlar ve verinin bu varsayımla ne kadar bağdaştığını ölçer.</p>
+    <p>Bu uyumu ölçmenin en doğrudan yolu bir <span class="term">permütasyon testi</span> <span class="en">(permutation test)</span> yapmaktır. Sıfır hipotezi doğruysa grup etiketleri (ilaç / kontrol) ile ölçümler arasında bir bağ yoktur; etiketler rastgele karıştırılsa da gözlenen fark kadar büyük farklar sıklıkla ortaya çıkmalıdır. Dolayısıyla etiketleri binlerce kez karıştırır, her karıştırmada grup ortalamaları farkını (<span class="term">test istatistiği</span> <span class="en">(test statistic)</span>) hesaplar ve gözlenen farkın bu rastlantı dağılımı <span class="en">(null distribution)</span> içinde nereye düştüğüne bakarız. Gözlenen fark kadar ya da daha uç bir farkın karıştırmalarda görülme oranına <span class="term">p-değeri</span> <span class="en">(p-value)</span> denir. Burada "daha uç", farkın her iki yönünü (artış ya da azalış) kapsar; buna <span class="term">çift yönlü</span> <span class="en">(two-sided)</span> p-değeri denir. Küçük bir p-değeri, gözlenen farkın yalnızca rastlantıyla üretilmesinin zor olduğunu; büyük bir p-değeri ise verinin sıfır hipoteziyle kolaylıkla bağdaştığını göstermektedir. Burada önemli olan, p-değerinin "sıfır hipotezinin doğru olma olasılığı" değil, "sıfır hipotezi doğruyken böyle ya da daha uç bir verinin görülme olasılığı" olmasıdır.</p>
+
+    <div class="card perm">
+      <h3 style="margin-top:0">Simülasyon: Etiketleri karıştırmak</h3>
+      <p>Bu simülasyonda bir genin log2 ifadesi 6 ilaç ve 6 kontrol örneğinde ölçülmüştür. Kaydırıcı ile gerçek etkiyi belirleyebilir ("Yeni örneklem" düğmesi aynı etkiyle yeni bir veri üretir), ardından etiketleri karıştırarak rastlantı dağılımının nasıl biriktiğini ve gözlenen farkın bu dağılımda nereye düştüğünü izleyebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="pe">İlacın gerçek etkisi (log2 birim)</label>
+          <output id="pe-out" for="pe">1,0</output>
+          <input type="range" id="pe" min="0" max="3" step="0.25" value="1">
+        </div>
+        <div class="control-row">
+          <span class="block" id="perm-label">Etiketleri karıştırma</span>
+          <div class="seg" role="group" aria-labelledby="perm-label">
+            <button type="button" class="primary" id="pm1">1 karıştırma</button>
+            <button type="button" id="pm100">100 karıştırma</button>
+            <button type="button" id="pm2000">2 000 karıştırma</button>
+            <button type="button" id="pm-reset">Sıfırlayınız</button>
+            <button type="button" data-reseed>Yeni örneklem</button>
+          </div>
+        </div>
+      </div>
+      <div class="charts two">
+        <div class="chart groups">
+          <h4>Gözlenen veri (<span class="swatch" style="background:var(--c1)"></span> kontrol, <span class="swatch" style="background:var(--c2)"></span> ilaç)</h4>
+          <canvas id="pgroups" role="img" aria-label="İki grubun ölçümleri nokta olarak; kısa yatay çizgiler grup ortalamaları."></canvas>
+          <p class="caption" id="pgroups-cap"></p>
+        </div>
+        <div class="chart groups">
+          <h4>Son karıştırma (etiketler rastgele)</h4>
+          <canvas id="pshuf" role="img" aria-label="Aynı ölçümler rastgele etiketlerle; grup ortalamaları yeniden hesaplanmış."></canvas>
+          <p class="caption" id="pshuf-cap">Henüz karıştırma yapılmadı.</p>
+        </div>
+        <div class="chart wide">
+          <h4><span class="swatch" style="background:var(--c3)"></span>Rastlantı dağılımı: karıştırmalardaki ortalama farkları</h4>
+          <canvas id="pdist" role="img" aria-label="Karıştırmalardan elde edilen farkların histogramı; turuncu düşey çizgi gözlenen fark; boyalı alan gözlenen kadar ya da daha uç farklar."></canvas>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Gözlenen fark (ilaç − kontrol)</div><div class="v" id="p-obs">-</div></div>
+        <div class="stat"><div class="k">Karıştırma sayısı</div><div class="v" id="p-n">0</div></div>
+        <div class="stat"><div class="k">Gözlenen kadar uç olanlar</div><div class="v" id="p-ext">-</div></div>
+        <div class="stat"><div class="k">Permütasyon p-değeri (çift yönlü)</div><div class="v" id="p-p">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Gerçek etki 0 iken gözlenen farkın dağılımın kuyruğuna düşmediğini ve p-değerinin küçük çıkmadığını (bu örneklemde yaklaşık 0,2) görüyoruz; etki 2 log2 birime çıkarıldığında gözlenen fark dağılımın kuyruğuna taşınır ve 2 000 karıştırmanın çok azı onu aşar. Etki 1 iken ise sonuç örneklemden örnekleme değişmektedir: "Yeni örneklem" ile aynı gerçek etkinin kimi zaman küçük, kimi zaman büyük bir p-değeri verdiğini görebilirsiniz. Bu değişkenlik, 3. bölümdeki güç kavramının çıkış noktasıdır.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Bir genin iki koşuldaki ifadesi</h3>
+      <p>Bir araştırmacı, 6 tedavi ve 6 kontrol faresinde bir genin ifadesini ölçmüş ve tedavi grubunda ortalamanın 1,2 log2 birim (yaklaşık 2,3 kat) yüksek olduğunu bulmuştur. Sıfır hipotezi "tedavi bu genin ifadesini değiştirmez" biçimindedir. Etiketleri 10 000 kez karıştırdığında ortalama farkının büyüklük olarak 1,2'yi aştığı (1,2'den büyük ya da −1,2'den küçük olduğu) yalnızca 40 karıştırma ile karşılaşmıştır; p-değeri 40 / 10 000 = 0,004'tür. Bu sonuç, sıfır hipotezi doğruyken en az bu kadar büyük bir farkın görülme olasılığının binde dört olduğunu söyler; tedavinin etkisinin "kanıtlandığını" değil, verinin sıfır hipoteziyle zor bağdaştığını göstermektedir. Aynı mantık Ünite 9'da 20 000 gene aynı anda uygulanacaktır; orada "binde dört" sayısının tek başına yeterli olmadığını göreceğiz.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. "Bu ilaç karaciğer hücrelerinde ALB geninin ifadesini değiştirir mi?" sorusu için sıfır hipotezi hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>İlaç ALB ifadesini artırır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>İlacın ALB ifadesi üzerinde etkisi yoktur; gruplar arasındaki fark yalnızca örnekleme değişkenliğinden gelir.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>İlaç ALB ifadesini değiştirir.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>ALB ifadesi karaciğerde yüksektir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Sıfır hipotezi "etki yok" varsayımıdır; test bu varsayım altında verinin ne kadar olası olduğunu ölçer. "Değiştirir" ya da "artırır" ifadeleri alternatif hipotezlerdir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: İlacın etkisi yoktur. Sıfır hipotezi çoğunlukla "fark yok, etki yok, ilişki yok" biçimindeki varsayımdır; test onu çürütmeye çalışır. "Değiştirir" ve "artırır" alternatif hipotezlerdir; ALB'nin karaciğerde yüksek olması ise sorunun konusu değildir.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 2. Bir permütasyon testinde 5 000 karıştırmanın 150'si gözlenen fark kadar ya da daha uç bir fark vermiştir. p-değeri ve yorumu hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>p = 0,03; sıfır hipotezinin doğru olma olasılığı yüzde 3'tür.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>p = 0,97; fark neredeyse kesinlikle gerçektir.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>p = 0,03; sıfır hipotezi doğruyken gözlenen kadar uç bir fark karıştırmaların yüzde 3'ünde görülmüştür.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>p = 150; test anlamsızdır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. p = 150 / 5 000 = 0,03 ve yorumu "sıfır hipotezi doğruyken böyle ya da daha uç bir verinin görülme olasılığı"dır. Bu, sıfır hipotezinin doğru olma olasılığı değildir; o soruyu yanıtlamak için önsel bilgi de gerekir (Ünite 3'teki Bayes kuralı).</p></template>
+        <template class="fb-no"><p>Doğru yanıt: p = 0,03 ve yorumu, sıfır hipotezi doğruyken gözlenen kadar uç bir farkın görülme oranıdır. p-değeri bir olasılıktır (0 ile 1 arası) ve sıfır hipotezinin doğru olma olasılığı değildir; "yüzde 3 olasılıkla etki yok" cümlesi en yaygın yanlış yorumdur.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. p-değeri ve t-testi ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. p-değeri ve t-testi</h2>
+    <p>Bu bölümde, permütasyon testiyle sezgisel olarak kurduğumuz p-değerini bir formülle hesaplayabilmek amacıyla t-testine bakıyoruz. Permütasyon testi her tür veriye uygulanabilir ve çok az varsayımla çalışır (sıfır hipotezi altında etiketlerin değiş tokuş edilebilir olması yeter); ancak her test için binlerce karıştırma gerektirir. <span class="term">t-testi</span> <span class="en">(t-test)</span> aynı soruyu, Ünite 4'teki örnekleme dağılımı bilgisini kullanarak yanıtlar: iki grup ortalaması arasındaki fark, bu farkın standart hatasına bölünür. Elde edilen t istatistiği, "fark kaç standart hata büyüklüğünde?" sorusunun yanıtıdır; sıfır hipotezi doğruyken t'nin dağılımı bilindiğinden (t dağılımı), p-değeri bu dağılımdan okunur. Gruplar yaklaşık normal dağılıyorsa ya da örneklemler yeterince büyükse t-testi ile permütasyon testi neredeyse aynı p-değerini vermektedir. Dağılımın belirgin biçimde çarpık olduğu ya da aykırı değerler içerdiği durumlarda ise ölçümlerin kendisi yerine sıralarını kullanan <span class="term">sıra testleri</span> <span class="en">(rank tests; Wilcoxon, Mann-Whitney)</span> tercih edilebilmektedir.</p>
+    <p>t-testinin üç yaygın biçimi vardır. <em>Tek örneklem</em> t-testi, bir grubun ortalamasını bilinen bir değerle karşılaştırır. <em>İki bağımsız grup</em> t-testi, farklı birimlerden oluşan iki grubu karşılaştırır (tedavi ve kontrol fareleri). <em>Eşleştirilmiş t-testi</em> <span class="en">(paired t-test)</span> ise aynı birimin iki koşuldaki ölçümlerini karşılaştırır: aynı hastanın tedavi öncesi ve sonrası örnekleri. Eşleştirilmiş tasarımda her birim kendi kontrolüdür; bireyler arası değişkenlik farktan düşer ve aynı etki çok daha küçük bir gürültüyle ölçülür. Bu nedenle, bireyler arası değişkenlik ölçüm gürültüsünden büyük olduğunda ve eşleştirme mümkün olduğunda, bağımsız gruplara göre çok daha küçük bir örneklemle aynı güç (3. bölümde ele alıyoruz) elde edilebilmektedir.</p>
+    <p>Bir p-değerinin "küçük" sayılması için önceden bir <span class="term">anlamlılık düzeyi</span> <span class="en">(significance level, α)</span> belirlenir; geleneksel değer 0,05'tir. p &lt; α ise sonuç <span class="term">istatistiksel olarak anlamlı</span> <span class="en">(statistically significant)</span> kabul edilir. 0,05 sınırının doğal bir anlamı yoktur; p = 0,049 ile p = 0,051 arasında bilimsel bir fark bulunmamaktadır ve p-değeri ikili bir karar anahtarı olarak değil, kanıtın sürekli bir ölçüsü olarak okunmalıdır.</p>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>İki bağımsız grup için (Welch biçimi; varyansların eşit olması gerekmez) t istatistiği:</p>
+      <div class="formula">t = <span class="frac"><span>x̄₁ − x̄₂</span><span>√(s₁²/n₁ + s₂²/n₂)</span></span></div>
+      <p>Payda, iki ortalama farkının standart hatasıdır. Eşleştirilmiş t-testinde önce her çiftin farkı alınır; sonra farkların ortalaması, farkların standart hatasına bölünür. Sıfır hipotezi altında t, serbestlik derecesi örneklem büyüklüğüne bağlı bir t dağılımına uyar ve çift yönlü <span class="en">(two-sided)</span> p-değeri, |t| kadar ya da daha uç değerlerin (her iki kuyrukta) toplam olasılığıdır.</p>
+    </details>
+
+    <div class="card">
+      <h3 style="margin-top:0">Etkinlik: Permütasyon ve t-testi yan yana; bağımsız ve eşleştirilmiş tasarım</h3>
+      <p>Aynı 12 ölçüm için permütasyon testi ile Welch t-testinin (iki grubun yayılımının eşit olmasını gerektirmeyen t-testi biçimi) p-değerlerini karşılaştırabilirsiniz. Eşleştirilmiş tasarım seçildiğinde 6 hastanın tedavi öncesi ve sonrası ölçümleri çizgiyle bağlanır ve test, farklar üzerinden yapılır; hastalar arası değişkenliği artırdığınızda iki tasarımın ayrıştığını görebilirsiniz.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="dsg-label">Tasarım</span>
+          <div class="seg" id="dsg-seg" role="group" aria-labelledby="dsg-label">
+            <button type="button" data-value="indep" aria-pressed="true">Bağımsız iki grup (6 + 6 hasta)</button>
+            <button type="button" data-value="paired" aria-pressed="false">Eşleştirilmiş (6 hasta, önce ve sonra)</button>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <label for="te">Tedavinin gerçek etkisi (log2 birim)</label>
+          <output id="te-out" for="te">0,8</output>
+          <input type="range" id="te" min="0" max="2" step="0.2" value="0.8">
+        </div>
+        <div class="slider-wrap">
+          <label for="tb">Hastalar arası değişkenlik (standart sapma)</label>
+          <output id="tb-out" for="tb">1,0</output>
+          <input type="range" id="tb" min="0.2" max="2" step="0.2" value="1">
+        </div>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart">
+        <h4>Ölçümler</h4>
+        <canvas id="tchart" role="img" aria-label="Kontrol ve tedavi ölçümleri; eşleştirilmiş tasarımda aynı hastanın iki ölçümü çizgiyle bağlı."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Ortalama fark</div><div class="v" id="t-diff">-</div></div>
+        <div class="stat"><div class="k">t istatistiği</div><div class="v" id="t-t">-</div></div>
+        <div class="stat"><div class="k">t-testi p-değeri</div><div class="v" id="t-p">-</div></div>
+        <div class="stat"><div class="k">Permütasyon p-değeri <small id="t-pp-note">(924 olası bölünme)</small></div><div class="v" id="t-pp">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Bağımsız tasarımda iki yöntemin p-değerleri birbirine yakın çıkmaktadır. Hastalar arası değişkenlik büyükken eşleştirilmiş tasarıma geçtiğimizde, aynı gerçek etki için p-değerinin belirgin biçimde küçüldüğünü görüyoruz; çünkü her hastanın kendi başlangıç düzeyi farktan düşmekte, geriye yalnızca tedavinin etkisi ve ölçüm gürültüsü kalmaktadır. Bu nedenle eşleştirilmiş tasarımda "Hastalar arası değişkenlik" kaydırıcısı p-değerini değiştirmez; eşleştirmenin kazancı tam olarak budur. Eşleştirilmiş tasarımda 6 çiftin yalnızca 64 işaret düzeni vardır; bu nedenle permütasyon p-değeri 2/64'ün katlarıyla ilerler, en küçük değeri 0,031'dir ve t-testi p-değerinden biraz ayrışabilir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Tedavi öncesi ve sonrası biyopsiler</h3>
+      <p>Bir klinik çalışmada 8 hastadan tedaviden önce ve 4 hafta sonra tümör biyopsisi alınmış ve bir genin ifadesi ölçülmüştür. Hastaların başlangıç düzeyleri birbirinden çok farklıdır (log2 ölçeğinde 5 ile 11 arasında); tedavi ise her hastada ifadeyi yaklaşık 1 birim artırmıştır. Öncesi ve sonrası değerleri iki bağımsız grup gibi karşılaştıran bir t-testi, hastalar arası 6 birimlik yayılım içinde 1 birimlik etkiyi göremez ve p-değeri 0,3 civarında çıkar. Eşleştirilmiş t-testi ise her hastanın kendi farkına bakar: 8 farkın tamamı pozitiftir ve ortalaması 1 birim, standart hatası küçüktür; p-değeri 0,001'in altına iner. Aynı veri, doğru tasarımla değerlendirildiğinde tamamen farklı bir sonuç vermektedir; tasarımdaki eşleştirme bilgisini analizde kullanmamak, elde olan bilgiden vazgeçmek anlamına gelir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="d">
+        <legend>Soru 3. Bir t-testi p = 0,20 vermiştir. Hangisi doğru bir yorumdur?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>Tedavinin etkisi olmadığı kanıtlanmıştır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>Tedavinin etkisi yüzde 20 olasılıkla vardır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Örneklem büyütülürse p kesinlikle 0,05'in altına iner.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>Veri, sıfır hipoteziyle bağdaşmaktadır; etki olmadığı değil, bu veriyle etkinin gösterilemediği söylenebilir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Büyük bir p-değeri "etki yok" anlamına gelmez; "bu veri etkiyi göstermeye yetmemiştir" anlamına gelir. Etki küçük ya da örneklem yetersiz olabilir. Örneklemi büyütmek p-değerini mutlaka küçültmez; gerçek etki sıfırsa p büyük kalır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Veri sıfır hipoteziyle bağdaşmaktadır; etkinin yokluğu kanıtlanmış değildir. p-değeri etkinin var olma olasılığı değildir ve "kanıt yokluğu, yokluğun kanıtı değildir". Örneklemi büyütmek, yalnızca gerçek bir etki varsa p-değerini küçültür.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 4. Aynı 10 hastanın tedavi öncesi ve sonrası ölçümleri karşılaştırılacaktır. Hangi test uygundur ve neden?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Bağımsız iki grup t-testi; çünkü 20 ölçüm vardır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>Eşleştirilmiş t-testi; çünkü her hasta kendi kontrolüdür ve hastalar arası değişkenlik farktan düşer.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Tek örneklem t-testi; çünkü yalnızca bir hasta grubu vardır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>Test yapılamaz; çünkü ölçümler bağımsız değildir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Ölçümlerin bağımlı olması test yapılamayacağı anlamına gelmez; tam tersine, eşleştirilmiş test bu bağımlılığı kullanarak gürültüyü azaltır. Önce-sonra farkları alınır ve farkların ortalamasının sıfırdan farklı olup olmadığı test edilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Eşleştirilmiş t-testi. Ölçümler aynı hastadan geldiği için bağımsız değildir; bağımsız grup testi bu yapıyı yok sayar ve hastalar arası değişkenliği gürültü olarak sayar. Eşleştirilmiş test her hastanın kendi farkına bakarak bu değişkenliği ortadan kaldırır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Hata türleri ve güç ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Hata türleri, güç ve örneklem büyüklüğü</h2>
+    <p>Bu bölümde, bir deneye başlamadan önce onu doğru boyutlandırabilmek amacıyla testin iki hata türüne bakıyoruz. Sıfır hipotezi doğruyken onu reddetmek, yani olmayan bir etkiyi "var" ilan etmek <span class="term">Tip I hata</span> <span class="en">(type I error)</span>, diğer adıyla yanlış pozitiftir; anlamlılık düzeyi α, bu hataya izin verdiğimiz orandır. Gerçek bir etki varken onu kaçırmak ise <span class="term">Tip II hata</span> <span class="en">(type II error)</span>, yanlış negatiftir. Gerçek bir etki varken testin onu yakalama olasılığına <span class="term">güç</span> <span class="en">(power)</span> denir; güç, 1 eksi Tip II hata olasılığıdır.</p>
+    <p>Anlamlılık düzeyi α sabit tutulduğunda güç üç etkene bağlıdır: etkinin büyüklüğü (büyük etki kolay görülür), gürültü (gruplar içi standart sapma) ve örneklem büyüklüğü. Bunlar arasında araştırmacının doğrudan belirleyebildiği tek etken çoğu zaman örneklem büyüklüğüdür. Bu nedenle deney tasarımının ilk sorusu "kaç tekrar gerekir?" sorusudur ve yanıt, beklenen etki ile beklenen gürültüye dayalı bir güç hesabından (power calculation) gelir. Düşük güçlü bir deneyin iki sakıncası vardır: gerçek etkileri kaçırır ve bulduğu "anlamlı" sonuçların önemli bir kısmı yanlış pozitif ya da abartılmış etkilerdir. Üç biyolojik tekrarlı RNA-seq deneylerinin küçük etkileri sistematik olarak kaçırması, bu durumun günlük bir örneğidir.</p>
+
+    <div class="card power">
+      <h3 style="margin-top:0">Simülasyon: Güç eğrisi</h3>
+      <p>Etki büyüklüğünü ve gürültüyü belirleyerek, her örneklem büyüklüğünde testin gerçek etkiyi yakalama olasılığını (güç) görebilirsiniz. Eğri, iki bağımsız grup için eşit varyanslı t-testine göre α = 0,05'te hesaplanmaktadır.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="pw-eff">Gerçek etki (log2 birim)</label>
+          <output id="pw-eff-out" for="pw-eff">1,0</output>
+          <input type="range" id="pw-eff" min="0.2" max="3" step="0.1" value="1">
+        </div>
+        <div class="slider-wrap">
+          <label for="pw-sd">Gruplar içi standart sapma</label>
+          <output id="pw-sd-out" for="pw-sd">1,0</output>
+          <input type="range" id="pw-sd" min="0.3" max="2.5" step="0.1" value="1">
+        </div>
+        <div class="slider-wrap">
+          <label for="pw-n">Her gruptaki örneklem büyüklüğü (n)</label>
+          <output id="pw-n-out" for="pw-n">3</output>
+          <input type="range" id="pw-n" min="2" max="50" step="1" value="3">
+        </div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>Güç, örneklem büyüklüğüne göre</h4>
+        <canvas id="pcurve" role="img" aria-label="Örneklem büyüklüğü arttıkça gücün artışını gösteren eğri; kesikli çizgi yüzde 80 güç; nokta seçilen n."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Seçilen n'de güç</div><div class="v" id="pw-power">-</div></div>
+        <div class="stat"><div class="k">Yüzde 80 güç için gereken n <small>(her grupta)</small></div><div class="v" id="pw-n80">-</div></div>
+        <div class="stat"><div class="k">Etki / standart sapma <small>(standartlaştırılmış etki büyüklüğü, Cohen d)</small></div><div class="v" id="pw-d">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Etki 1 log2 birim ve standart sapma 1 iken 3 tekrarla gücün yüzde 20'nin altında kaldığını, yüzde 80 güç için her grupta 17 tekrar gerektiğini görüyoruz. Etki 2 birime çıktığında 6 tekrar yetmektedir. Gücü belirleyen, etkinin kendisi değil etkinin gürültüye oranıdır; aynı etki, yarı yarıya gürültülü bir ölçümle kabaca üçte bir tekrarla (burada 17 yerine 6) yakalanabilir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Kaç biyolojik tekrar?</h3>
+      <p>Bir RNA-seq deneyi planlanırken ilgilenilen genlerin 1,5 kat (log2 ölçeğinde 0,58 birim) değişmesi bekleniyor ve önceki deneylerden gruplar içi standart sapmanın log2 ölçeğinde yaklaşık 0,5 olduğu biliniyorsa, etki / standart sapma oranı yaklaşık 1,2'dir (0,58 / 0,5 ≈ 1,16) ve yüzde 80 güç için her grupta yaklaşık 12-13 tekrar gerekmektedir. Üç tekrarla yapılan aynı deneyin gücü yüzde 20 civarındadır; yani böyle 100 gerçek etkiden yalnızca 20'si yakalanır. Ünite 9'da göreceğimiz üzere, binlerce gen aynı anda test edildiğinde çoklu test düzeltmesi etkin α'yı daha da küçültür ve güç daha da düşer. Dolayısıyla "üç tekrar yeter mi?" sorusunun yanıtı, beklenen etkinin büyüklüğüne ve gürültüye bağlıdır; burada önemli olan, bu hesabı deneyden önce, bütçeyi belirlerken yapmaktır.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 5. α = 0,05 ile 1 000 gen test edilmiş ve hiçbirinin gerçek etkisi olmadığı bilinmektedir. Kaç genin "anlamlı" çıkması beklenir ve bu hangi hata türüdür?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>Hiçbiri; etki yoksa test anlamlı sonuç vermez.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>Yaklaşık 50; bunlar Tip I hata (yanlış pozitif) örnekleridir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>Yaklaşık 50; bunlar Tip II hata (yanlış negatif) örnekleridir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Yaklaşık 950; çünkü güç yüzde 95'tir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. α = 0,05, sıfır hipotezi doğru olan her testin yüzde 5 olasılıkla anlamlı çıkması demektir; 1 000 testte yaklaşık 50 yanlış pozitif beklenir. Tip II hata, gerçek bir etkinin kaçırılmasıdır ve burada gerçek etki yoktur.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yaklaşık 50 gen, Tip I hata. Anlamlılık düzeyi tam olarak "etki yokken anlamlı çıkma oranı"dır; 1 000 × 0,05 = 50. Etki olmayınca kaçırılacak bir etki de yoktur, dolayısıyla Tip II hata söz konusu değildir. Bu beklenti, Ünite 9'daki çoklu test sorununun özüdür.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 6. Bir deneyin gücü yüzde 20'dir ve p = 0,03 ile "anlamlı" bir etki bulunmuştur. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Düşük güç yalnızca etki bulunamadığında sorundur; anlamlı sonuç çıktığına göre deney başarılıdır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Anlamlı sonuç, gücün aslında yüksek olduğunu gösterir.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Düşük güçlü bir deneyin anlamlı sonuçları arasında yanlış pozitiflerin ve abartılmış etki tahminlerinin payı yüksektir; sonuç ihtiyatla yorumlanmalı ve tekrarlanmalıdır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Güç ile sonucun güvenilirliği arasında ilişki yoktur.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Güç düşükken gerçek etkiler nadiren anlamlı çıkar; anlamlı çıkanlar ise ya yanlış pozitiftir ya da rastlantıyla büyük görünen etkilerdir. Bu, Ünite 3'teki tarama testi mantığının aynısıdır: nadir gerçek pozitifler, yanlış pozitiflerin arasında kaybolur.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Sonuç ihtiyatla yorumlanmalıdır. Düşük güç, anlamlı sonuç çıktığında da sorundur; çünkü yüzde 20 güçle gerçek etkilerin beşte biri yakalanırken yanlış pozitifler α oranında üretilmeye devam eder ve anlamlı sonuçların önemli bir kısmı güvenilmez olur. Anlamlı bir p-değeri gücü artırmaz; güç, deneyin tasarımının bir özelliğidir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 4. Etki büyüklüğü ============ -->
+  <section aria-labelledby="b4">
+    <h2 id="b4">4. Etki büyüklüğü ve pratik anlamlılık</h2>
+    <p>Bu bölümde, "anlamlı" sözcüğünün biyolojik önemle karıştırılmasını önleyebilmek amacıyla etki büyüklüğüne bakıyoruz. p-değeri bir farkın ne kadar şaşırtıcı olduğunu söyler, ne kadar büyük olduğunu değil. <span class="term">Etki büyüklüğü</span> <span class="en">(effect size)</span> ise farkın kendisidir: iki grup ortalaması arasındaki fark, kat değişimi ya da bu farkın standart sapmaya oranı. Örneklem yeterince büyüdüğünde biyolojik olarak önemsiz farklar bile istatistiksel olarak anlamlı çıkar; çünkü standart hata küçülür ve küçücük bir fark bile standart hatanın katlarına ulaşır. Tersine, küçük bir örneklemde biyolojik olarak büyük bir etki anlamlı çıkmayabilir.</p>
+    <p>Bu nedenle bir sonucun iki boyutu birlikte raporlanmalıdır: etki büyüklüğü (güven aralığıyla) ve p-değeri. "İstatistiksel olarak anlamlı" ile <span class="term">pratik anlamlılık</span> <span class="en">(practical significance)</span>, yani bulgunun biyolojik ya da klinik olarak fark yaratıp yaratmadığı, ayrı sorulardır ve ikincisini istatistik değil alan bilgisi yanıtlar. Diferansiyel ifade analizinde bu iki boyutun aynı grafikte gösterilmesi volkan grafiğinin tam olarak amacıdır (Ünite 9): yatay eksende etki (log2 kat değişimi), dikey eksende anlamlılık.</p>
+
+    <div class="card es">
+      <h3 style="margin-top:0">Simülasyon: Aynı fark, büyüyen örneklem</h3>
+      <p>Gerçek etki sabit tutulurken örneklem büyüklüğünü artırabilir, p-değerinin nasıl küçüldüğünü ve etki büyüklüğünün (güven aralığıyla) nasıl sabit kaldığını izleyebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="es-eff">Gerçek etki (log2 birim)</label>
+          <output id="es-eff-out" for="es-eff">0,15</output>
+          <input type="range" id="es-eff" min="0" max="1" step="0.05" value="0.15">
+        </div>
+        <div class="slider-wrap">
+          <label for="es-n">Her gruptaki örneklem büyüklüğü (n)</label>
+          <output id="es-n-out" for="es-n">10</output>
+          <input type="range" id="es-n" min="3" max="2000" step="1" value="10">
+        </div>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c2)"></span>Gözlenen fark ve yüzde 95 güven aralığı</h4>
+        <canvas id="eschart" role="img" aria-label="Gözlenen etki ve güven aralığı; kesikli çizgi sıfır, gri bant biyolojik olarak önemsiz sayılan bölge."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Gözlenen fark</div><div class="v" id="es-obs">-</div></div>
+        <div class="stat"><div class="k">Yüzde 95 güven aralığı</div><div class="v" id="es-ci">-</div></div>
+        <div class="stat"><div class="k">Kat değişimi</div><div class="v" id="es-fc">-</div></div>
+        <div class="stat"><div class="k">p-değeri</div><div class="v" id="es-p">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Gerçek etki 0,15 log2 birim (yüzde 11 artış) iken n = 10'da gözlenen fark örneklemden örnekleme büyük ölçüde oynar, güven aralığı sıfırı kapsar ve gri bandın dışına taşar (bu başlangıç örnekleminde gözlenen fark eksi işaretli bile çıkmaktadır) ve p-değeri çoğu örneklemde büyüktür. n = 2 000'de ise gözlenen fark 0,15 civarına oturur, güven aralığı daralarak gri bandın (biyolojik olarak önemsiz sayılan bölge) içinde kalır ve p-değeri 0,001'in altına iner. Büyük örneklem, önemsiz bir farkı "anlamlı" yapar; güven aralığı ise farkın küçüklüğünü göstermektedir. Bu nedenle raporlarda p-değerinin yanında etki büyüklüğü ve güven aralığı mutlaka yer almalıdır.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Binlerce hücreyle "anlamlı" fark</h3>
+      <p>Bir single-cell çalışmasında iki hücre kümesi arasında bir genin ifadesi karşılaştırılmış ve 4 000'er hücreyle p-değeri 10⁻¹⁵ bulunmuştur. Kat değişimi ise 1,08'dir; yani ifade yüzde 8 farklıdır. Bu sonuç istatistiksel olarak son derece anlamlıdır ve biyolojik olarak büyük olasılıkla önemsizdir; dahası, yüzde 8'lik bir fark hücre kümelerinin teknik özelliklerinden (yakalanan transkript sayısı farkı gibi) de kaynaklanabilir. Aynı çalışmada başka bir gen 3 kat fark göstermiş ancak az sayıda hücrede ifade edildiğinden p-değeri 0,08 çıkmıştır; bu gen biyolojik olarak çok daha ilginçtir. Diferansiyel ifade tablolarında sonuçların yalnızca p-değerine göre sıralanması, birinci türden genleri öne, ikinci türden genleri arkaya atar; bu yüzden tablolar çoğu zaman hem kat değişimi hem de düzeltilmiş p-değeri eşik değerleriyle birlikte filtrelenmektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 7. İki çalışma aynı geni incelemiştir. A çalışması: 5 + 5 fare, kat değişimi 2,5, p = 0,09. B çalışması: 500 + 500 hücre, kat değişimi 1,05, p = 0,0001. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q7" value="a"><span>B çalışması daha büyük bir etki bulmuştur; çünkü p-değeri daha küçüktür.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="b"><span>A çalışmasının sonucu değersizdir; çünkü anlamlı değildir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="c"><span>A çalışması büyük ancak belirsiz bir etki, B çalışması küçük ancak kesin bir etki bildirmektedir; biyolojik önem için etki büyüklüğüne bakılmalıdır.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="d"><span>İki çalışma çelişmektedir; biri yanlıştır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. p-değeri etkinin büyüklüğünü değil kesinliğini yansıtır. A çalışması 2,5 katlık bir etkiyi az örnekle, geniş bir belirsizlikle ölçmüş; B çalışması yüzde 5'lik bir farkı çok sayıda hücreyle kesin ölçmüştür. İki sonuç çelişmez; farklı sorulara yanıt vermektedir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: A büyük ancak belirsiz, B küçük ancak kesin bir etki bildirmektedir. Küçük p-değeri büyük etki anlamına gelmez; büyük örneklemde küçük farklar da anlamlı çıkar. Anlamlı olmayan bir sonuç değersiz değildir; belirsizliği büyük demektir. Çelişki de yoktur; etki büyüklükleri farklı, kesinlikleri farklıdır.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 8. Bir raporda yalnızca "fark anlamlıydı (p = 0,01)" yazmaktadır. Yorum için eksik olan en önemli bilgi hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q8" value="a"><span>Etki büyüklüğü ve güven aralığı; farkın ne kadar büyük olduğu bilinmeden biyolojik önemi değerlendirilemez.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="b"><span>Testin adı; p-değeri hangi testten geldiğine göre farklı anlam taşır.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="c"><span>Hiçbir şey; p = 0,01 yeterince bilgilendiricidir.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="d"><span>Sıfır hipotezinin doğru olma olasılığı.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. p-değeri tek başına farkın yönünü ve büyüklüğünü söylemez. Etki büyüklüğü ve güven aralığı olmadan sonucun biyolojik önemi değerlendirilemez. Testin adı da yararlı bir bilgidir; p-değerinin tanımı testten teste değişmez, ancak hangi sıfır hipotezinin sınandığını testin adı söyler. Sıfır hipotezinin doğru olma olasılığı ise testin verebileceği bir şey değildir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Etki büyüklüğü ve güven aralığı. p = 0,01 yalnızca farkın rastlantıyla açıklanmasının zor olduğunu söyler; farkın 1,01 kat mı 10 kat mı olduğu bu sayıdan anlaşılmaz. Testin adı ikincil bir bilgidir; sıfır hipotezinin olasılığı ise p-değerinden elde edilemez.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Sıfır hipotezi "etki yok" varsayımıdır; test, bu varsayım altında verinin ne kadar olası olduğunu ölçer.</li>
+        <li>Permütasyon testi etiketleri karıştırarak rastlantı dağılımını üretir; p-değeri, gözlenen kadar uç sonuçların bu dağılımdaki oranıdır. p-değeri sıfır hipotezinin olasılığı değildir.</li>
+        <li>t-testi aynı soruyu farkı standart hataya bölerek yanıtlar; eşleştirilmiş tasarım bireyler arası değişkenliği düşürür ve gücü artırır.</li>
+        <li>Tip I hata (yanlış pozitif) oranı α ile sınırlanır; güç, gerçek etkiyi yakalama olasılığıdır ve etki/gürültü oranı ile örneklem büyüklüğüne bağlıdır. Düşük güçlü deneylerin "anlamlı" sonuçları güvenilmezdir.</li>
+        <li>p-değeri kesinliği, etki büyüklüğü önemi ölçer; büyük örneklemde önemsiz farklar da anlamlı çıkar. Etki büyüklüğü ve güven aralığı her zaman birlikte raporlanmalıdır.</li>
+      </ul>
+    </div>
+    <p class="meta">Bir sonraki ünitede, iki kategorik değişken arasındaki ilişkiyi (örneğin genotip ve hastalık) test edebilmek amacıyla çapraz tablolara, ki-kare testine ve odds oranına; iki sayısal değişken için ise korelasyona bakıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u04-ornekleme/index.html">Önceki: Ünite 4</a><a href="../index.html">Dizin</a><a href="../u06-kategorik/index.html">Sonraki: Ünite 6, Kategorik veri ve ilişki</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 5. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  function welch(a, b) {
+    var ma = BI.mean(a), mb = BI.mean(b), va = Math.pow(BI.sd(a), 2), vb = Math.pow(BI.sd(b), 2), na = a.length, nb = b.length;
+    var se = Math.sqrt(va / na + vb / nb), t = (ma - mb) / se;
+    var df = Math.pow(va / na + vb / nb, 2) / (Math.pow(va / na, 2) / (na - 1) + Math.pow(vb / nb, 2) / (nb - 1));
+    return { t: t, df: df, p: BI.tPvalue2(t, df), diff: ma - mb, se: se };
+  }
+  function jitter(k) { return [-0.22, -0.13, -0.04, 0.04, 0.13, 0.22][k % 6]; }
+  function drawGroups(canvasId, vals, labels, colors, title) {
+    var c = document.getElementById(canvasId);
+    var lo = Math.floor(Math.min.apply(null, vals)) - 1, hi = Math.ceil(Math.max.apply(null, vals)) + 1;
+    var p = BI.plot(c, { x: [0, 2], y: [lo, hi], pad: { l: 30, r: 8, t: 8, b: 24 } });
+    p.axes({ xticks: [{ v: 0.5, l: "kontrol" }, { v: 1.5, l: "ilaç" }], yticks: [lo, (lo + hi) / 2, hi], grid: true, ydigits: 1 });
+    var g0 = [], g1 = [];
+    vals.forEach(function (v, k) { if (labels[k]) { g1.push(v); } else { g0.push(v); } });
+    var i0 = 0, i1 = 0;
+    vals.forEach(function (v, k) { var isT = labels[k]; var x = (isT ? 1.5 : 0.5) + jitter(isT ? i1++ : i0++); p.dot(x, v, isT ? colors.c2 : colors.c1, 5, { ring: true }); });
+    p.line([[0.25, BI.mean(g0)], [0.75, BI.mean(g0)]], colors.c1, { width: 3 });
+    p.line([[1.25, BI.mean(g1)], [1.75, BI.mean(g1)]], colors.c2, { width: 3 });
+    return BI.mean(g1) - BI.mean(g0);
+  }
+
+  /* ---------- 1. Permütasyon ---------- */
+  var pm = { eff: 1, seed: BI.DEFAULT_SEED, vals: [], labels: [], obs: 0, diffs: [], shufRng: null, lastLabels: null };
+  function genPerm() {
+    var rng = BI.rng(pm.seed); pm.vals = []; pm.labels = [];
+    for (var k = 0; k < 12; k++) { var t = k >= 6; pm.labels.push(t); pm.vals.push(8 + (t ? pm.eff : 0) + 0.8 * BI.randn(rng)); }
+    pm.diffs = []; pm.lastLabels = null; pm.shufRng = BI.rng(pm.seed + 100);
+  }
+  function diffOf(vals, labels) { var a = [], b = []; vals.forEach(function (v, k) { (labels[k] ? b : a).push(v); }); return BI.mean(b) - BI.mean(a); }
+  function shuffle(m) {
+    for (var j = 0; j < m; j++) { var lab = BI.shuffle(pm.labels, pm.shufRng); pm.diffs.push(diffOf(pm.vals, lab)); pm.lastLabels = lab; }
+    renderPerm();
+  }
+  function renderPerm() {
+    var col = BI.colors();
+    pm.obs = drawGroups("pgroups", pm.vals, pm.labels, col);
+    BI.text("pgroups-cap", "Gözlenen fark: " + BI.fmt(pm.obs, 2) + " log2 birim.");
+    if (pm.lastLabels) { var d = drawGroups("pshuf", pm.vals, pm.lastLabels, col); BI.text("pshuf-cap", "Bu karıştırmada fark: " + BI.fmt(d, 2) + ". Etiketler rastgele dağıtıldığında gruplar yalnızca rastlantıyla farklılaşır."); }
+    else { var c0 = document.getElementById("pshuf"); var q0 = BI.plot(c0, { x: [0, 2], y: [0, 1], pad: { l: 30, r: 8, t: 8, b: 24 } }); q0.axes({ xticks: [{ v: 0.5, l: "kontrol" }, { v: 1.5, l: "ilaç" }] }); BI.text("pshuf-cap", "Henüz karıştırma yapılmadı."); }
+    var c = document.getElementById("pdist");
+    var lim = Math.max(2.5, Math.abs(pm.obs) + 0.5);
+    var p, ext = 0;
+    if (pm.diffs.length) {
+      var counts = BI.hist(pm.diffs, 40, -lim, lim);
+      p = BI.plot(c, { x: [-lim, lim], y: [0, BI.niceMax(Math.max.apply(null, counts) * 1.15)], pad: { l: 36, r: 10, t: 12, b: 40 } });
+      p.axes({ xticks: [-lim, -lim / 2, 0, lim / 2, lim].map(function (v) { return { v: v, l: BI.fmt(v, 1) }; }), yticks: BI.yTicks(p.y[1]), grid: true, xlabel: "karıştırmadaki ortalama farkı", ylabel: "karıştırma sayısı" });
+      p.rect(-lim, 0, -Math.abs(pm.obs), p.y[1], p.col.c2, 0.12); p.rect(Math.abs(pm.obs), 0, lim, p.y[1], p.col.c2, 0.12);
+      p.bars(counts, -lim, lim, p.col.c3);
+      pm.diffs.forEach(function (d) { if (Math.abs(d) >= Math.abs(pm.obs) - 1e-12) { ext++; } });
+    } else {
+      p = BI.plot(c, { x: [-lim, lim], y: [0, 1], pad: { l: 36, r: 10, t: 12, b: 40 } });
+      p.axes({ xticks: [-lim, 0, lim].map(function (v) { return { v: v, l: BI.fmt(v, 1) }; }), xlabel: "karıştırmadaki ortalama farkı" });
+    }
+    p.vline(pm.obs, p.col.c2, { label: "gözlenen " + BI.fmt(pm.obs, 2) });
+    BI.text("p-obs", BI.fmt(pm.obs, 2)); BI.text("p-n", BI.fmtInt(pm.diffs.length));
+    BI.text("p-ext", pm.diffs.length ? BI.fmtInt(ext) : "-");
+    BI.text("p-p", pm.diffs.length ? BI.fmt(ext / pm.diffs.length, 3) : "-");
+  }
+  BI.slider("pe", function (v) { pm.eff = v; genPerm(); renderPerm(); }, { digits: 2 });
+  BI.on("pm1", "click", function () { shuffle(1); }); BI.on("pm100", "click", function () { shuffle(100); }); BI.on("pm2000", "click", function () { shuffle(2000); });
+  BI.on("pm-reset", "click", function () { pm.diffs = []; pm.lastLabels = null; pm.shufRng = BI.rng(pm.seed + 100); renderPerm(); });
+  BI.onReseed(function (seed) { pm.seed = seed; genPerm(); renderPerm(); });
+  BI.onRedraw(renderPerm);
+  genPerm(); renderPerm();
+
+  /* ---------- 2. t-testi ve tasarım ---------- */
+  var tt = { design: "indep", eff: 0.8, between: 1, seed: BI.DEFAULT_SEED + 7 };
+  function renderT() {
+    var rng = BI.rng(tt.seed), base = [], ctrl = [], trt = [], k;
+    for (k = 0; k < 6; k++) { base.push(8 + tt.between * BI.randn(rng)); }
+    var base2 = []; for (k = 0; k < 6; k++) { base2.push(8 + tt.between * BI.randn(rng)); }
+    for (k = 0; k < 6; k++) {
+      ctrl.push(base[k] + 0.4 * BI.randn(rng));
+      trt.push((tt.design === "paired" ? base[k] : base2[k]) + tt.eff + 0.4 * BI.randn(rng));
+    }
+    var c = document.getElementById("tchart");
+    var all = ctrl.concat(trt), lo = Math.floor(Math.min.apply(null, all)) - 1, hi = Math.ceil(Math.max.apply(null, all)) + 1;
+    var p = BI.plot(c, { x: [0, 2], y: [lo, hi], pad: { l: 30, r: 8, t: 8, b: 24 } });
+    p.axes({ xticks: [{ v: 0.5, l: tt.design === "paired" ? "önce" : "kontrol" }, { v: 1.5, l: tt.design === "paired" ? "sonra" : "tedavi" }], yticks: [lo, (lo + hi) / 2, hi], grid: true, ydigits: 1 });
+    for (k = 0; k < 6; k++) {
+      if (tt.design === "paired") { p.line([[0.5 + jitter(k), ctrl[k]], [1.5 + jitter(k), trt[k]]], p.col.text3, { width: 1 }); }
+      p.dot(0.5 + jitter(k), ctrl[k], p.col.c1, 5, { ring: true }); p.dot(1.5 + jitter(k), trt[k], p.col.c2, 5, { ring: true });
+    }
+    var res, diff, pp, ext = 0, M, j;
+    if (tt.design === "paired") {
+      var d = trt.map(function (v, i) { return v - ctrl[i]; });
+      diff = BI.mean(d); var se = BI.sd(d) / Math.sqrt(6), t = diff / se;
+      res = { t: t, p: BI.tPvalue2(t, 5) };
+      M = 64; // 2^6 işaret düzeni, tam sayım
+      for (j = 0; j < M; j++) { var s = 0; for (k = 0; k < 6; k++) { s += ((j >> k) & 1 ? -1 : 1) * d[k]; } if (Math.abs(s / 6) >= Math.abs(diff) - 1e-12) { ext++; } }
+      BI.text("t-pp-note", "(64 olası işaret düzeni)");
+    } else {
+      res = welch(trt, ctrl); diff = res.diff;
+      M = 0; // C(12,6) = 924 bölünme, tam sayım
+      for (var mask = 0; mask < 4096; mask++) {
+        var cnt = 0, m2 = mask; while (m2) { cnt += m2 & 1; m2 >>= 1; }
+        if (cnt !== 6) { continue; }
+        M++; var sT = 0, sC = 0;
+        for (k = 0; k < 12; k++) { if ((mask >> k) & 1) { sT += all[k]; } else { sC += all[k]; } }
+        if (Math.abs(sT / 6 - sC / 6) >= Math.abs(diff) - 1e-12) { ext++; }
+      }
+      BI.text("t-pp-note", "(924 olası bölünme)");
+    }
+    pp = ext / M;
+    BI.text("t-diff", BI.fmt(diff, 2)); BI.text("t-t", BI.fmt(res.t, 2)); BI.text("t-p", BI.fmtP(res.p)); BI.text("t-pp", BI.fmtP(pp));
+  }
+  BI.seg("#dsg-seg", function (v) { tt.design = v; renderT(); });
+  BI.slider("te", function (v) { tt.eff = v; renderT(); }, { digits: 1 });
+  BI.slider("tb", function (v) { tt.between = v; renderT(); }, { digits: 1 });
+  BI.onReseed(function (seed) { tt.seed = seed; renderT(); });
+  BI.onRedraw(renderT);
+  renderT();
+
+  /* ---------- 3. Güç ---------- */
+  var pw = { eff: 1, sd: 1, n: 3 };
+  function chi2Pdf(v, df) { return Math.exp((df / 2 - 1) * Math.log(v) - v / 2 - (df / 2) * Math.log(2) - BI.lgamma(df / 2)); }
+  function nctSf(t, df, ncp) { // P(T > t), T merkezi olmayan t: T = (Z + ncp) / sqrt(V/df), V ~ ki-kare(df); Simpson integrali
+    var vmax = df + 12 * Math.sqrt(2 * df) + 20, N = 400, h = vmax / N, sum = 0;
+    for (var i = 0; i <= N; i++) { var v = i * h || 1e-12, w = (i === 0 || i === N) ? 1 : (i % 2 ? 4 : 2); sum += w * chi2Pdf(v, df) * (1 - BI.normCdf(t * Math.sqrt(v / df) - ncp)); }
+    return sum * h / 3;
+  }
+  function power(d, n) { // iki bağımsız grup (eşit varyanslı t-testi), alpha 0,05, tam merkezi olmayan t dağılımı
+    var df = 2 * n - 2, tcrit = BI.tQuantile(0.975, df), ncp = d * Math.sqrt(n / 2);
+    return nctSf(tcrit, df, ncp) + 1 - nctSf(-tcrit, df, ncp);
+  }
+  function renderPower() {
+    var d = pw.eff / pw.sd, c = document.getElementById("pcurve");
+    var p = BI.plot(c, { x: [2, 50], y: [0, 1], pad: { l: 40, r: 10, t: 10, b: 40 } });
+    p.axes({ xticks: [2, 10, 20, 30, 40, 50], yticks: [{ v: 0, l: "0" }, { v: 0.5, l: "0,5" }, { v: 1, l: "1" }], grid: true, xlabel: "her gruptaki örneklem büyüklüğü n", ylabel: "güç" });
+    p.hline(0.8, p.col.text3, { dashed: true, label: "yüzde 80 güç" });
+    var pts = [], n80 = null;
+    for (var n = 2; n <= 50; n++) { var pw_ = power(d, n); pts.push([n, pw_]); if (n80 === null && pw_ >= 0.8) { n80 = n; } }
+    p.line(pts, p.col.c1);
+    var cur = power(d, pw.n); p.dot(pw.n, cur, p.col.c2, 6, { ring: true });
+    BI.text("pw-power", "yüzde " + BI.fmt(100 * cur, 0)); BI.text("pw-n80", n80 === null ? "50'den fazla" : String(n80)); BI.text("pw-d", BI.fmt(d, 2));
+  }
+  BI.slider("pw-eff", function (v) { pw.eff = v; renderPower(); }, { digits: 1 });
+  BI.slider("pw-sd", function (v) { pw.sd = v; renderPower(); }, { digits: 1 });
+  BI.slider("pw-n", function (v) { pw.n = v; renderPower(); });
+  BI.onRedraw(renderPower);
+  renderPower();
+
+  /* ---------- 4. Etki büyüklüğü ---------- */
+  var es = { eff: 0.15, n: 10, seed: BI.DEFAULT_SEED + 13 };
+  function renderEs() {
+    var rng = BI.rng(es.seed), a = [], b = [];
+    for (var k = 0; k < es.n; k++) { a.push(8 + 0.5 * BI.randn(rng)); b.push(8 + es.eff + 0.5 * BI.randn(rng)); }
+    var r = welch(b, a), tcrit = BI.tQuantile(0.975, r.df), lo = r.diff - tcrit * r.se, hi = r.diff + tcrit * r.se;
+    var c = document.getElementById("eschart");
+    var p = BI.plot(c, { x: [-1, 1.5], y: [0, 1], pad: { l: 10, r: 10, t: 12, b: 40 } });
+    p.rect(-0.2, 0, 0.2, 1, p.col.text3, 0.12);
+    p.axes({ xticks: [-1, -0.5, 0, 0.5, 1, 1.5].map(function (v) { return { v: v, l: BI.fmt(v, 1) }; }), yaxis: false, xlabel: "fark (log2 birim)" });
+    p.vline(0, p.col.text2, { dashed: true });
+    p.text("biyolojik olarak önemsiz bölge (±0,2)", 0, 0.9, { align: "center", size: 11 });
+    p.line([[Math.max(-1, lo), 0.5], [Math.min(1.5, hi), 0.5]], p.col.c2, { width: 3 });
+    p.dot(r.diff, 0.5, p.col.c2, 7, { ring: true });
+    BI.text("es-obs", BI.fmt(r.diff, 2)); BI.text("es-ci", BI.fmt(lo, 2) + " ile " + BI.fmt(hi, 2)); BI.text("es-fc", BI.fmt(Math.pow(2, r.diff), 2)); BI.text("es-p", BI.fmtP(r.p));
+  }
+  BI.slider("es-eff", function (v) { es.eff = v; renderEs(); }, { digits: 2 });
+  BI.slider("es-n", function (v) { es.n = v; renderEs(); });
+  BI.onReseed(function (seed) { es.seed = seed; renderEs(); });
+  BI.onRedraw(renderEs);
+  renderEs();
+})();
+</script>
+</body>
+</html>

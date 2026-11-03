@@ -1,0 +1,1018 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 9: Binlerce test birden</title>
+<meta name="description" content="Çoklu test sorunu; p-değeri histogramı; Bonferroni ve yanlış keşif oranı (Benjamini-Hochberg); volkan grafiği.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .mt canvas { height: 220px; }
+  .bh canvas { height: 260px; }
+  .volc canvas { height: 320px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u08-cokboyutlu/index.html">Önceki: Ünite 8</a><a href="../index.html">Dizin</a><a href="../u10-de-tablosu/index.html">Sonraki: Ünite 10</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 9 · yaklaşık 70 dakika</p>
+    <h1>Binlerce test birden: çoklu test ve volkan grafiği</h1>
+    <p class="lead">Bu ünitede, binlerce genin aynı anda test edildiği durumda p-değerinin neden tek başına yetmediğine, yanlış keşif oranının bu sorunu nasıl çözdüğüne ve binlerce sonucun tek bir şekilde nasıl görüldüğüne bakıyoruz. Bir sonraki ve son ünitede aynı sonuçları tablo hâlinde satır satır okuyacağız.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>20 000 gen test edildiğinde α = 0,05 ile kaç yanlış pozitif beklendiğini hesaplayabilirsiniz.</li>
+      <li>Bir p-değeri histogramından verideki sinyalin varlığını okuyabilirsiniz.</li>
+      <li>Bonferroni düzeltmesi ile yanlış keşif oranı arasındaki farkı ve "FDR &lt; 0,05" ifadesinin anlamını açıklayabilirsiniz.</li>
+      <li>Bir volkan grafiğinin üç bölgesini tanıyabilir ve eşik değerlerin ne yaptığını söyleyebilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Çoklu test sorunu ve p-değeri histogramı</a></li>
+      <li><a href="#b2">Bonferroni ve yanlış keşif oranı</a></li>
+      <li><a href="#b3">Volkan grafiği</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Çoklu test ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Çoklu test sorunu ve p-değeri histogramı</h2>
+    <p>Bu bölümde, tek bir gen için öğrendiğimiz testin binlerce gene aynı anda uygulandığında ne olduğunu görebilmek amacıyla çoklu test sorununa bakıyoruz. Bir <span class="term">diferansiyel ifade</span> <span class="en">(differential expression)</span> analizi, 20 000 gen için 20 000 ayrı hipotez testi yapar ve her gene bir p-değeri atar. Ünite 5'te gördüğümüz üzere, hiçbir gerçek etkisi olmayan bir gen bile α = 0,05 ile yüzde 5 olasılıkla "anlamlı" çıkar. Dolayısıyla tedavinin hiçbir geni etkilemediği bir deneyde bile yaklaşık 1 000 gen anlamlı görünecektir. Bu, <span class="term">çoklu test sorunu</span> <span class="en">(multiple testing problem)</span> olarak adlandırılmaktadır: anlamlı çıkan genlerin listesi, gerçek keşiflerle yanlış pozitiflerin karışımıdır ve ham p-değeri hangisinin hangisi olduğunu söylemez.</p>
+    <p>Verideki sinyali görmenin en hızlı yolu, tüm genlerin p-değerlerinin histogramına bakmaktır. Sıfır hipotezi doğru olan genlerin p-değerleri 0 ile 1 arasında düzgün dağılır: her aralıkta eşit sayıda gen bulunur (<span class="term">düzgün dağılım</span>, <span class="en">uniform distribution</span>). Gerçek etkisi olan genlerin p-değerleri ise sıfıra yakın yığılır. Dolayısıyla sıfıra yakın bir tepe ile sağa doğru düz bir plato gösteren histogram "sinyal var" demektir; tamamen düz bir histogram "sinyal yok" demektir ve tepesi sıfırda değil ortada ya da 1'e yakın olan bir histogram ise modelin ya da varsayımlarının gözden geçirilmesi gerektiğine işaret etmektedir. Bu histogram, bir diferansiyel ifade analizinde sonuç tablosundan önce bakılması gereken ilk grafiktir.</p>
+
+    <div class="card mt">
+      <h3 style="margin-top:0">Simülasyon: 10 000 gen, kaçı gerçekten değişiyor?</h3>
+      <p>Bu simülasyonda 10 000 gen için bir test yapılmaktadır. Gerçekten değişen genlerin oranını ve etkinin büyüklüğünü belirleyebilir, anlamlılık düzeyini değiştirerek anlamlı çıkan genler arasında yanlış pozitiflerin payını izleyebilirsiniz. Aynı veri seti bu ünitenin diğer simülasyonlarında da kullanılmaktadır.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="pi1">Gerçekten değişen genlerin oranı (yüzde)</label><output id="pi1-out" for="pi1">10</output><input type="range" id="pi1" min="0" max="50" step="1" value="10"></div>
+        <div class="slider-wrap"><label for="eff">Değişen genlerde ortalama etki büyüklüğü (standart hata birimi)</label><output id="eff-out" for="eff">3,0</output><input type="range" id="eff" min="1" max="6" step="0.5" value="3"></div>
+        <div class="slider-wrap"><label for="alpha">Anlamlılık düzeyi α (ham p-değeri eşik değeri)</label><output id="alpha-out" for="alpha">0,05</output><input type="range" id="alpha" min="0.001" max="0.2" step="0.001" value="0.05"></div>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="charts two">
+        <div class="chart"><h4><span class="swatch" style="background:var(--c3)"></span>p-değeri histogramı (10 000 gen)</h4><canvas id="phist" role="img" aria-label="10 000 genin p-değerlerinin histogramı; kesikli çizgi sinyal olmasaydı beklenen düz düzey."></canvas></div>
+        <div class="chart"><h4>Anlamlı çıkan genlerin bileşimi</h4><canvas id="comp" role="img" aria-label="Anlamlı çıkan genler arasında gerçek pozitif ve yanlış pozitif sayıları çubuk olarak."></canvas></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption class="visually-hidden">Test sonuçlarının gerçeğe göre dökümü</caption>
+          <thead><tr><th></th><th class="num">Anlamlı (p &lt; α)</th><th class="num">Anlamlı değil</th><th class="num">Toplam</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Gerçekten değişen</th><td class="num" id="tp">-</td><td class="num" id="fn">-</td><td class="num" id="ntrue">-</td></tr>
+            <tr><th scope="row">Değişmeyen</th><td class="num" id="fp">-</td><td class="num" id="tn">-</td><td class="num" id="nnull">-</td></tr>
+            <tr><th scope="row">Toplam</th><td class="num" id="nsig">-</td><td class="num" id="nnot">-</td><td class="num">10 000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Anlamlı listede yanlış pozitif payı</div><div class="v" id="fdp">-</div></div>
+        <div class="stat"><div class="k">Gerçek değişimlerin yakalanan payı <small>(güç)</small></div><div class="v" id="pow">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Değişen gen oranı yüzde 0 iken histogram düzdür ve α = 0,05 ile yine de 500 civarında gen anlamlı çıkar; listenin tamamı yanlış pozitiftir. Oran yüzde 10 ve etki 3 standart hata iken listede 450 civarında yanlış pozitifin (9 000 değişmeyen genin yüzde 5'i) yanında 800 kadar gerçek keşif bulunur: her 100 "anlamlı" genin 35-40'ı yanlıştır. Etki küçüldükçe gerçek keşifler azalır, yanlış pozitif sayısı ise α tarafından belirlendiğinden sabit kalır; liste giderek yanlış pozitiflerle dolmaktadır. Bu, Ünite 3'teki nadir hastalık taramasının gen diline çevrilmiş hâlidir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Bir p-değeri histogramını yorumlamak</h3>
+      <p>Bir RNA-seq analizinin p-değeri histogramında sıfıra yakın belirgin bir tepe ve sağda düz bir plato görülüyorsa analiz beklendiği gibi davranmaktadır: plato, değişmeyen genlerin düzgün dağılmış p-değerleridir ve yüksekliği bu genlerin sayısını, tepe ise gerçek sinyali yansıtır. Histogramın 1'e yakın bölgede yükselmesi, çoğunlukla düşük sayımlı genlerden kaynaklanır: kesikli sayımlarda p-değerleri 1'e yığılabilir ve aşırı yayılım olduğundan büyük tahmin edildiğinde testler aşırı tutucu davranır; DESeq2 bu nedenle düşük sayımlı genleri <span class="term">bağımsız filtreleme</span> <span class="en">(independent filtering; Ünite 10)</span> ile test dışı bırakır. Histogramın ortasında tümsek görülmesi ise modelin veriyle uyumsuz olduğunu düşündürür; eksik bir kovaryat (batch etkisi) olası nedenlerden biridir. Dolayısıyla tek bir grafik, sonuç tablosuna geçmeden önce analizdeki en yaygın sorunları ortaya çıkarabilmektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. 20 000 gen test edilmiş ve tedavinin hiçbir geni etkilemediği bilinmektedir. α = 0,05 ile kaç genin anlamlı çıkması beklenir?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>Hiçbiri; etki yoksa p-değerleri büyük olur.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>Yaklaşık 1 000; sıfır hipotezi doğruyken p-değerleri düzgün dağılır ve yüzde 5'i 0,05'in altında kalır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>Yaklaşık 50.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>Tam olarak 1 000.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. 20 000 × 0,05 = 1 000 yanlış pozitif beklenir; gerçek sayı rastgele biraz altında ya da üstünde çıkar. Bu beklenti, çoklu test düzeltmesinin (multiple testing correction) neden zorunlu olduğunun özüdür.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yaklaşık 1 000. α = 0,05, sıfır hipotezi doğru olan her testin yüzde 5 olasılıkla anlamlı çıkması demektir; 20 000 testte beklenen yanlış pozitif sayısı 1 000'dir. Sayı tam olarak 1 000 değil, onun çevresinde rastgele bir değerdir.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 2. Bir analizin p-değeri histogramı tamamen düzdür. Bu ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Analiz hatalıdır; p-değerleri sıfıra yakın olmalıydı.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>Tüm genler değişmiştir.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Veride tespit edilebilir bir sinyal yoktur; genlerin tamamı sıfır hipoteziyle uyumlu davranmaktadır.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Batch etkisi vardır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Düz histogram, sıfır hipotezi altında beklenen görünümdür. Analizin doğru çalıştığını, ancak tedavinin bu deneyde ölçülebilir bir etkisinin olmadığını (ya da gücün yetmediğini) gösterir. Sıfıra yakın tepe sinyal, ortada tümsek ise model sorunu anlamına gelir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Tespit edilebilir sinyal yoktur. Düz histogram hata değil, "etki yok ya da güç yetersiz" durumunun beklenen görünümüdür. Modellenmemiş bir batch etkisi gibi bir model sorunu histogramı çoğu zaman bozar (ortada tümsek ya da 1'e doğru yığılma); sinyal ise sıfıra yakın bir tepe olarak görünür.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. Bonferroni ve FDR ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Bonferroni ve yanlış keşif oranı</h2>
+    <p>Bu bölümde, binlerce test arasında güvenilir bir keşif listesi elde edebilmek amacıyla iki düzeltme yaklaşımına bakıyoruz. Birincisi, tek bir yanlış pozitif bile olmamasını hedefler: <span class="term">aile bazında hata oranı</span> <span class="en">(family-wise error rate, FWER)</span>, tüm testler arasında en az bir yanlış pozitif bulunma olasılığıdır. <span class="term">Bonferroni düzeltmesi</span> <span class="en">(Bonferroni correction)</span> bu oranı α'da tutmak için her testin eşik değerini α / test sayısı yapar: 20 000 gen için 0,05 / 20 000 = 2,5 × 10⁻⁶. Bu kural basittir ve güvenlidir; ancak çok tutucudur: orta büyüklükteki gerçek etkilerin neredeyse tamamı eşik değerin üstünde kalır ve kaçırılır. GWAS'taki 5 × 10⁻⁸ eşik değeri, bir milyon bağımsız test için yapılmış bir Bonferroni düzeltmesidir.</p>
+    <p>İkinci yaklaşım soruyu değiştirir: "hiç yanlış olmasın" yerine "anlamlı ilan ettiklerim arasında yanlışların payı küçük olsun". Bu paya <span class="term">yanlış keşif oranı</span> <span class="en">(false discovery rate, FDR)</span> denir. FDR = 0,05 ile elde edilen 1 000 genlik bir listede ortalama 50 genin yanlış pozitif olması kabul edilmektedir; bunun karşılığında liste, Bonferroni'ye göre çok daha fazla gerçek keşif içerir. Keşif analizlerinde (hangi genler değişmiş olabilir?) bu değiş tokuş neredeyse her zaman tercih edilir; doğrulama deneyleri daha sonra yapılır. <span class="term">Benjamini-Hochberg yöntemi</span> <span class="en">(Benjamini-Hochberg procedure, BH)</span> FDR'yi kontrol eden standart yöntemdir: p-değerleri küçükten büyüğe sıralanır ve sırası k olan p-değeri k × q / m eşik değeriyle karşılaştırılır (q istenen yanlış keşif oranı, m test sayısı); bu koşulu sağlayan en büyük k'ya kadar olan tüm genler anlamlı sayılır. Her gen için bu işlemin sonucu bir <span class="term">düzeltilmiş p-değeri</span> <span class="en">(adjusted p-value)</span> olarak bildirilir; DESeq2 tablosundaki padj sütunu budur ve "padj &lt; 0,05" tam olarak "FDR yüzde 5'te anlamlı" demektir.</p>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>m test ve küçükten büyüğe sıralanmış p-değerleri p₍₁₎ ≤ p₍₂₎ ≤ ... ≤ p₍ₘ₎ olmak üzere:</p>
+      <div class="formula">Bonferroni: p &lt; <span class="frac"><span>α</span><span>m</span></span> &#8203; , &#8203; BH: p₍ₖ₎ ≤ <span class="frac"><span>k × q</span><span>m</span></span> koşulunu sağlayan en büyük k</div>
+      <p>BH eşik değeri, sıralamada ilerledikçe doğrusal olarak yükselen bir çizgidir; sıralı p-değerleri bu çizginin altında kaldığı sürece anlamlı sayılır. Düzeltilmiş p-değeri, k. genin anlamlı sayılabilmesi için gereken en küçük q düzeyidir: önce p₍ₖ₎ × m / k hesaplanır, sonra büyük p-değerlerinden küçüklere doğru ilerlenerek her değerin kendisinden sonrakilerden büyük olmaması sağlanır. Yöntem, testlerin bağımsız ya da pozitif bağımlı olduğunu varsayar; gen ifadesi verisinde bu varsayım pratikte kabul edilmektedir.</p>
+    </details>
+
+    <div class="card bh">
+      <h3 style="margin-top:0">Simülasyon: Üç eşik değer, üç liste</h3>
+      <p>1. bölümdeki 10 000 genin en küçük 300 p-değeri sırayla çizilmektedir. İstenen FDR düzeyini değiştirerek BH çizgisinin ve üç farklı listenin (ham α, Bonferroni, BH) nasıl değiştiğini görebilirsiniz; veri setini 1. bölümdeki kaydırıcılar belirler.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="q">İstenen yanlış keşif oranı (FDR)</label><output id="q-out" for="q">0,05</output><input type="range" id="q" min="0.01" max="0.25" step="0.01" value="0.05"></div>
+      </div>
+      <div class="chart">
+        <h4>Sıralı p-değerleri (en küçük 300) ve <span class="swatch" style="background:var(--c2)"></span> BH çizgisi, <span class="swatch" style="background:var(--c7)"></span> Bonferroni eşik değeri</h4>
+        <canvas id="bhplot" role="img" aria-label="Sıralı p-değerleri nokta olarak; gerçekten değişen genler dolu, değişmeyenler içi boş; BH çizgisi ve Bonferroni eşik değeri."></canvas>
+        <div class="legend"><span>● gerçekten değişen gen</span><span>○ değişmeyen gen</span></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption class="visually-hidden">Üç yöntemle anlamlı bulunan gen sayıları</caption>
+          <thead><tr><th>Yöntem</th><th class="num">Anlamlı gen</th><th class="num">Bunların yanlış pozitif olanı</th><th class="num">Listede yanlış payı</th><th class="num">Yakalanan gerçek değişim payı</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Ham p &lt; α</th><td class="num" id="r-n">-</td><td class="num" id="r-fp">-</td><td class="num" id="r-fdp">-</td><td class="num" id="r-pow">-</td></tr>
+            <tr><th scope="row">Bonferroni</th><td class="num" id="b-n">-</td><td class="num" id="b-fp">-</td><td class="num" id="b-fdp">-</td><td class="num" id="b-pow">-</td></tr>
+            <tr><th scope="row">BH (FDR)</th><td class="num" id="h-n">-</td><td class="num" id="h-fp">-</td><td class="num" id="h-fdp">-</td><td class="num" id="h-pow">-</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Varsayılan ayarlarda ham α listesinde yanlış payı yüzde 35-40 iken Bonferroni listesinde neredeyse sıfırdır, ancak Bonferroni gerçek değişimlerin yalnızca küçük bir kısmını yakalar. BH listesi ise yanlış payını istenen düzeyin (yüzde 5) civarında tutarken gerçek değişimlerin yaklaşık yarısını, yani Bonferroni'nin dört katından fazlasını bulmaktadır. FDR düzeyini yükselttiğimizde liste uzar ve yanlış payı birlikte artar; bu, araştırmacının bilinçli bir seçimidir. Gerçek değişen gen oranı sıfıra çekildiğinde BH listesinin de çoğunlukla boş kaldığını görüyoruz; FDR kontrolü, sinyal yokken sinyal uydurmaz.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: "FDR &lt; 0,05 ile 1 243 gen"</h3>
+      <p>Bir makale "tedavi ile kontrol arasında FDR &lt; 0,05 düzeyinde 1 243 gen diferansiyel ifade göstermiştir" demektedir. Bu cümlenin doğru okunuşu şudur: 1 243 genlik listede yanlış pozitiflerin beklenen sayısı yaklaşık 60'tır (yüzde 5); hangi 60 gen olduğu bilinmez. Dolayısıyla listeden seçilen tek bir gen hakkında "bu gen kesinlikle değişmiştir" denemez; listenin bütünü hakkında "yüzde 95 kadarının gerçek olması beklenir" denebilir. Aynı listeyi Bonferroni ile daraltmak 1 243'ü belki 150'ye indirir; bu 150 gen daha güvenilir, ancak kaçırılan gerçek değişim sayısı çok daha büyüktür. Hangi yaklaşımın uygun olduğu amaca bağlıdır: <span class="term">yolak analizi</span> <span class="en">(pathway analysis)</span> gibi listenin bütününü kullanan sonraki adımlar için FDR, tek tek genlerin pahalı doğrulama deneylerine seçilmesi için daha sıkı eşik değerler tercih edilmektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 3. "padj &lt; 0,05 ile 800 gen anlamlı" ifadesi ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>800 genin her biri yüzde 95 olasılıkla değişmiştir.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>Listede hiç yanlış pozitif yoktur.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Listede yanlış pozitiflerin beklenen payı yüzde 5'tir (yaklaşık 40 gen); hangileri olduğu bilinmez.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>Genlerin yüzde 5'i değişmiştir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Düzeltilmiş p-değeri FDR'yi kontrol eder: listenin bütünü hakkında bir ifade verir, tek tek genler hakkında değil. Yüzde 5, yanlış pozitiflerin liste içindeki beklenen payıdır; tüm genlerin değişen yüzdesi değildir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Listede beklenen yanlış pozitif payı yüzde 5'tir. FDR, listenin bütününe ilişkin bir orandır; her genin ayrı ayrı olasılığını vermez ve sıfır yanlış pozitif garantisi (Bonferroni'nin hedefi) sunmaz.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 4. Bir keşif analizinde Bonferroni yerine BH yönteminin tercih edilmesinin nedeni hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Bonferroni tek bir yanlış pozitifi bile önlemeye çalıştığından çok tutucudur; BH, küçük bir yanlış payını kabul ederek çok daha fazla gerçek keşif sağlar.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>BH yanlış pozitifleri tamamen ortadan kaldırır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Bonferroni yalnızca küçük veri setlerinde çalışır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>BH, p-değerlerini küçültür.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. İki yöntem farklı hata ölçülerini kontrol eder: Bonferroni aile bazında hata oranını, BH yanlış keşif oranını. Keşif aşamasında birkaç yanlış pozitifi kabul etmek, yüzlerce gerçek keşfi kaçırmaktan daha iyidir. BH p-değerlerini küçültmez; düzeltilmiş p-değeri ham p-değerinden her zaman büyük ya da eşittir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Bonferroni çok tutucudur, BH küçük bir yanlış payıyla daha fazla keşif sağlar. BH yanlış pozitifleri yok etmez, oranlarını kontrol eder; Bonferroni her boyutta çalışır, ancak test sayısı arttıkça gücü düşer; düzeltilmiş p-değerleri ham değerlerden küçük olamaz.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Volkan grafiği ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Volkan grafiği</h2>
+    <p>Bu bölümde, binlerce genin etki büyüklüğünü ve kanıtını tek bir şekilde görebilmek amacıyla volkan grafiğine bakıyoruz. Ünite 5'te bir sonucun iki boyutu olduğunu görmüştük: etkinin büyüklüğü ve bu etkinin rastlantıyla açıklanmasının ne kadar zor olduğu. <span class="term">Volkan grafiği</span> <span class="en">(volcano plot)</span> her gen için bu iki boyutu bir noktaya dönüştürür: yatay eksende log2 kat değişimi (Ünite 2), dikey eksende −log10 p-değeri. Dikey eksendeki dönüşüm, küçük p-değerlerini yukarı taşır: p = 0,05 için 1,3; p = 0,001 için 3; p = 10⁻¹⁰ için 10. Dolayısıyla grafiğin üst kısmı güçlü kanıtı, sağ ve sol kenarları büyük etkiyi gösterir; "ilginç" genler sağ üst ve sol üst köşelerde toplanmaktadır.</p>
+    <p>Volkan grafiği okunurken üç bölgeye dikkat edilir. Tepe noktasına yakın, ancak yatay eksende sıfıra yakın genler, yüksek ifadeli genlerdeki küçük ancak kesin farklardır; istatistiksel olarak anlamlı, biyolojik olarak çoğu zaman önemsizdir. Alt kısımdaki geniş, dağınık bulut düşük sayımlı genlerdir: kat değişimleri büyük görünür, ancak standart hataları da büyük olduğundan kanıt zayıftır. Köşelerdeki genler ise hem büyük hem kesin etkilerdir ve çoğu analiz tam olarak bu genleri hedefleyerek iki eşik değer uygular: düzeltilmiş p-değeri için bir sınır (örneğin padj &lt; 0,05) ve kat değişimi için bir sınır (örneğin |log2 kat değişimi| ≥ 1). Kat değişimi eşik değeri bir çoklu test düzeltmesi değildir ve yanlış keşif oranını kontrol etmez; pratik anlamlılığı ölçüte ekler.</p>
+
+    <div class="card de">
+      <h3 style="margin-top:0">Simülasyon: 10 000 genin volkan grafiği</h3>
+      <p>1. bölümdeki 10 000 gen için temsili log2 kat değişimleri ve p-değerleri çizilmektedir. Eşik değerleri değiştirerek hangi genlerin listeye girdiğini görebilir, grafikte bir noktaya tıklayarak (ya da klavyeyle odaklanıp Enter'a basarak) o genin değerlerini okuyabilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="thr-p">padj eşik değeri</label><output id="thr-p-out" for="thr-p">0,05</output><input type="range" id="thr-p" min="0.001" max="0.2" step="0.001" value="0.05"></div>
+        <div class="slider-wrap"><label for="thr-l">|log2 kat değişimi| eşik değeri</label><output id="thr-l-out" for="thr-l">1,0</output><input type="range" id="thr-l" min="0" max="3" step="0.1" value="1"></div>
+      </div>
+      <div class="chart volc">
+        <h4>Volkan grafiği: 10 000 gen</h4>
+        <canvas id="volcano" role="img" aria-label="Volkan grafiği: yatay eksen log2 kat değişimi, dikey eksen eksi log10 p-değeri; eşik değerleri geçen genler renkli, seçili gen halkalı." tabindex="0"></canvas>
+        <div class="legend"><span><span class="swatch" style="background:var(--c2)"></span>eşik değerleri geçen, artan</span><span><span class="swatch" style="background:var(--c1)"></span>eşik değerleri geçen, azalan</span><span><span class="swatch" style="background:var(--text-3)"></span>diğer genler</span></div>
+      </div>
+      <p class="caption" id="de-cap">Bir nokta seçildiğinde genin değerleri burada görünür.</p>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Eşik değerleri geçen gen</div><div class="v" id="v-n">-</div></div>
+        <div class="stat"><div class="k">Artan / azalan</div><div class="v" id="v-ud">-</div></div>
+        <div class="stat"><div class="k">Yalnızca padj ile anlamlı (kat değişimi eşik değerini geçmeyen)</div><div class="v" id="v-only">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Kat değişimi eşik değerini sıfıra indirdiğimizde volkan grafiğinin tepesine yakın, ancak yatay eksende sıfıra yakın onlarca gen daha listeye girer: bunlar yüksek ifadeli, küçük ancak kesin farklardır. Eşik değeri 1'e çıkardığımızda liste "hem büyük hem kesin" genlere daralmaktadır. Volkan grafiğinin alt kısmındaki geniş, dağınık bulut düşük sayımlı genlerdir: büyük kat değişimleri görünür, ancak standart hataları büyük olduğundan p-değerleri büyüktür. 1. bölümdeki kaydırıcılarla gerçek sinyali azalttığımızda köşeler boşalmakta, değişen gen oranı yüzde 0'a çekildiğinde ise grafik simetrik ve alçak bir tepe hâlini almaktadır.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Bir makaledeki volkan grafiğini okumak</h3>
+      <p>Bir makalenin şeklinde volkan grafiği üzerinde 25 gen adı yazılı ve altyazıda "padj &lt; 0,01 ve |log2FC| &gt; 1,5 ile 342 gen diferansiyel ifade göstermiştir" denmektedir. Bu şekilden okunabilenler şunlardır: eşik değerlerin ikisi de sıkıdır, dolayısıyla 342 gen görece güvenilir ve büyük etkili bir listedir; etiketlenmiş 25 gen çoğu zaman en uç köşelerdeki genlerdir, ancak etiket seçimi yazarların tercihidir ve biyolojik önemle örtüşmek zorunda değildir; grafiğin bir yanı diğerinden çok daha kalabalıksa (örneğin azalanlar çoğunluktaysa) bu, tedavinin küresel bir etkisini ya da Ünite 8'deki normalizasyon varsayımının bozulduğunu düşündürebilir. Şekilden okunamayanlar ise genlerin ifade düzeyi (baseMean) ve standart hatalarıdır; bunlar için bir sonraki ünitede ele alacağımız sonuç tablosuna bakılması gerekir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 5. Volkan grafiğinin sağ alt köşesinde (büyük log2 kat değişimi, büyük p-değeri) yer alan genler için en olası açıklama hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>En önemli genlerdir, çünkü kat değişimi büyüktür.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>Analiz hatalıdır; büyük kat değişimi her zaman küçük p-değeri verir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>Çoğunlukla düşük sayımlı genlerdir: kat değişimi tahmini büyük, ancak standart hatası da büyük olduğundan kanıt zayıftır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Batch etkisinin işaretidir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Düşük sayımlı genlerde birkaç okumalık fark bile büyük bir kat değişimi verir; ancak standart hata büyüktür ve test istatistiği küçük kalır. Bu genler aday bile olsa, daha derin sekanslama ya da doğrulama olmadan yorumlanmamalıdır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Düşük sayımlı, gürültülü genlerdir. Büyük kat değişimi tek başına kanıt değildir; p-değeri, etkiyi standart hataya böler ve düşük sayımlarda standart hata çok büyüktür. Bu bulut, volkan grafiğinin olağan bir parçasıdır, hata değildir.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 6. Bir analizde "padj &lt; 0,05 ve |log2 kat değişimi| &gt; 1" ölçütü uygulanmıştır. Kat değişimi eşik değerinin amacı nedir?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>İstatistiksel olarak anlamlı ancak biyolojik olarak küçük farkları listeden çıkararak pratik anlamlılığı da ölçüte eklemek.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Yanlış keşif oranını düşürmek.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Düşük sayımlı genleri listeye almak.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>p-değerlerini düzeltmek.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. padj kanıtı, kat değişimi etkinin büyüklüğünü ölçer (Ünite 5). Kat değişimi eşik değeri FDR'yi kontrol etmez; yüksek ifadeli genlerdeki küçük ancak kesin farkları eler. Düşük sayımlı genler ise bu eşiği geçse bile padj ölçütünde elenir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Pratik anlamlılığı ölçüte eklemek. Kat değişimi eşik değeri bir etki büyüklüğü filtresidir; p-değerlerini düzeltmez ve yanlış keşif oranını kontrol etmez. Amaç, "anlamlı ancak önemsiz" farkları listeden çıkarmaktır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Binlerce test yapıldığında ham α = 0,05, binlerce yanlış pozitif üretir; p-değeri histogramı sinyalin varlığını ve model sorunlarını gösterir.</li>
+        <li>Bonferroni aile bazında hata oranını kontrol eder (çok tutucu); BH yanlış keşif oranını kontrol eder ve keşif analizlerinin standardıdır. padj &lt; 0,05, "listede yüzde 5 yanlış beklenir" demektir.</li>
+        <li>Volkan grafiği etki (log2 kat değişimi) ile kanıtı (−log10 p) tek şekilde gösterir; köşeler hem büyük hem kesin etkilerdir, alt bulut düşük sayımlı genlerdir; kat değişimi eşik değeri pratik anlamlılığı ölçüte ekler.</li>
+      </ul>
+    </div>
+    <p class="meta">Son ünitede, bu kursta öğrendiklerimizin tamamını kullanarak gerçek görünümlü bir diferansiyel ifade sonuç tablosunu satır satır okuyor, normalizasyonu hatırlıyor ve analiz kararlarının sonucu nasıl etkileyebildiğine bakıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u08-cokboyutlu/index.html">Önceki: Ünite 8</a><a href="../index.html">Dizin</a><a href="../u10-de-tablosu/index.html">Sonraki: Ünite 10, Diferansiyel ifade tablosunu okumak</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 9. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var M = 10000;
+  var st = { pi1: 10, eff: 3, alpha: 0.05, q: 0.05, seed: BI.DEFAULT_SEED, thrP: 0.05, thrL: 1, sel: null, genes: null };
+  function genGenes() {
+    var rng = BI.rng(st.seed), genes = [], nTrue = Math.round(M * st.pi1 / 100);
+    for (var i = 0; i < M; i++) {
+      var isTrue = i < nTrue;
+      var base = Math.exp(2 + 2.2 * BI.randn(rng)); // baseMean, log-normal
+      var se = 0.10 + 1.6 / Math.sqrt(Math.max(1, base)); // düşük sayımda büyük SE
+      var effect = isTrue ? (rng() < 0.5 ? -1 : 1) * st.eff * se * (0.6 + 0.8 * rng()) : 0; // etki, SE birimi cinsinden
+      var lfc = effect + se * BI.randn(rng);
+      var z = lfc / se, p = BI.normTail2(z);
+      genes.push({ id: "GEN" + String(i + 1), isTrue: isTrue, base: base, lfc: lfc, se: se, stat: z, p: Math.max(p, 1e-320) });
+    }
+    var adj = BI.bh(genes.map(function (g) { return g.p; }));
+    genes.forEach(function (g, i) { g.padj = adj[i]; });
+    return genes;
+  }
+  function counts(pred) {
+    var tp = 0, fp = 0, fn = 0, tn = 0;
+    st.genes.forEach(function (g) { var s = pred(g); if (g.isTrue) { if (s) { tp++; } else { fn++; } } else { if (s) { fp++; } else { tn++; } } });
+    return { tp: tp, fp: fp, fn: fn, tn: tn };
+  }
+  function renderAll() {
+    if (!st.genes) { st.genes = genGenes(); }
+    render1(); renderBH(); renderDe();
+  }
+  /* ---------- 1. Çoklu test ---------- */
+  function render1() {
+    var g = st.genes, c = counts(function (x) { return x.p < st.alpha; });
+    var nTrue = c.tp + c.fn, nNull = c.fp + c.tn;
+    BI.text("tp", BI.fmtInt(c.tp)); BI.text("fn", BI.fmtInt(c.fn)); BI.text("ntrue", BI.fmtInt(nTrue));
+    BI.text("fp", BI.fmtInt(c.fp)); BI.text("tn", BI.fmtInt(c.tn)); BI.text("nnull", BI.fmtInt(nNull));
+    BI.text("nsig", BI.fmtInt(c.tp + c.fp)); BI.text("nnot", BI.fmtInt(c.fn + c.tn));
+    BI.text("fdp", (c.tp + c.fp) ? "yüzde " + BI.fmt(100 * c.fp / (c.tp + c.fp), 1) : "-");
+    BI.text("pow", nTrue ? "yüzde " + BI.fmt(100 * c.tp / nTrue, 1) : "-");
+    var hc = BI.hist(g.map(function (x) { return x.p; }), 20, 0, 1);
+    var cv = document.getElementById("phist");
+    var p = BI.plot(cv, { x: [0, 1], y: [0, BI.niceMax(Math.max.apply(null, hc) * 1.1)], pad: { l: 44, r: 8, t: 10, b: 40 } });
+    p.axes({ xticks: [0, 0.5, 1].map(function (v) { return { v: v, l: BI.fmt(v, 1) }; }), yticks: BI.yTicks(p.y[1]).map(function (v) { return { v: v, l: BI.fmtInt(v) }; }), grid: true, xlabel: "p-değeri", ylabel: "gen sayısı" });
+    p.bars(hc, 0, 1, p.col.c3);
+    p.hline(nNull / 20, p.col.text2, { dashed: true, label: "değişmeyen genlerin beklenen düzeyi" });
+    var cc = document.getElementById("comp");
+    var q = BI.plot(cc, { x: [0, 2], y: [0, BI.niceMax(Math.max(c.tp + c.fp, 1) * 1.15)], pad: { l: 44, r: 8, t: 10, b: 40 } });
+    q.axes({ xticks: [{ v: 0.5, l: "gerçek pozitif" }, { v: 1.5, l: "yanlış pozitif" }], yticks: BI.yTicks(q.y[1]).map(function (v) { return { v: v, l: BI.fmtInt(v) }; }), grid: true, ylabel: "gen sayısı" });
+    q.barAt(0.5, c.tp, 0.6, q.col.c3); q.barAt(1.5, c.fp, 0.6, q.col.c2);
+    q.text(BI.fmtInt(c.tp), 0.5, c.tp, { align: "center", dy: -10 }); q.text(BI.fmtInt(c.fp), 1.5, c.fp, { align: "center", dy: -10 });
+  }
+  BI.slider("pi1", function (v) { st.pi1 = v; st.genes = null; st.sel = null; renderAll(); });
+  BI.slider("eff", function (v) { st.eff = v; st.genes = null; st.sel = null; renderAll(); }, { digits: 1 });
+  BI.slider("alpha", function (v) { st.alpha = v; render1(); renderBH(); }, { digits: 3 });
+  BI.onReseed(function (seed) { st.seed = seed; st.genes = null; st.sel = null; renderAll(); });
+
+  /* ---------- 2. BH ---------- */
+  function renderBH() {
+    var g = st.genes, sorted = g.slice().sort(function (a, b) { return a.p - b.p; });
+    var bonf = st.alpha / M;
+    var r = counts(function (x) { return x.p < st.alpha; }), b = counts(function (x) { return x.p < bonf; }), h = counts(function (x) { return x.padj <= st.q; });
+    var nTrue = r.tp + r.fn;
+    function row(pre, c) { BI.text(pre + "-n", BI.fmtInt(c.tp + c.fp)); BI.text(pre + "-fp", BI.fmtInt(c.fp)); BI.text(pre + "-fdp", (c.tp + c.fp) ? "yüzde " + BI.fmt(100 * c.fp / (c.tp + c.fp), 1) : "-"); BI.text(pre + "-pow", nTrue ? "yüzde " + BI.fmt(100 * c.tp / nTrue, 1) : "-"); }
+    row("r", r); row("b", b); row("h", h);
+    var K = 300, cv = document.getElementById("bhplot");
+    var ymax = Math.max(sorted[K - 1].p, K * st.q / M, st.alpha / M) * 1.15;
+    var p = BI.plot(cv, { x: [0, K], y: [0, ymax], pad: { l: 52, r: 8, t: 10, b: 40 } });
+    p.axes({ xticks: [0, 100, 200, 300], yticks: [0, ymax / 2, ymax].map(function (v) { return { v: v, l: BI.fmt(v, 3) }; }), grid: true, xlabel: "sıra (k)", ylabel: "p-değeri" });
+    p.line([[0, 0], [K, K * st.q / M]], p.col.c2, { width: 2 });
+    p.hline(bonf, p.col.c7, { dashed: true, label: "Bonferroni " + BI.fmtSci(bonf) });
+    for (var k = 0; k < K; k++) { var gg = sorted[k]; if (gg.isTrue) { p.dot(k + 1, gg.p, p.col.c1, 3); } else { p.dot(k + 1, gg.p, p.col.c1, 3, { hollow: true }); } }
+    p.text("BH çizgisi: k × FDR / m", K * 0.98, K * st.q / M, { align: "right", dy: -10, color: p.col.c2 });
+  }
+  BI.slider("q", function (v) { st.q = v; renderBH(); renderDe(); }, { digits: 2 });
+
+  /* ---------- 3. Volkan ---------- */
+  function passes(g) { return g.padj <= st.thrP && Math.abs(g.lfc) >= st.thrL; }
+  function fmtP(p) { return p < 0.001 ? BI.fmtSci(p) : BI.fmt(p, 3); }
+  function describe(x) {
+    var fc = Math.pow(2, Math.abs(x.lfc)), dir = x.lfc > 0 ? "artmıştır" : "azalmıştır";
+    var s = x.id + ": log2 kat değişimi " + BI.fmt(x.lfc, 2) + ", yani ifade yaklaşık " + BI.fmt(fc, 1) + " kat " + dir + "; standart hata " + BI.fmt(x.se, 2) + "; ham p " + fmtP(x.p) + "; padj " + fmtP(x.padj) + ". ";
+    s += passes(x) ? "Seçili eşik değerlerin ikisini de geçmektedir." : (x.padj <= st.thrP ? "FDR ölçütünü geçmekte, ancak kat değişimi eşik değerini geçmemektedir." : "FDR ölçütünü geçmemektedir; " + (x.se > 1 ? "standart hatası büyük olan düşük sayımlı bir gendir." : "kanıt yetersizdir."));
+    s += " (Simülasyonda bu gen gerçekte " + (x.isTrue ? "değişmektedir.)" : "değişmemektedir.)");
+    return s;
+  }
+  function renderDe() { renderVolcano(); }
+  var volcGeom = null, volcL = 6;
+  function renderVolcano() {
+    var g = st.genes, cv = document.getElementById("volcano");
+    var ymax = 0; g.forEach(function (x) { ymax = Math.max(ymax, -Math.log10(x.p)); }); ymax = Math.min(Math.ceil(ymax) + 1, 40);
+    var L = 6; g.forEach(function (x) { L = Math.max(L, Math.abs(x.lfc)); }); L = Math.min(Math.ceil(L), 12); volcL = L;
+    var p = BI.plot(cv, { x: [-L, L], y: [0, ymax], pad: { l: 44, r: 8, t: 10, b: 40 } });
+    volcGeom = p;
+    p.axes({ xticks: [-L, -L / 2, 0, L / 2, L].map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), yticks: [0, ymax / 2, ymax].map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), grid: true, xlabel: "log2 kat değişimi", ylabel: "−log10 p" });
+    p.vline(-st.thrL, p.col.text3, { dashed: true, width: 1 }); p.vline(st.thrL, p.col.text3, { dashed: true, width: 1 });
+    var maxP = 0; g.forEach(function (x) { if (x.padj <= st.thrP) { maxP = Math.max(maxP, x.p); } });
+    if (maxP > 0) { p.hline(-Math.log10(maxP), p.col.text3, { dashed: true, width: 1, label: "padj = " + BI.fmt(st.thrP, 3) + " sınırı" }); }
+    var n = 0, up = 0, down = 0, only = 0, selG = null;
+    g.forEach(function (x) {
+      var y = Math.min(-Math.log10(x.p), ymax), ok = passes(x);
+      if (ok) { n++; if (x.lfc > 0) { up++; } else { down++; } } else if (x.padj <= st.thrP) { only++; }
+      p.ctx.fillStyle = ok ? (x.lfc > 0 ? p.col.c2 : p.col.c1) : p.col.text3;
+      p.ctx.globalAlpha = ok ? 0.9 : 0.35;
+      p.ctx.beginPath(); p.ctx.arc(p.sx(Math.max(-volcL, Math.min(volcL, x.lfc))), p.sy(y), 2.2, 0, 2 * Math.PI); p.ctx.fill();
+      if (x.id === st.sel) { selG = x; }
+    });
+    p.ctx.globalAlpha = 1;
+    if (selG) { p.dot(Math.max(-volcL, Math.min(volcL, selG.lfc)), Math.min(-Math.log10(selG.p), ymax), p.col.c4, 8, { hollow: true }); p.dot(Math.max(-volcL, Math.min(volcL, selG.lfc)), Math.min(-Math.log10(selG.p), ymax), p.col.c4, 4); BI.text("de-cap", describe(selG)); }
+    else { BI.text("de-cap", "Bir nokta seçildiğinde genin değerleri burada görünür."); }
+    BI.text("v-n", BI.fmtInt(n)); BI.text("v-ud", BI.fmtInt(up) + " / " + BI.fmtInt(down)); BI.text("v-only", BI.fmtInt(only));
+  }
+  document.getElementById("volcano").addEventListener("click", function (ev) {
+    if (!volcGeom) { return; }
+    var r = ev.target.getBoundingClientRect(), px = ev.clientX - r.left, py = ev.clientY - r.top, best = null, bd = 100;
+    var ymax = volcGeom.y[1];
+    st.genes.forEach(function (x) { var dx = volcGeom.sx(Math.max(-volcL, Math.min(volcL, x.lfc))) - px, dy = volcGeom.sy(Math.min(-Math.log10(x.p), ymax)) - py, d = dx * dx + dy * dy; if (d < bd) { bd = d; best = x; } });
+    if (best) { st.sel = best.id; renderDe(); }
+  });
+  document.getElementById("volcano").addEventListener("keydown", function (e) {
+    if (e.key !== "Enter" && e.key !== " ") { return; }
+    e.preventDefault();
+    var top = st.genes.slice().sort(function (a, b) { return a.padj - b.padj; })[0]; st.sel = top.id; renderDe();
+  });
+  BI.slider("thr-p", function (v) { st.thrP = v; renderDe(); }, { digits: 3 });
+  BI.slider("thr-l", function (v) { st.thrL = v; renderDe(); }, { digits: 1 });
+  BI.onRedraw(renderAll);
+  renderAll();
+
+})();
+</script>
+</body>
+</html>

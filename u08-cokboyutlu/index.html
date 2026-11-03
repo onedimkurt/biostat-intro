@@ -1,0 +1,1233 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 8: Çok boyutlu veri: PCA ve kümeleme</title>
+<meta name="description" content="Örnekler arası uzaklık; temel bileşen analizi ve PCA grafiğini okuma; hiyerarşik kümeleme ve dendrogram; kütüphane boyutu normalizasyonu.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .dist canvas { height: 240px; }
+  .pca canvas { height: 280px; }
+  .pca .scree canvas { height: 160px; }
+  .clu canvas { height: 240px; }
+  .clu .hm canvas { height: 220px; }
+  .norm canvas { height: 220px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u07-regresyon/index.html">Önceki: Ünite 7</a><a href="../index.html">Dizin</a><a href="../u09-coklu-test/index.html">Sonraki: Ünite 9</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 8 · yaklaşık 70 dakika</p>
+    <h1>Çok boyutlu veri: PCA ve kümeleme</h1>
+    <p class="lead">Bu ünitede, yüzlerce örneği ve binlerce geni aynı anda görebilmek amacıyla verinin boyutunu düşürmeye (<span class="term">boyut düşürme</span>, <span class="en">dimensionality reduction</span>) bakıyoruz. Örnekler arası uzaklık, temel bileşen analizi (PCA) ve kümeleme, her omik çalışmasının kalite kontrol raporunda yer alan araçlardır; normalizasyon ise bu araçların anlamlı sonuç vermesinin ön koşuludur.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>İki örnek arasındaki uzaklığın binlerce genden nasıl tek bir sayıya indirgendiğini açıklayabilirsiniz.</li>
+      <li>Temel bileşen analizinin ne yaptığını ve bir PCA grafiğinde nelere bakılacağını söyleyebilirsiniz.</li>
+      <li>Bir dendrogramı okuyabilir ve kümelemenin rastgele veride de küme üreteceğini açıklayabilirsiniz.</li>
+      <li>Ham sayımların neden doğrudan karşılaştırılamayacağını ve normalizasyonun ne yaptığını açıklayabilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Örnekler arası uzaklık</a></li>
+      <li><a href="#b2">Temel bileşen analizi</a></li>
+      <li><a href="#b3">Hiyerarşik kümeleme ve dendrogram</a></li>
+      <li><a href="#b4">Normalizasyon</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Uzaklık ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Örnekler arası uzaklık</h2>
+    <p>Bu bölümde, "bu iki örnek birbirine ne kadar benziyor?" sorusunu sayıya dökebilmek amacıyla uzaklık kavramına bakıyoruz. İki gen ölçüldüğünde her örnek bir düzlemde bir noktadır ve iki örneğin benzerliği, noktalar arasındaki <span class="term">uzaklık</span> <span class="en">(distance)</span> ile ölçülür. Üç gende noktalar üç boyutlu uzaydadır; 20 000 gende ise 20 000 boyutlu bir uzayda. Gözümüzle göremesek de formül aynıdır: her gendeki farkın karesi alınır, toplanır ve karekökü alınır (<span class="term">Öklid uzaklığı</span>, <span class="en">Euclidean distance</span>). Dolayısıyla binlerce genden oluşan iki ifade profili, tek bir sayıyla karşılaştırılabilir hâle gelmektedir.</p>
+    <p>Uzaklığın birden fazla tanımı vardır ve seçim sonucu etkiler. Öklid uzaklığı mutlak düzey farklarına duyarlıdır: biri diğerinin iki katı ifade veren iki örnek, profilleri aynı biçimde olsa da uzak sayılır. <span class="term">Korelasyon uzaklığı</span> <span class="en">(correlation distance)</span>, yani 1 − r, ise yalnızca profilin biçimine bakar; ortak yükselip alçalan iki örnek, düzeyleri farklı olsa da yakındır. Ham sayımlarla hesaplanan uzaklıklar birkaç çok yüksek ifadeli gen tarafından belirlendiğinden, hesaplama neredeyse her zaman log ölçeğindeki (Ünite 2) ve normalize edilmiş (4. bölüm) veride yapılır. Örnekler arası <span class="term">uzaklık matrisi</span> <span class="en">(distance matrix)</span> kümelemenin doğrudan girdisidir; PCA ise aynı yapıyı veri matrisinin kendisinden çıkarır.</p>
+
+    <div class="card dist">
+      <h3 style="margin-top:0">Simülasyon: İki genden uzaklık matrisine</h3>
+      <p>Aşağıda altı örneğin iki gendeki log2 ifadesi bir düzlemde gösterilmektedir. Seçilen örneği kaydırıcılarla hareket ettirerek uzaklık matrisinin nasıl değiştiğini görebilirsiniz; koyu renk uzak, açık renk yakın anlamına gelmektedir.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="mv-label">Hareket ettirilecek örnek</span>
+          <div class="seg" id="mv-seg" role="group" aria-labelledby="mv-label">
+            <button type="button" data-value="0" aria-pressed="false">K1</button><button type="button" data-value="1" aria-pressed="false">K2</button><button type="button" data-value="2" aria-pressed="false">K3</button>
+            <button type="button" data-value="3" aria-pressed="false">T1</button><button type="button" data-value="4" aria-pressed="false">T2</button><button type="button" data-value="5" aria-pressed="true">T3</button>
+          </div>
+        </div>
+        <div class="slider-wrap"><label for="mx">Gen A ifadesi</label><output id="mx-out" for="mx">9,0</output><input type="range" id="mx" min="2" max="12" step="0.1" value="9"></div>
+        <div class="slider-wrap"><label for="my">Gen B ifadesi</label><output id="my-out" for="my">9,0</output><input type="range" id="my" min="2" max="12" step="0.1" value="9"></div>
+        <div class="control-row">
+          <span class="block" id="dm-label">Uzaklık tanımı</span>
+          <div class="seg" id="dm-seg" role="group" aria-labelledby="dm-label">
+            <button type="button" data-value="euclid" aria-pressed="true">Öklid</button>
+            <button type="button" data-value="corr" aria-pressed="false">1 − korelasyon (20 gen üzerinden)</button>
+          </div>
+        </div>
+      </div>
+      <div class="charts two">
+        <div class="chart"><h4>Gen A ve gen B düzlemi</h4><canvas id="plane" role="img" aria-label="Altı örneğin iki gendeki konumu; seçilen örnek halkalı."></canvas></div>
+        <div class="chart"><h4>Uzaklık matrisi</h4><canvas id="dmat" role="img" aria-label="Altı örnek arası uzaklık matrisi; koyu renk uzak."></canvas><p class="caption" id="dmat-cap"></p></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Seçilen örneği kendi grubundan uzaklaştırdığımızda matriste o örneğin satırı ve sütunu koyulaşmaktadır. Korelasyon uzaklığına geçildiğinde matris, iki gen yerine 20 genlik profillerin biçimine göre hesaplanır ve 0 ile 2 arasında değer alır (1'in üstü, ters yönde değişen profiller demektir); kaydırıcılar profilin 20 geninden yalnızca ikisini oynatır; ancak büyük bir kaydırma bu iki geni profile hâkim kıldığından korelasyon uzaklığı da belirgin biçimde değişmektedir (örneğin T3 kontrol grubunun yanına taşındığında T1 ve T2'ye uzaklığı 0,1'den 0,6 dolayına çıkar). Buna karşın bir örneğin tüm genlerinin birlikte iki katına çıkması Öklid uzaklığını büyütürken korelasyon uzaklığını hiç değiştirmezdi. Hangi uzaklığın "doğru" olduğu araştırma sorusuna bağlıdır: toplam ifade farkı önemliyse Öklid, profil biçimi önemliyse korelasyon uzaklığı tercih edilir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Kalite kontrolünde örnekler arası uzaklık heatmap'i</h3>
+      <p>Bir RNA-seq analizinin kalite kontrol raporunda, tüm örnek çiftleri arasındaki uzaklıkların heatmap'i yer alır. Beklenti, aynı koşuldaki örneklerin birbirine yakın (açık), farklı koşulların ise uzak (koyu) görünmesidir. Bu heatmap'te tek bir örneğin diğer tüm örneklere uzak görünmesi (koyu bir satır ve sütun), o örneğin teknik bir sorunu olduğunu (düşük kalite, kontaminasyon, etiket karışıklığı) düşündürür; iki koşulun değil de iki işlem gününün ayrışması ise batch etkisinin ilk işaretidir. Örnekler arası uzaklıklar, bir sonraki bölümdeki PCA grafiğinin iki boyutta göstermeye çalıştığı yapının ham hâlidir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. İki örneğin 20 000 gendeki ifade profilleri biçim olarak aynıdır; ancak birinde tüm değerler diğerinin iki katıdır. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>Öklid uzaklığı ve korelasyon uzaklığı sıfırdır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>Korelasyon uzaklığı sıfıra yakındır; Öklid uzaklığı ise büyüktür.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>Öklid uzaklığı sıfırdır; korelasyon uzaklığı büyüktür.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>Uzaklık 20 000 gende hesaplanamaz.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Korelasyon yalnızca profilin biçimine bakar; iki profil orantılı olduğundan r = 1 ve uzaklık 0'dır. Öklid uzaklığı ise her gendeki mutlak farkı toplar ve büyük çıkar. Uzaklık her boyut sayısında aynı formülle hesaplanır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Korelasyon uzaklığı sıfıra yakın, Öklid uzaklığı büyük. Öklid, mutlak düzey farklarını ölçer ve iki kat fark büyük bir uzaklıktır; korelasyon orantılı profilleri özdeş sayar. Boyut sayısı formülü değiştirmez.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 2. Örnekler arası uzaklık heatmap'inde bir örneğin satırı ve sütunu, kendi koşulundaki örnekler dâhil diğer tüm örneklere karşı koyu görünmektedir. İlk akla gelmesi gereken açıklama hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Bu örnek biyolojik olarak en ilginç örnektir.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>Uzaklık yanlış hesaplanmıştır.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Örnekte teknik bir sorun (kalite, kontaminasyon, etiket karışıklığı) olabilir; incelenmelidir.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Koşul etkisi çok güçlüdür.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Koşul etkisi, aynı koşuldaki örnekleri birbirine yaklaştırır; diğer tüm örneklere uzak tek bir örnek koşulla değil, o örneğe özgü bir durumla açıklanır. Bu çoğu zaman teknik bir sorundur ve ileri analizden önce araştırılmalıdır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Teknik bir sorun olabilir. Tek bir örneğin diğer tüm örneklerden uzak olması koşul etkisini değil, örneğe özgü bir farkı gösterir; en sık neden teknik sorunlardır. Örnek "ilginç" olabilir, ancak bu yorumdan önce teknik nedenlerin dışlanması gerekir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. PCA ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Temel bileşen analizi</h2>
+    <p>Bu bölümde, 20 000 boyutlu bir uzaydaki örnekleri iki boyutlu bir grafikte görebilmek amacıyla temel bileşen analizine bakıyoruz. <span class="term">Temel bileşen analizi</span> <span class="en">(principal component analysis, PCA)</span>, verideki değişkenliğin en büyük kısmını yakalayan yeni eksenler bulur. Birinci <span class="term">bileşen</span> <span class="en">(component)</span> (PC1), örneklerin en çok ayrıştığı yöndür; ikinci bileşen (PC2), birinciye dik olan yönler arasında en çok ayrıştıran yöndür ve sonraki bileşenler aynı kuralla sırayla bulunur. Her bileşen, orijinal genlerin ağırlıklı bir toplamıdır; bir genin bir bileşendeki ağırlığına o genin <span class="term">yükü</span> <span class="en">(loading)</span> denir. İlk iki bileşen çoğu zaman toplam değişkenliğin büyük bir kısmını taşıdığından, örnekleri PC1-PC2 düzleminde çizmek, 20 000 boyutlu yapının anlamlı bir özetini vermektedir.</p>
+    <p>Bir PCA grafiği okunurken üç soruya bakılır. Birincisi, her bileşenin açıkladığı varyans yüzdesidir: PC1 yüzde 60 açıklıyorsa grafik yapıyı iyi temsil eder; PC1 ve PC2 toplamda yüzde 15 açıklıyorsa yapı daha dağınıktır. İkincisi, örneklerin neye göre ayrıştığıdır: aynı grafik koşula, batch'e ve cinsiyete göre renklendirildiğinde PC1'in koşulu mu yoksa işlem gününü mü izlediği görülür; batch etkisinin keşfi çoğu zaman bu adımda gerçekleşmektedir. Üçüncüsü, diğerlerinden uzak düşen örneklerdir; bunlar 1. bölümdeki teknik sorun adaylarıdır. Burada dikkat edilmesi gereken nokta, PCA'nın eksenlerinin biyolojik bir anlamla değil, varyans ölçütüyle seçilmesidir: PC1 bazen biyolojik sinyali, bazen de batch etkisini ya da kütüphane boyutu farkını yansıtmaktadır.</p>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Veri önce her gen için ortalanır (gen ortalaması çıkarılır). Birinci bileşen, örneklerin üzerine izdüşümü alındığında varyansı en büyük yapan birim vektördür; ikinci bileşen, birinciye dik olanlar arasında aynı ölçütü sağlayan vektördür. Matematiksel olarak bileşenler, genler arası kovaryans matrisinin özvektörleridir (eigenvectors) ve her bileşenin açıkladığı varyans ilgili özdeğerdir (eigenvalue). Toplam varyans özdeğerlerin toplamı olduğundan "açıklanan varyans yüzdesi" her özdeğerin bu toplama oranıdır. Genler çok farklı ölçeklerde ölçülmüşse PCA'dan önce her genin standartlaştırılması (z-skoru) gerekebilir; aksi hâlde en yüksek varyanslı birkaç gen ilk bileşeni tek başına belirler.</p>
+    </details>
+
+    <div class="card pca">
+      <h3 style="margin-top:0">Simülasyon: Eksen döndürme ve iki genden PCA</h3>
+      <p>Önce iki genle başlıyoruz: 40 örneğin gen A ve gen B ifadeleri bir düzlemdedir. Bir ekseni döndürerek örneklerin bu eksen üzerindeki <span class="term">izdüşümlerinin</span> <span class="en">(projection)</span> varyansını izleyebilir, varyansı en büyük yapan açıyı arayabilirsiniz; PCA tam olarak bu açıyı hesaplamaktadır.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="ang">Eksenin açısı (derece)</label><output id="ang-out" for="ang">0</output><input type="range" id="ang" min="0" max="180" step="1" value="0"></div>
+        <div class="control-row"><div class="seg"><button type="button" class="primary" id="pc1btn">PC1 açısına geçiniz</button><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>Örnekler ve <span class="swatch" style="background:var(--c2)"></span> seçilen eksen (noktaların eksen üzerindeki izdüşümleri)</h4>
+        <canvas id="rot" role="img" aria-label="İki gen düzlemindeki örnekler, döndürülebilir eksen ve izdüşümler."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">İzdüşümlerin varyansı</div><div class="v" id="pv">-</div></div>
+        <div class="stat"><div class="k">Toplam varyans (gen A + gen B)</div><div class="v" id="tv">-</div></div>
+        <div class="stat"><div class="k">Bu eksenin açıkladığı pay</div><div class="v" id="pp">-</div></div>
+        <div class="stat"><div class="k">PC1 açısı ve payı</div><div class="v" id="pc1">-</div></div>
+      </div>
+    </div>
+
+    <div class="card pca">
+      <h3 style="margin-top:0">Simülasyon: 40 örnek, 50 gen, PCA grafiği</h3>
+      <p>Şimdi 50 genlik temsili bir veri setine geçiyoruz: 40 örnek iki dokudan gelmektedir, iki ayrı günde işlenmiştir ve her iki cinsiyetten bireyler içermektedir. Batch etkisinin ve doku etkisinin büyüklüğünü belirleyip grafiği farklı değişkenlere göre renklendirerek PC1 ve PC2'nin neyi izlediğini görebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="tis">Doku etkisi (etkilenen genlerde log2 fark)</label><output id="tis-out" for="tis">1,5</output><input type="range" id="tis" min="0" max="3" step="0.25" value="1.5"></div>
+        <div class="slider-wrap"><label for="bat">Batch etkisi (etkilenen genlerde log2 fark)</label><output id="bat-out" for="bat">0,5</output><input type="range" id="bat" min="0" max="3" step="0.25" value="0.5"></div>
+        <div class="control-row">
+          <span class="block" id="col-label">Renklendirme</span>
+          <div class="seg" id="col-seg" role="group" aria-labelledby="col-label">
+            <button type="button" data-value="tissue" aria-pressed="true">Doku</button>
+            <button type="button" data-value="batch" aria-pressed="false">Batch (işlem günü)</button>
+            <button type="button" data-value="sex" aria-pressed="false">Cinsiyet</button>
+          </div>
+        </div>
+      </div>
+      <div class="charts two">
+        <div class="chart"><h4>PC1 ve PC2</h4><canvas id="pcaplot" role="img" aria-label="Örneklerin PC1-PC2 düzlemindeki konumu, seçilen değişkene göre renkli ve biçimli."></canvas><div class="legend" id="pca-legend"></div></div>
+        <div class="chart scree"><h4>Bileşenlerin açıkladığı varyans</h4><canvas id="scree" role="img" aria-label="İlk altı bileşenin açıkladığı varyans yüzdeleri."></canvas><p class="caption" id="scree-cap"></p></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Batch etkisi küçükken PC1 dokuyu izler ve iki doku grafikte iki küme olarak ayrılır; cinsiyete göre renklendirdiğimizde ise belirgin bir ayrışma görmüyoruz, çünkü bu veride cinsiyet yalnızca birkaç geni etkilemektedir. Batch etkisini doku etkisinin üzerine çıkardığımızda PC1 artık işlem gününü izlemektedir; dokuya göre renklendirilmiş grafik "karışık" görünür, batch'e göre renklendirilmiş grafik ise temiz iki küme verir. Aynı grafiğe hangi değişkenle bakıldığı, yorumun tamamını değiştirmektedir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: PC1'in kütüphane boyutunu izlemesi</h3>
+      <p>Bir RNA-seq çalışmasında PCA grafiğinde örnekler PC1 boyunca belirgin biçimde iki kümeye ayrılmış ve araştırmacı bunu tedavi etkisi olarak yorumlamak istemiştir. Örneklerin PC1 skorları toplam okuma sayısıyla (kütüphane boyutuyla) karşılaştırıldığında neredeyse mükemmel bir korelasyon görülmüş; iki "küme", derin ve sığ sekanslanmış örneklerden oluşmaktadır. Veri normalize edilip log ölçeğine alındıktan sonra aynı PCA'da PC1 tedaviyi izlemeye başlamıştır. Bu nedenle PCA her zaman normalize edilmiş, log ölçeğindeki veride yapılır ve ilk bileşenler teknik değişkenlerle (kütüphane boyutu, RNA kalitesi, batch) karşılaştırılır; bir bileşenin bir teknik değişkenle korelasyon göstermesi, o bileşenin biyolojik değil teknik olduğunu düşündürmektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 3. Bir PCA grafiğinde PC1 varyansın yüzde 45'ini, PC2 yüzde 8'ini açıklamaktadır. Örnekler PC1 boyunca ikiye ayrılmaktadır. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>PC1 kesinlikle tedavi etkisini göstermektedir.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>Grafik yapıyı iyi temsil etmemektedir, çünkü PC2 küçüktür.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Verideki en büyük değişkenlik kaynağı örnekleri ikiye ayırmaktadır; bunun tedavi mi, batch mi yoksa başka bir teknik etken mi olduğu, grafik bu değişkenlere göre renklendirilerek anlaşılır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>İki küme arasındaki fark yüzde 45'tir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. PCA varyansı bulur, nedenini söylemez. PC1'in büyük olması güçlü bir yapı olduğunu gösterir; yapının kaynağı yalnızca örnek bilgileriyle karşılaştırılarak anlaşılır. "Yüzde 45" iki küme arasındaki farkın değil, bileşenin açıkladığı varyansın ölçüsüdür.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: PC1 en büyük değişkenlik kaynağını yakalar; kaynağın ne olduğu grafik örnek bilgilerine göre renklendirilerek anlaşılır. PC1'in tedaviyi yansıttığı kesin değildir; batch etkisi ya da kütüphane boyutu da olabilir. PC2'nin küçük olması grafiğin kötü olduğunu değil, ikinci bir yapının zayıf olduğunu gösterir.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 4. Bir PCA grafiği batch'e göre renklendirildiğinde iki batch PC1 boyunca tamamen ayrışmakta, koşula göre renklendirildiğinde ise koşullar iç içe görünmektedir. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Verideki en büyük değişkenlik batch etkisidir; koşul etkisi ya küçüktür ya da batch etkisinin gölgesinde kalmaktadır ve tasarım dengeliyse batch modele eklenerek düzeltilmelidir.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>Koşulun hiçbir etkisi yoktur.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>PCA yanlış hesaplanmıştır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>Batch etkisi biyolojik bir bulgudur.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. PC1 varyansın en büyük kaynağını gösterir; burada bu batch'tir. Koşul etkisi daha küçük bileşenlerde olabilir ve Ünite 7'deki gibi batch kovaryatıyla düzeltildikten sonra ortaya çıkabilir. Batch etkisi teknik bir olgudur, biyolojik bulgu değildir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: En büyük değişkenlik batch'tir; koşul etkisi gölgede kalıyor olabilir ve düzeltme gerekir. Koşulun etkisiz olduğu sonucu çıkarılamaz; PC1'de görünmemesi, daha küçük olduğunu gösterir. Bu keşif, PCA'nın işini doğru yaptığını göstermektedir: en büyük değişkenlik kaynağını ortaya çıkarmıştır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Kümeleme ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Hiyerarşik kümeleme ve dendrogram</h2>
+    <p>Bu bölümde, örnekleri (ya da genleri) benzerliklerine göre gruplara ayırabilmek amacıyla kümelemeye bakıyoruz. <span class="term">Kümeleme</span> <span class="en">(clustering)</span>, önceden etiket verilmeden, yalnızca uzaklık matrisine dayanarak <span class="term">kümeler</span> <span class="en">(clusters)</span> oluşturur. <span class="term">Hiyerarşik kümeleme</span> <span class="en">(hierarchical clustering)</span> en yakın iki örneği birleştirir, oluşan grubu tek bir birim gibi ele alır ve en yakın çifti birleştirmeyi tüm örnekler tek bir ağaçta toplanana dek sürdürür. Bu ağaç <span class="term">dendrogram</span> olarak adlandırılır: yaprakları örnekler, dalların birleştiği yükseklik ise birleşen grupların uzaklığıdır. Ağacı belirli bir yükseklikten kestiğimizde o yükseklikteki dal sayısı kadar küme elde edilir; <span class="term">kesme yüksekliği</span> <span class="en">(cut height)</span> analistin seçimidir.</p>
+    <p>İki uyarı özellikle önemlidir. Birincisi, kümeleme algoritmaları her veride küme üretir; hiçbir yapı içermeyen tamamen rastgele veride bile dendrogram dallanır ve kesilirse "kümeler" verir. Dolayısıyla bir kümenin gerçek olup olmadığı ayrıca sınanmalıdır: Ünite 4'teki bootstrap mantığıyla veri yeniden örneklenip aynı kümelerin yeniden oluşup oluşmadığına bakılır (<span class="term">küme kararlılığı</span>, <span class="en">cluster stability</span>). İkincisi, sonuç uzaklık tanımına ve <span class="term">bağlantı yöntemine</span> <span class="en">(linkage)</span>, yani gruplar arası uzaklığın nasıl ölçüldüğüne (en yakın komşu, en uzak komşu ya da ortalama bağlantı) bağlıdır; farklı seçimler farklı ağaçlar verebilir. Ünite 2'deki heatmap'lerin satır ve sütun sırası çoğu zaman bu dendrogramlardan gelmektedir ve heatmap'teki "bloklar", kümelerin görsel karşılığıdır.</p>
+
+    <div class="card clu">
+      <h3 style="margin-top:0">Simülasyon: Dendrogram ve kesme yüksekliği</h3>
+      <p>On iki örnek ve 30 gen içeren temsili bir veri setiyle ortalama bağlantılı hiyerarşik kümeleme yapıyoruz. Verideki gerçek yapıyı (grup sayısını) seçebilir, ağacı farklı yüksekliklerden keserek küme sayısının nasıl değiştiğini görebilir ve "Yeni örneklem" ile kümelerin ne kadar kararlı olduğunu izleyebilirsiniz. "Yapı yok" seçeneği, tamamen rastgele veride de dendrogramın dallandığını göstermektedir.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="str-label">Gerçek yapı</span>
+          <div class="seg" id="str-seg" role="group" aria-labelledby="str-label">
+            <button type="button" data-value="0" aria-pressed="false">Yapı yok (yalnızca gürültü)</button>
+            <button type="button" data-value="2" aria-pressed="true">2 grup</button>
+            <button type="button" data-value="3" aria-pressed="false">3 grup</button>
+          </div>
+        </div>
+        <div class="slider-wrap"><label for="cut">Kesme yüksekliği</label><output id="cut-out" for="cut">10,0</output><input type="range" id="cut" min="0" max="15" step="0.1" value="10"></div>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="charts two">
+        <div class="chart"><h4>Dendrogram</h4><canvas id="dendro" role="img" aria-label="Hiyerarşik kümeleme ağacı; kesikli yatay çizgi kesme yüksekliği; yapraklar gerçek gruba göre renkli."></canvas><p class="caption" id="dendro-cap"></p></div>
+        <div class="chart hm"><h4>Heatmap (sütunlar dendrogram sırasında)</h4><canvas id="chm" role="img" aria-label="30 gen × 12 örnek heatmap, sütunlar dendrogram sırasında."></canvas></div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Kesme yüksekliğinde küme sayısı</div><div class="v" id="nclu">-</div></div>
+        <div class="stat"><div class="k">Gerçek grup sayısı</div><div class="v" id="ntrue">-</div></div>
+        <div class="stat"><div class="k">Kümeler gerçek gruplarla uyumlu mu?</div><div class="v" id="agree">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> İki gruplu veride dendrogramın üst kısmında uzun bir dal çifti görülür ve bu yükseklikten kesildiğinde iki küme gerçek gruplarla örtüşür. "Yapı yok" seçildiğinde dendrogram yine dallanmaktadır ve kesme yüksekliği düşürüldükçe istediğimiz kadar "küme" elde ederiz; ancak "Yeni örneklem" ile kümelerin üyeleri tamamen değişir. Gerçek bir yapıda ise kümeler yeni örneklemlerde büyük ölçüde korunmaktadır; kararlılık, yapının varlığının işaretidir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Tümör alt tipleri</h3>
+      <p>Meme kanseri ifade profillerinin hiyerarşik kümelenmesi, bugün klinikte kullanılan moleküler alt tiplerin (luminal A, luminal B, HER2 ile zenginleşmiş, bazal benzeri) keşfedilmesini sağlamıştır. Bu kümelerin gerçek olduğuna, bağımsız hasta kohortlarında aynı kümelerin yeniden ortaya çıkması ve kümelerin sağkalım gibi klinik sonuçlarla ilişkili olması sayesinde inanılmıştır; yalnızca bir dendrogramın dallanması yeterli olmamıştır. Aynı dönemde yayımlanan pek çok başka "alt tip" ise ikinci bir kohortta tekrarlanamamış ve unutulmuştur. Dolayısıyla bir kümeleme sonucunu değerlendirirken sorulacak ilk soru, kümelerin bağımsız veride ve yeniden örneklemede ne kadar kararlı olduğudur.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 5. Bir araştırmacı 30 hastanın ifade verisini kümelemiş, dendrogramı 4 kümeye kesmiş ve "4 hasta alt grubu keşfettik" demiştir. En doğru değerlendirme hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>Dendrogram 4 dala ayrıldığına göre 4 alt grup vardır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>Her veri kümelenebilir; alt grupların gerçekliği, kümelerin yeniden örneklemede ve bağımsız bir kohortta kararlı olup olmadığıyla sınanmalıdır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>Küme sayısı her zaman 2 olmalıdır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Hiyerarşik kümeleme hasta verisinde kullanılamaz.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Kesme yüksekliği keyfî bir seçimdir ve rastgele veri de 4 kümeye kesilebilir. Kararlılık (bootstrap) ve bağımsız doğrulama, bir alt grubun gerçekliğinin ölçütüdür.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Kümelerin kararlılığı ve bağımsız doğrulama gerekir. Dendrogramın dallanması yapı kanıtı değildir; yalnızca gürültü içeren veri de dallanır. Küme sayısı için evrensel bir kural yoktur ve hiyerarşik kümeleme hasta verisinde yaygın biçimde kullanılmaktadır.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 6. Bir dendrogramda iki örnek çok alçak bir yükseklikte, bir başka ikili ise çok yüksekte birleşmektedir. Bu ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Yüksekte birleşen ikili birbirine daha çok benzemektedir.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Yükseklik örneklerin ifade düzeyini gösterir.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Alçakta birleşen ikili birbirine çok benzer (uzaklık küçük); yüksekte birleşenler ise birbirinden uzak gruplardır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Yükseklik örneklerin işlenme sırasını gösterir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Dendrogramda dikey eksen uzaklıktır: dallar ne kadar alçakta birleşiyorsa birleşen gruplar o kadar yakındır. Yatay sıralama ise büyük ölçüde keyfîdir ve bilgi taşımaz.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Alçakta birleşenler benzerdir. Dendrogramın dikey ekseni ifade düzeyi ya da işlem sırası değil, birleşen grupların uzaklığıdır; yüksekte birleşmek uzak olmak demektir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 4. Normalizasyon ============ -->
+  <section aria-labelledby="b4">
+    <h2 id="b4">4. Normalizasyon</h2>
+    <p>Bu bölümde, farklı örneklerdeki ham sayımların neden doğrudan karşılaştırılamayacağını ve nasıl karşılaştırılabilir kılındığını görebilmek amacıyla normalizasyona bakıyoruz. İki örnekten biri 30 milyon, diğeri 15 milyon okuma vermişse ilkinde her gen yaklaşık iki kat daha fazla okuma alacaktır; bu fark biyolojik değil tekniktir ve <span class="term">kütüphane boyutu</span> <span class="en">(library size)</span> farkı olarak adlandırılır. <span class="term">Normalizasyon</span> <span class="en">(normalization)</span>, örnekler arasındaki bu tür teknik ölçek farklarını giderme işlemidir. En basit biçimi, her örneğin sayımlarını kendi toplam okuma sayısına bölüp milyonla çarpmaktır (milyon başına sayım, CPM). Daha dayanıklı yöntemler (DESeq2'nin <span class="term">medyan oranı yöntemi</span> <span class="en">(median-of-ratios)</span>, edgeR'ın kırpılmış ortalama temelli TMM yöntemi), birkaç çok yüksek ifadeli genin toplama hâkim olmasını önlemek için medyan ya da kırpılmış ortalama temelli <span class="term">ölçek faktörleri</span> <span class="en">(size factors)</span> hesaplamaktadır.</p>
+    <p>Normalizasyonun ne yapmadığını bilmek de önemlidir. Kütüphane boyutu normalizasyonu örnekler arası ölçeği eşitler; genler arası farkları (uzun genlerin daha çok okuma alması gibi) düzeltmez ve batch etkisini gidermez; batch etkisi Ünite 7'deki gibi modelde ele alınır. Normalize edilmiş değer artık tam sayı değildir; bu nedenle <span class="term">diferansiyel ifade</span> <span class="en">(differential expression)</span> araçları normalize edilmiş değerleri değil, ham sayımları ve ölçek faktörlerini birlikte kullanarak sayım modeliyle (Ünite 3, negatif binom) çalışmaktadır. PCA, kümeleme ve heatmap gibi görselleştirmeler ise normalize edilmiş, log ölçeğine alınmış değerlerle yapılır.</p>
+
+    <div class="card norm">
+      <h3 style="margin-top:0">Simülasyon: Kütüphane boyutu ve normalizasyon</h3>
+      <p>Altı örnek aynı koşuldan gelmekte ve biyolojik olarak birbirine benzemektedir; ancak kütüphane boyutları farklıdır. Bir örneğin okuma derinliğini değiştirip ham sayımlarla normalize edilmiş değerleri karşılaştırabilirsiniz. Her kutu grafiği bir örneğin 200 genindeki değerlerin dağılımıdır.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="lib">Örnek 3'ün kütüphane boyutu çarpanı</label><output id="lib-out" for="lib">0,5</output><input type="range" id="lib" min="0.25" max="3" step="0.05" value="0.5"></div>
+        <div class="control-row">
+          <span class="block" id="nm-label">Gösterilen değer</span>
+          <div class="seg" id="nm-seg" role="group" aria-labelledby="nm-label">
+            <button type="button" data-value="raw" aria-pressed="true">Ham sayım, log2</button>
+            <button type="button" data-value="cpm" aria-pressed="false">Normalize (medyan oranı), log2</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart">
+        <h4>Örnek başına 200 genin dağılımı</h4>
+        <canvas id="normc" role="img" aria-label="Altı örneğin kutu grafikleri; örnek 3 turuncu."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Örnek 3'ün ölçek faktörü</div><div class="v" id="sf">-</div></div>
+        <div class="stat"><div class="k">Ham veride örnek 3 ile diğerlerinin medyan farkı (log2)</div><div class="v" id="rawdiff">-</div></div>
+        <div class="stat"><div class="k">Normalize veride aynı fark</div><div class="v" id="normdiff">-</div></div>
+        <div class="stat"><div class="k">"Diferansiyel" görünen gen sayısı (ham veri, eşik değer: 2 kat)</div><div class="v" id="fakede">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Ham veride örnek 3'ün kutusu diğerlerinin altında kalmakta ve onlarca gen "iki kat düşük" görünmektedir (çarpan 0,5 iken 200 genin 70-80 kadarı; çarpan 1 iken yalnızca gürültüden kaynaklanan birkaç gen); oysa örnek biyolojik olarak diğerleriyle aynıdır. Normalize edildiğinde kutular hizalanır ve sahte farklar kaybolur. Burada önemli olan, normalizasyonun verideki bilgiyi değiştirmemesi, yalnızca örnekler arası ölçeği eşitlemesidir; biyolojik farklar normalizasyondan sonra da yerinde kalır.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Normalizasyonun çalışmadığı durum</h3>
+      <p>Kütüphane boyutu normalizasyonu, örneklerin büyük çoğunluğunda genlerin ifadesinin değişmediğini varsayar; ölçek faktörü bu "değişmeyen çoğunluk" üzerinden hesaplanır. Bir hücre hattında küresel bir transkripsiyon artışına yol açan bir tedavi (örn. MYC aktivasyonu) bu varsayımı bozar: genlerin çoğunun ifadesi gerçekten artmıştır, ancak normalizasyon bu artışı "teknik" sayıp siler ve sonuçta tedavi etkisi olduğundan küçük tahmin edilir, hatta bazı genler yanlışlıkla azalmış görünür. Böyle durumlarda bilinen miktarda eklenen dış kontrol RNA'ları (spike-in) ile normalizasyon yapılır. Bu örnek, her istatistiksel aracın bir varsayıma dayandığını ve varsayımın biyolojik olarak sorgulanması gerektiğini hatırlatmaktadır.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 7. İki örnekte bir genin ham okuma sayısı 600 ve 300'dür. Örneklerin toplam okuma sayıları sırasıyla 40 milyon ve 20 milyondur. Genin ifadesi için en doğru yorum hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q7" value="a"><span>İfade birinci örnekte iki kat yüksektir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="b"><span>Kütüphane boyutuna göre düzeltildiğinde (milyon başına 15 ve 15) iki örnekte ifade aynıdır.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="c"><span>İfade ikinci örnekte iki kat yüksektir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="d"><span>Karşılaştırma için gen uzunluğu gerekir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. 600 / 40 = 15 ve 300 / 20 = 15 milyon başına sayım; fark tamamen okuma derinliğinden gelmektedir. Gen uzunluğu, aynı genin iki örnek arasında karşılaştırılmasında gerekmez; farklı genleri birbiriyle karşılaştırırken gerekir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Normalize edildiğinde ifade aynıdır. Ham sayımlardaki iki kat fark, kütüphane boyutundaki iki kat farkla tamamen açıklanmaktadır. Aynı genin örnekler arası karşılaştırmasında gen uzunluğu ortak olduğundan düzeltme gerektirmez.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 8. Kütüphane boyutu normalizasyonu hangisini yapmaz?</legend>
+        <label class="opt"><input type="radio" name="q8" value="a"><span>Örnekler arasındaki okuma derinliği farkını giderir.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="b"><span>Örneklerin kutu grafiklerini hizalar.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="c"><span>Batch etkisini giderir.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="d"><span>PCA ve heatmap için karşılaştırılabilir değerler üretir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Normalizasyon yalnızca örnekler arası ölçek farkını eşitler. Batch etkisi genden gene farklı yönde ve büyüklükte olabilen bir olgudur; tek bir ölçek faktörüyle giderilemez ve Ünite 7'deki gibi kovaryat olarak modellenir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Batch etkisini gidermez. Kütüphane boyutu normalizasyonu her örneği tek bir sayıyla ölçekler; derinlik farkını giderir, kutuları hizalar ve görselleştirme için uygun değerler üretir. Batch etkisi ise genden gene değişir ve ayrı bir modelleme gerektirir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Uzaklık, binlerce gendeki farkı tek bir sayıya indirger; Öklid düzeye, korelasyon biçime duyarlıdır ve her ikisi de log ölçeğindeki normalize veride hesaplanır.</li>
+        <li>PCA, varyansı en çok yakalayan eksenleri bulur; PC1 en büyük değişkenlik kaynağıdır ve bu kaynak biyolojik de teknik de olabilir. Grafik koşul, batch ve teknik değişkenlere göre renklendirilerek okunur.</li>
+        <li>Hiyerarşik kümeleme bir dendrogram üretir; kesme yüksekliği keyfîdir, rastgele veri de kümelenir ve kümelerin gerçekliği kararlılıkla sınanır.</li>
+        <li>Normalizasyon örnekler arası kütüphane boyutu farkını giderir; batch etkisini gidermez ve "çoğu gen değişmez" varsayımına dayanır.</li>
+      </ul>
+    </div>
+    <p class="meta">Sonraki iki ünitede, bu kursta öğrenilen her şeyi bir araya getirerek binlerce gen için aynı anda yapılan testleri, yanlış keşif oranını ve volkan grafiğini (Ünite 9), ardından bir diferansiyel ifade sonuç tablosunun kodsuz okunmasını (Ünite 10) ele alıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u07-regresyon/index.html">Önceki: Ünite 7</a><a href="../index.html">Dizin</a><a href="../u09-coklu-test/index.html">Sonraki: Ünite 9, Binlerce test birden</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 8. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var NAMES = ["K1", "K2", "K3", "T1", "T2", "T3"];
+  function seqColor(t, dark) { var a = dark ? [38, 52, 72] : [232, 240, 250], b = dark ? [120, 175, 240] : [13, 54, 107]; return "rgb(" + Math.round(a[0] + (b[0] - a[0]) * t) + "," + Math.round(a[1] + (b[1] - a[1]) * t) + "," + Math.round(a[2] + (b[2] - a[2]) * t) + ")"; }
+  function isDark() { return window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches; }
+
+  /* ---------- 1. Uzaklık ---------- */
+  var ds = { sel: 5, metric: "euclid", pts: [[4, 5], [4.5, 4.2], [3.6, 5.6], [8.5, 8.8], [9.2, 8.1], [9, 9]], profiles: null };
+  (function () { // 20 genlik profiller: ilk iki gen düzlemdeki konum, diğer 18 gen grup ortalaması + gürültü
+    var rng = BI.rng(BI.DEFAULT_SEED + 51); ds.profiles = [];
+    for (var i = 0; i < 6; i++) { var row = []; for (var g = 0; g < 18; g++) { row.push((i < 3 ? 6 : 8) + (g % 2 ? 1 : -1) * (i < 3 ? 0.8 : -0.8) + 0.4 * BI.randn(rng)); } ds.profiles.push(row); }
+  })();
+  function fullProfile(i) { return [ds.pts[i][0], ds.pts[i][1]].concat(ds.profiles[i]); }
+  function dist(i, j) {
+    if (ds.metric === "euclid") { var dx = ds.pts[i][0] - ds.pts[j][0], dy = ds.pts[i][1] - ds.pts[j][1]; return Math.sqrt(dx * dx + dy * dy); }
+    return 1 - BI.corr(fullProfile(i), fullProfile(j));
+  }
+  var mxS, myS;
+  function renderDist() {
+    var c = document.getElementById("plane");
+    var p = BI.plot(c, { x: [2, 12], y: [2, 12], pad: { l: 36, r: 10, t: 10, b: 40 } });
+    p.axes({ xticks: [2, 7, 12], yticks: [2, 7, 12], grid: true, xlabel: "gen A", ylabel: "gen B" });
+    for (var i = 0; i < 6; i++) {
+      p.dot(ds.pts[i][0], ds.pts[i][1], i < 3 ? p.col.c1 : p.col.c2, i === ds.sel ? 8 : 6, { ring: true });
+      p.text(NAMES[i], ds.pts[i][0], ds.pts[i][1], { dx: 9, dy: -9 });
+    }
+    if (ds.metric === "euclid") { for (i = 0; i < 6; i++) { if (i !== ds.sel) { p.line([ds.pts[ds.sel], ds.pts[i]], p.col.text3, { width: 1, dashed: true }); } } }
+    var m = document.getElementById("dmat");
+    var q = BI.plot(m, { x: [0, 6], y: [0, 6], pad: { l: 30, r: 4, t: 22, b: 4 } });
+    var cw = q.plotW / 6, ch = q.plotH / 6, maxd = ds.metric === "euclid" ? 10 : 1.2, dark = isDark();
+    for (i = 0; i < 6; i++) {
+      for (var j = 0; j < 6; j++) {
+        var d = dist(i, j), t = Math.min(1, d / maxd);
+        q.ctx.fillStyle = seqColor(t, dark); q.ctx.fillRect(q.sx(j) + 1, q.sy(6 - i) + 1, cw - 2, ch - 2);
+        q.textPx(BI.fmt(d, 1), q.sx(j) + cw / 2, q.sy(6 - i) + ch / 2, { align: "center", size: 10, color: t > 0.55 ? "#ffffff" : q.col.text });
+      }
+      q.textPx(NAMES[i], q.P.l - 4, q.sy(6 - i) + ch / 2, { align: "right", size: 11 });
+      q.textPx(NAMES[i], q.sx(i) + cw / 2, q.P.t - 6, { align: "center", baseline: "bottom", size: 11 });
+    }
+    BI.text("dmat-cap", ds.metric === "euclid" ? "Öklid uzaklığı, gen A ve gen B düzleminde." : "1 − Pearson korelasyonu, 20 genlik profiller üzerinden (düzlemdeki iki gen dâhil).");
+  }
+  BI.seg("#mv-seg", function (v) { ds.sel = parseInt(v, 10); mxS.set(ds.pts[ds.sel][0]); myS.set(ds.pts[ds.sel][1]); renderDist(); });
+  mxS = BI.slider("mx", function (v) { ds.pts[ds.sel][0] = v; renderDist(); }, { digits: 1 });
+  myS = BI.slider("my", function (v) { ds.pts[ds.sel][1] = v; renderDist(); }, { digits: 1 });
+  BI.seg("#dm-seg", function (v) { ds.metric = v; renderDist(); });
+  BI.onRedraw(renderDist);
+  renderDist();
+
+  /* ---------- 2a. Eksen döndürme ---------- */
+  var rt = { ang: 0, seed: BI.DEFAULT_SEED + 53, x: [], y: [] };
+  function genRot() { var rng = BI.rng(rt.seed); rt.x = []; rt.y = []; for (var i = 0; i < 40; i++) { var z1 = BI.randn(rng), z2 = BI.randn(rng); rt.x.push(7 + 2 * z1 + 0.5 * z2); rt.y.push(7 + 1.4 * z1 - 0.9 * z2); } }
+  function varAlong(deg) { var a = deg * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), mx = BI.mean(rt.x), my = BI.mean(rt.y), proj = []; for (var i = 0; i < 40; i++) { proj.push((rt.x[i] - mx) * ux + (rt.y[i] - my) * uy); } return BI.sdPop(proj) * BI.sdPop(proj); }
+  function pc1Angle() { var best = 0, bv = -1; for (var d = 0; d < 180; d += 0.5) { var v = varAlong(d); if (v > bv) { bv = v; best = d; } } return { ang: best, v: bv }; }
+  function renderRot() {
+    var c = document.getElementById("rot");
+    var p = BI.plot(c, { x: [1, 13], y: [1, 13], pad: { l: 36, r: 10, t: 10, b: 40 } });
+    p.axes({ xticks: [1, 7, 13], yticks: [1, 7, 13], grid: true, xlabel: "gen A", ylabel: "gen B" });
+    var a = rt.ang * Math.PI / 180, ux = Math.cos(a), uy = Math.sin(a), mx = BI.mean(rt.x), my = BI.mean(rt.y);
+    p.line([[mx - 8 * ux, my - 8 * uy], [mx + 8 * ux, my + 8 * uy]], p.col.c2, { width: 2 });
+    for (var i = 0; i < 40; i++) {
+      var t = (rt.x[i] - mx) * ux + (rt.y[i] - my) * uy, px = mx + t * ux, py = my + t * uy;
+      p.line([[rt.x[i], rt.y[i]], [px, py]], p.col.text3, { width: 1 });
+      p.dot(rt.x[i], rt.y[i], p.col.c1, 4, { ring: true }); p.dot(px, py, p.col.c2, 3);
+    }
+    var v = varAlong(rt.ang), tv = BI.sdPop(rt.x) * BI.sdPop(rt.x) + BI.sdPop(rt.y) * BI.sdPop(rt.y), pc = pc1Angle();
+    BI.text("pv", BI.fmt(v, 2)); BI.text("tv", BI.fmt(tv, 2)); BI.text("pp", "yüzde " + BI.fmt(100 * v / tv, 1));
+    BI.text("pc1", BI.fmt(pc.ang, 0) + " derece, yüzde " + BI.fmt(100 * pc.v / tv, 1));
+  }
+  var angS = BI.slider("ang", function (v) { rt.ang = v; renderRot(); });
+  BI.on("pc1btn", "click", function () { var pc = pc1Angle(); rt.ang = Math.round(pc.ang); angS.set(rt.ang); renderRot(); });
+  BI.onReseed(function (seed) { rt.seed = seed; genRot(); renderRot(); });
+  BI.onRedraw(renderRot);
+  genRot(); renderRot();
+
+  /* ---------- 2b. 50 genlik PCA ---------- */
+  var pc = { tis: 1.5, bat: 0.5, color: "tissue" };
+  var NS = 40, NG = 50;
+  var meta = (function () { var m = []; for (var i = 0; i < NS; i++) { m.push({ tissue: i < 20 ? 0 : 1, batch: (i % 4) < 2 ? 0 : 1, sex: i % 2 }); } return m; })();
+  var noise = (function () { var rng = BI.rng(BI.DEFAULT_SEED + 57), z = []; for (var i = 0; i < NS; i++) { var r = []; for (var g = 0; g < NG; g++) { r.push(0.5 * BI.randn(rng)); } z.push(r); } return z; })();
+  function buildData() {
+    var X = [];
+    for (var i = 0; i < NS; i++) {
+      var r = [];
+      for (var g = 0; g < NG; g++) {
+        var v = 8 + noise[i][g];
+        if (g < 20) { v += pc.tis * (meta[i].tissue ? 1 : 0) * (g % 2 ? 1 : -1); }
+        if (g >= 20 && g < 40) { v += pc.bat * (meta[i].batch ? 1 : 0) * (g % 2 ? 1 : -1); }
+        if (g >= 40 && g < 44) { v += 0.5 * (meta[i].sex ? 1 : 0); }
+        r.push(v);
+      }
+      X.push(r);
+    }
+    return X;
+  }
+  function pca(X, k) { // sütunları ortala, kovaryans (NG x NG), güç iterasyonu ile ilk k özvektör
+    var n = X.length, p = X[0].length, i, j, g;
+    var mu = []; for (g = 0; g < p; g++) { var s = 0; for (i = 0; i < n; i++) { s += X[i][g]; } mu.push(s / n); }
+    var C = []; for (i = 0; i < n; i++) { C.push(X[i].map(function (v, gg) { return v - mu[gg]; })); }
+    var S = []; for (g = 0; g < p; g++) { S.push(new Array(p).fill(0)); }
+    for (i = 0; i < n; i++) { for (g = 0; g < p; g++) { for (j = g; j < p; j++) { S[g][j] += C[i][g] * C[i][j]; } } }
+    for (g = 0; g < p; g++) { for (j = g; j < p; j++) { S[g][j] /= (n - 1); S[j][g] = S[g][j]; } }
+    var total = 0; for (g = 0; g < p; g++) { total += S[g][g]; }
+    var vecs = [], vals = [];
+    for (var c = 0; c < k; c++) {
+      var v = []; for (g = 0; g < p; g++) { v.push(Math.sin(1 + g * (c + 1))); }
+      for (var it = 0; it < 300; it++) {
+        var w = new Array(p).fill(0);
+        for (g = 0; g < p; g++) { for (j = 0; j < p; j++) { w[g] += S[g][j] * v[j]; } }
+        var nrm = Math.sqrt(w.reduce(function (a, b) { return a + b * b; }, 0)); if (nrm < 1e-12) { break; }
+        v = w.map(function (x) { return x / nrm; });
+      }
+      var lam = 0, Sv = new Array(p).fill(0);
+      for (g = 0; g < p; g++) { for (j = 0; j < p; j++) { Sv[g] += S[g][j] * v[j]; } lam += v[g] * Sv[g]; }
+      vecs.push(v); vals.push(lam);
+      for (g = 0; g < p; g++) { for (j = 0; j < p; j++) { S[g][j] -= lam * v[g] * v[j]; } } // deflasyon
+    }
+    var scores = C.map(function (row) { return vecs.map(function (v) { var s2 = 0; for (var gg = 0; gg < p; gg++) { s2 += row[gg] * v[gg]; } return s2; }); });
+    return { scores: scores, vals: vals, total: total };
+  }
+  function renderPca() {
+    var X = buildData(), res = pca(X, 6);
+    var c = document.getElementById("pcaplot");
+    var lim = 0; res.scores.forEach(function (s) { lim = Math.max(lim, Math.abs(s[0]), Math.abs(s[1])); }); lim = Math.ceil(lim) + 1;
+    var p = BI.plot(c, { x: [-lim, lim], y: [-lim, lim], pad: { l: 40, r: 10, t: 10, b: 40 } });
+    var v1 = 100 * res.vals[0] / res.total, v2 = 100 * res.vals[1] / res.total;
+    p.axes({ xticks: [-lim, 0, lim].map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), yticks: [-lim, 0, lim].map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), grid: true, xlabel: "PC1 (yüzde " + BI.fmt(v1, 0) + ")", ylabel: "PC2 (yüzde " + BI.fmt(v2, 0) + ")" });
+    var labels = { tissue: ["karaciğer", "böbrek"], batch: ["1. gün", "2. gün"], sex: ["kadın", "erkek"] }[pc.color];
+    for (var i = 0; i < NS; i++) {
+      var grp = meta[i][pc.color];
+      if (grp) { p.square(res.scores[i][0], res.scores[i][1], p.col.c2, 5); } else { p.dot(res.scores[i][0], res.scores[i][1], p.col.c1, 5, { ring: true }); }
+    }
+    document.getElementById("pca-legend").innerHTML = "<span><span class=\"swatch\" style=\"background:var(--c1);border-radius:50%\"></span>" + labels[0] + " (daire)</span><span><span class=\"swatch\" style=\"background:var(--c2)\"></span>" + labels[1] + " (kare)</span>";
+    var sc = document.getElementById("scree");
+    var q = BI.plot(sc, { x: [0.5, 6.5], y: [0, 100], pad: { l: 36, r: 8, t: 8, b: 28 } });
+    q.axes({ xticks: [1, 2, 3, 4, 5, 6].map(function (v) { return { v: v, l: "PC" + v }; }), yticks: [0, 50, 100], grid: true, ylabel: "yüzde" });
+    for (i = 0; i < 6; i++) { q.barAt(i + 1, 100 * res.vals[i] / res.total, 0.7, q.col.c3); }
+    BI.text("scree-cap", "PC1 yüzde " + BI.fmt(v1, 1) + ", PC2 yüzde " + BI.fmt(v2, 1) + "; ilk iki bileşen toplam değişkenliğin yüzde " + BI.fmt(v1 + v2, 0) + " kadarını taşımaktadır.");
+  }
+  BI.slider("tis", function (v) { pc.tis = v; renderPca(); }, { digits: 2 });
+  BI.slider("bat", function (v) { pc.bat = v; renderPca(); }, { digits: 2 });
+  BI.seg("#col-seg", function (v) { pc.color = v; renderPca(); });
+  BI.onRedraw(renderPca);
+  renderPca();
+
+  /* ---------- 3. Hiyerarşik kümeleme ---------- */
+  var cl = { groups: 2, cut: 10, seed: BI.DEFAULT_SEED + 61 };
+  function genClu() {
+    var rng = BI.rng(cl.seed), X = [], truth = [];
+    for (var i = 0; i < 12; i++) {
+      var g = cl.groups === 0 ? 0 : (cl.groups === 2 ? (i < 6 ? 0 : 1) : Math.floor(i / 4));
+      truth.push(cl.groups === 0 ? -1 : g);
+      var row = [];
+      for (var k = 0; k < 30; k++) { var v = 8 + 1.0 * BI.randn(rng); if (cl.groups > 0 && Math.floor(k / 10) === g) { v += 2.5; } row.push(v); }
+      X.push(row);
+    }
+    return { X: X, truth: truth };
+  }
+  function euclid(a, b) { var s = 0; for (var k = 0; k < a.length; k++) { s += (a[k] - b[k]) * (a[k] - b[k]); } return Math.sqrt(s); }
+  function hclust(X) { // ortalama bağlantı
+    var n = X.length, D = [], i, j;
+    for (i = 0; i < n; i++) { D.push([]); for (j = 0; j < n; j++) { D[i].push(euclid(X[i], X[j])); } }
+    var clusters = []; for (i = 0; i < n; i++) { clusters.push({ members: [i], height: 0, left: null, right: null, id: i }); }
+    var merges = [];
+    while (clusters.length > 1) {
+      var best = Infinity, bi = 0, bj = 1;
+      for (i = 0; i < clusters.length; i++) { for (j = i + 1; j < clusters.length; j++) {
+        var s = 0, cnt = 0; clusters[i].members.forEach(function (a) { clusters[j].members.forEach(function (b) { s += D[a][b]; cnt++; }); });
+        var d = s / cnt; if (d < best) { best = d; bi = i; bj = j; }
+      } }
+      var node = { members: clusters[bi].members.concat(clusters[bj].members), height: best, left: clusters[bi], right: clusters[bj] };
+      clusters.splice(bj, 1); clusters.splice(bi, 1); clusters.push(node); merges.push(node);
+    }
+    return clusters[0];
+  }
+  function leaves(node) { return node.left ? leaves(node.left).concat(leaves(node.right)) : [node.id]; }
+  function cutTree(node, h) { if (!node.left || node.height <= h) { return [node.members]; } return cutTree(node.left, h).concat(cutTree(node.right, h)); }
+  function renderClu() {
+    var d = genClu(), tree = hclust(d.X), order = leaves(tree), pos = {};
+    order.forEach(function (id, k) { pos[id] = k; });
+    var c = document.getElementById("dendro");
+    var maxH = Math.max(tree.height * 1.1, 15);
+    var p = BI.plot(c, { x: [-0.5, 11.5], y: [0, maxH], pad: { l: 36, r: 8, t: 8, b: 28 } });
+    p.axes({ xticks: order.map(function (id, k) { return { v: k, l: "" }; }), yticks: [0, maxH / 2, maxH].map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), grid: true, ylabel: "uzaklık" });
+    var cols = [p.col.c1, p.col.c2, p.col.c3];
+    function xOf(node) { if (!node.left) { return pos[node.id]; } return (xOf(node.left) + xOf(node.right)) / 2; }
+    function draw(node) {
+      if (!node.left) { return; }
+      var xl = xOf(node.left), xr = xOf(node.right), hl = node.left.height, hr = node.right.height, h = node.height;
+      p.line([[xl, hl], [xl, h], [xr, h], [xr, hr]], p.col.text2, { width: 1.5 });
+      draw(node.left); draw(node.right);
+    }
+    draw(tree);
+    order.forEach(function (id, k) { var t = d.truth[id]; p.dot(k, 0, t < 0 ? p.col.text3 : cols[t], 5, { ring: true }); p.textPx("S" + (id + 1), p.sx(k), p.h - p.P.b + 6, { align: "center", baseline: "top", size: 9 }); });
+    p.hline(Math.min(cl.cut, maxH), p.col.c4, { dashed: true, label: "kesme yüksekliği" });
+    var clusters = cutTree(tree, cl.cut);
+    // uyum: her gerçek grubun tek bir kümede olup olmadığı ve küme sayısının eşit olup olmadığı
+    var agree = "-";
+    if (cl.groups > 0) {
+      var ok = clusters.length === cl.groups;
+      if (ok) { clusters.forEach(function (m) { var t0 = d.truth[m[0]]; m.forEach(function (id) { if (d.truth[id] !== t0) { ok = false; } }); }); }
+      agree = ok ? "Evet, birebir" : "Hayır";
+    } else { agree = "Gerçek yapı yok"; }
+    BI.text("nclu", String(clusters.length)); BI.text("ntrue", cl.groups === 0 ? "0 (yalnızca gürültü)" : String(cl.groups)); BI.text("agree", agree);
+    BI.text("dendro-cap", "Yaprak renkleri gerçek grubu göstermektedir (gri: yapı yok). Dalların birleştiği yükseklik, birleşen grupların ortalama uzaklığıdır.");
+    var hm = document.getElementById("chm");
+    var q = BI.plot(hm, { x: [0, 12], y: [0, 30], pad: { l: 8, r: 4, t: 18, b: 4 } });
+    var cw = q.plotW / 12, ch = q.plotH / 30, dark = isDark();
+    var lo = 5, hi = 13;
+    for (var k = 0; k < 12; k++) { var id = order[k]; for (var g = 0; g < 30; g++) { var t = Math.max(0, Math.min(1, (d.X[id][g] - lo) / (hi - lo))); q.ctx.fillStyle = seqColor(t, dark); q.ctx.fillRect(q.sx(k) + 0.5, q.sy(30 - g) + 0.5, cw - 1, ch - 1); }
+      q.textPx("S" + (id + 1), q.sx(k) + cw / 2, q.P.t - 4, { align: "center", baseline: "bottom", size: 9 }); }
+  }
+  BI.seg("#str-seg", function (v) { cl.groups = parseInt(v, 10); renderClu(); });
+  BI.slider("cut", function (v) { cl.cut = v; renderClu(); }, { digits: 1 });
+  BI.onReseed(function (seed) { cl.seed = seed; renderClu(); });
+  BI.onRedraw(renderClu);
+  renderClu();
+
+  /* ---------- 4. Normalizasyon ---------- */
+  var nm = { lib: 0.5, mode: "raw" };
+  var baseCounts = (function () { var rng = BI.rng(BI.DEFAULT_SEED + 67), mus = [], C = []; for (var g = 0; g < 200; g++) { mus.push(Math.exp(3 + 1.5 * BI.randn(rng))); } for (var i = 0; i < 6; i++) { var row = []; for (g = 0; g < 200; g++) { row.push(Math.max(1, BI.randPoisson(rng, mus[g] * (0.9 + 0.2 * rng())))); } C.push(row); } return C; })();
+  function medianRatio(X) { // DESeq2 tarzı: her genin geometrik ortalamasına oranların medyanı
+    var ng = X[0].length, ns = X.length, gm = [], g, i;
+    for (g = 0; g < ng; g++) { var s = 0; for (i = 0; i < ns; i++) { s += Math.log(X[i][g]); } gm.push(Math.exp(s / ns)); }
+    return X.map(function (row) { return BI.median(row.map(function (v, gg) { return v / gm[gg]; })); });
+  }
+  function renderNorm() {
+    var X = baseCounts.map(function (row, i) { return row.map(function (v) { return i === 2 ? Math.max(1, Math.round(v * nm.lib)) : v; }); });
+    var sf = medianRatio(X), vals;
+    if (nm.mode === "raw") { vals = X.map(function (row) { return row.map(function (v) { return Math.log2(v + 1); }); }); }
+    else { vals = X.map(function (row, i) { return row.map(function (v) { return Math.log2(v / sf[i] + 1); }); }); }
+    var c = document.getElementById("normc");
+    var p = BI.plot(c, { x: [0, 6], y: [0, 12], pad: { l: 36, r: 8, t: 8, b: 28 } });
+    p.axes({ xticks: [0, 1, 2, 3, 4, 5].map(function (i) { return { v: i + 0.5, l: "örnek " + (i + 1) }; }), yticks: [0, 4, 8, 12], grid: true, ylabel: "log2 değer" });
+    var meds = [];
+    for (var i = 0; i < 6; i++) {
+      var s = BI.sorted(vals[i]), q1 = BI.quantile(s, 0.25), q2 = BI.quantile(s, 0.5), q3 = BI.quantile(s, 0.75), iqr = q3 - q1;
+      var inside = s.filter(function (x) { return x >= q1 - 1.5 * iqr && x <= q3 + 1.5 * iqr; });
+      var col = i === 2 ? p.col.c2 : p.col.c1, x0 = i + 0.2, x1 = i + 0.8, xm = i + 0.5;
+      p.line([[xm, inside[0]], [xm, q1]], col); p.line([[xm, q3], [xm, inside[inside.length - 1]]], col);
+      p.rect(x0, q1, x1, q3, col, 0.25); p.ctx.strokeStyle = col; p.ctx.lineWidth = 2; p.ctx.strokeRect(p.sx(x0), p.sy(q3), p.sx(x1) - p.sx(x0), p.sy(q1) - p.sy(q3));
+      p.line([[x0, q2], [x1, q2]], p.col.text, { width: 3 });
+      meds.push(q2);
+    }
+    var others = BI.mean([meds[0], meds[1], meds[3], meds[4], meds[5]]);
+    var rawMeds = X.map(function (row) { return BI.median(row.map(function (v) { return Math.log2(v + 1); })); });
+    var rawOthers = BI.mean([rawMeds[0], rawMeds[1], rawMeds[3], rawMeds[4], rawMeds[5]]);
+    var normVals = X.map(function (row, i) { return row.map(function (v) { return Math.log2(v / sf[i] + 1); }); });
+    var normMeds = normVals.map(function (r) { return BI.median(r); }), normOthers = BI.mean([normMeds[0], normMeds[1], normMeds[3], normMeds[4], normMeds[5]]);
+    var fake = 0; for (var g = 0; g < 200; g++) { var ref = BI.mean([X[0][g], X[1][g], X[3][g], X[4][g], X[5][g]]); var r = (X[2][g] + 0.5) / (ref + 0.5); if (r >= 2 || r <= 0.5) { fake++; } }
+    BI.text("sf", BI.fmt(sf[2] / BI.mean([sf[0], sf[1], sf[3], sf[4], sf[5]]), 2)); BI.text("rawdiff", BI.fmt(rawMeds[2] - rawOthers, 2)); BI.text("normdiff", BI.fmt(normMeds[2] - normOthers, 2)); BI.text("fakede", BI.fmtInt(fake) + " / 200");
+  }
+  BI.slider("lib", function (v) { nm.lib = v; renderNorm(); }, { digits: 2 });
+  BI.seg("#nm-seg", function (v) { nm.mode = v; renderNorm(); });
+  BI.onRedraw(renderNorm);
+  renderNorm();
+})();
+</script>
+</body>
+</html>

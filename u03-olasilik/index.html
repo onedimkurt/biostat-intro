@@ -1,0 +1,1253 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 3: Olasılık ve dağılımlar</title>
+<meta name="description" content="Olasılık ve uzun vadeli sıklık; koşullu olasılık ve bağımsızlık; Bayes kuralı ile tanı testleri; rastgele değişken ve beklenen değer; normal dağılım ve z-skoru; binom ve Poisson dağılımları.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .icons canvas { height: 200px; }
+  .conv canvas { height: 170px; }
+  .dist canvas { height: 210px; }
+  .two-col { display: grid; gap: 12px; grid-template-columns: 1fr; }
+  @media (min-width: 720px) { .two-col { grid-template-columns: 1fr 1fr; } }
+  .cpg table { font-size: 0.92rem; }
+  .cpg td.num { text-align: right; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u02-ozet/index.html">Önceki: Ünite 2</a><a href="../index.html">Dizin</a><a href="../u04-ornekleme/index.html">Sonraki: Ünite 4</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 3 · yaklaşık 80 dakika</p>
+    <h1>Olasılık ve dağılımlar</h1>
+    <p class="lead">Bu ünitede, rastgeleliği sayıya dökebilmek amacıyla olasılığa ve biyolojik veride en sık karşılaşılan üç dağılıma bakıyoruz. Bir okumanın varyant taşıma olasılığı, pozitif çıkan bir tarama testinde hastalık olasılığı ve bir gene düşen okuma sayısının dağılımı aynı dilin cümleleridir; bu dil, sonraki ünitelerdeki belirsizlik ve test kavramlarının temelidir.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>Olasılığı uzun vadeli sıklık olarak yorumlayabilir, koşullu olasılık ile bağımsızlığı ayırt edebilirsiniz.</li>
+      <li>Bayes kuralını bir tarama testine uygulayıp pozitif sonucun neden çoğu zaman yanlış alarm olabildiğini açıklayabilirsiniz.</li>
+      <li>Normal dağılımda bir değerin z-skorunu hesaplayıp 68-95-99,7 kuralını kullanabilirsiniz.</li>
+      <li>Binom ve Poisson dağılımlarının hangi biyolojik sayımları modellediğini ve aşırı yayılımın ne olduğunu söyleyebilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Olasılık, koşullu olasılık ve bağımsızlık</a></li>
+      <li><a href="#b2">Bayes kuralı ve tanı testleri</a></li>
+      <li><a href="#b3">Rastgele değişken, normal dağılım ve z-skoru</a></li>
+      <li><a href="#b4">Sayımların dağılımı: binom ve Poisson</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Olasılık ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Olasılık, koşullu olasılık ve bağımsızlık</h2>
+    <p>Bu bölümde, "bu okuma yüzde 30 olasılıkla varyant taşır" gibi cümlelerin ne anlama geldiğini netleştirebilmek amacıyla olasılığın sıklık yorumuna bakıyoruz. Bir olayın <span class="term">olasılığı</span> <span class="en">(probability)</span>, aynı rastgele süreç çok kez tekrarlandığında o olayın görülme oranının yaklaştığı değerdir. Az sayıda tekrarda gözlenen oran olasılıktan belirgin biçimde sapabilir; tekrar sayısı arttıkça oran olasılığa yaklaşır. Bu yakınsamanın belirli bir okuma sayısında ne kadar ilerlemiş olduğunu, Ünite 4'te ele alacağımız örnekleme dağılımı (sampling distribution) ölçmektedir.</p>
+    <p>Çoğu biyolojik soru tek bir olayla değil, iki olayın ilişkisiyle ilgilidir. "Bir önceki baz C ise bir sonraki bazın G olma olasılığı nedir?" sorusu bir <span class="term">koşullu olasılık</span> <span class="en">(conditional probability)</span> sorusudur ve P(G | C) biçiminde yazılır: dikey çizgi "verildiğinde" anlamına gelmektedir. İki olay, birinin gerçekleşmesi diğerinin olasılığını değiştirmiyorsa <span class="term">bağımsızdır</span> <span class="en">(independent)</span>; bu durumda P(G | C) = P(G) olur. Omurgalı genomlarında bu eşitlik belirgin biçimde bozulmaktadır: CpG dinükleotidleri, metilasyona bağlı mutasyon nedeniyle beklenen sıklığın yaklaşık dörtte biri kadar görülür. Dolayısıyla "C'den sonra G gelmesi" ile "G'nin genel sıklığı" aynı sayı değildir ve bu fark, koşullu olasılığın biyolojik bir ölçüsüdür.</p>
+
+    <div class="card conv">
+      <h3 style="margin-top:0">Simülasyon: Gözlenen oran olasılığa yaklaşır</h3>
+      <p>Bir tümörde belirli bir konumdaki gerçek <span class="term">alel frekansının</span> <span class="en">(allele frequency)</span> p olduğunu varsayıyoruz; bu konumu kapsayan her okuma, p olasılığıyla varyant aleli taşır. Okumaları tek tek, 100'er ya da 1 000'er ekleyerek varyant taşıyan okumaların oranının nasıl değiştiğini izleyebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="pp">Gerçek olasılık p</label>
+          <output id="pp-out" for="pp">0,30</output>
+          <input type="range" id="pp" min="0.05" max="0.95" step="0.05" value="0.30">
+        </div>
+        <div class="control-row"><div class="seg">
+          <button type="button" class="primary" id="r1">1 okuma</button>
+          <button type="button" id="r100">100 okuma</button>
+          <button type="button" id="r1000">1 000 okuma</button>
+          <button type="button" id="r-reset">Sıfırlayınız</button>
+          <button type="button" data-reseed>Yeni örneklem</button>
+        </div></div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c2)"></span>Varyant taşıyan okumaların oranı (biriken)</h4>
+        <canvas id="conv" role="img" aria-label="Okuma sayısı arttıkça gözlenen oranın gerçek olasılık çizgisine yaklaşması."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Okuma sayısı</div><div class="v" id="c-n">0</div></div>
+        <div class="stat"><div class="k">Varyant taşıyan</div><div class="v" id="c-k">0</div></div>
+        <div class="stat"><div class="k">Gözlenen oran</div><div class="v" id="c-p">-</div></div>
+        <div class="stat"><div class="k">Gerçek p</div><div class="v" id="c-true">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> İlk 10-20 okumada oranın 0 ile 1 arasında sıçradığını, yüzlerce okumadan sonra ise gerçek p çevresinde dar bir bantta kaldığını görüyoruz. Buna karşın oran hiçbir zaman tam olarak p'ye "oturmaz"; her yeni okuma onu biraz oynatır. Okuma derinliğinin alel frekansı tahminini neden iyileştirdiğini bu grafik göstermektedir.</p></div>
+    </div>
+
+    <div class="card cpg">
+      <h3 style="margin-top:0">Etkinlik: CpG ve koşullu olasılık</h3>
+      <p>Aşağıdaki tablo, 100 000 bazlık temsili bir dizide ardışık baz çiftlerinin (dinükleotidlerin) sayımlarını vermektedir. <span class="term">CpG tükenmesini</span> <span class="en">(CpG depletion)</span> değiştirerek P(G | önceki C) ile P(G) arasındaki farkın nasıl açıldığını görebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="dep">CpG tükenmesi (0: bağımsız; 1: CpG hiç yok)</label>
+          <output id="dep-out" for="dep">0,75</output>
+          <input type="range" id="dep" min="0" max="1" step="0.05" value="0.75">
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table id="cpg-table"><caption class="visually-hidden">Dinükleotid sayımları: satırlar önceki baz, sütunlar sonraki baz</caption></table>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">P(G)</div><div class="v" id="pg">-</div></div>
+        <div class="stat"><div class="k">P(G | önceki C)</div><div class="v" id="pgc">-</div></div>
+        <div class="stat"><div class="k">Gözlenen / beklenen CpG</div><div class="v" id="oe">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Tükenme sıfırken P(G | C) ile P(G) eşittir; ardışık bazlar bağımsız davranmaktadır. Tükenme arttıkça P(G | C) düşer ve gözlenen/beklenen CpG oranı 1'in altına iner. İnsan genomunda bu oran yaklaşık 0,2-0,25 düzeyindedir; CpG adacıkları ise oranın 0,6'nın üzerine çıktığı, çoğu zaman gen başlangıçlarını işaretleyen bölgelerdir. Bir sonraki bölümde aynı koşullu olasılık mantığını tanı testlerine uyguluyoruz.</p></div>
+    </div>
+
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Koşullu olasılık, ortak olasılığın (joint probability) koşulun olasılığına bölünmesiyle elde edilir:</p>
+      <div class="formula">P(G | C) = <span class="frac"><span>P(C ve ardından G)</span><span>P(C)</span></span></div>
+      <p>Bağımsızlık durumunda P(C ve ardından G) = P(C) × P(G) olduğundan bu bölme işleminin sonucu P(G) olur. Tabloda "beklenen CpG" sayısı tam olarak bu çarpımla, N × P(C) × P(G) olarak hesaplanmaktadır; gözlenen sayının buna oranı bağımsızlıktan sapmanın ölçüsüdür.</p>
+    </details>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Heterozigot bir varyantta beklenen okuma oranı</h3>
+      <p>Germ hattında (germline) heterozigot bir varyantta her okuma yüzde 50 olasılıkla varyant aleli taşır. 20 <span class="term">okuma derinliğinde</span> <span class="en">(read depth; bir konumu kapsayan okuma sayısı)</span> 10 varyant okuması beklenir; ancak 6 ya da 14 varyant okuması da olağan bir sonuçtur. Bu nedenle varyant çağırma (variant calling) araçları, tek bir okuma oranına bakarak değil, gözlenen oranın p = 0,5 (heterozigot), p = 1 (homozigot varyant) ve p ≈ 0 (yalnızca sekanslama hatası) altında ne kadar olası olduğunu karşılaştırarak genotip ataması yapmaktadır. Bu karşılaştırmanın hangi dağılımla yapıldığını 4. bölümde ele alıyoruz.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 1. Bir konumda gerçek alel frekansı 0,30'dur. 10 okumada 5 varyant okuması (oran 0,50) gözlenmiştir. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>Gerçek frekans 0,30 olamaz; gözlem onu yalanlamıştır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>Olasılık, 10 okumadan sonra tam olarak gözlenen orana eşittir.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>10 okumada 0,50 gibi bir oran, gerçek frekans 0,30 iken olağan bir rastlantıdır; oran yalnızca çok sayıda okumada 0,30'a yaklaşır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>Sonraki okumalar bu farkı "telafi etmek" için daha az varyant taşıyacaktır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Olasılık uzun vadeli oranı tanımlar; 10 okuma uzun vade değildir. Rastgele süreçlerin "hafızası" yoktur: sonraki okumalar önceki sapmayı telafi etmez, yalnızca artan okuma sayısı içinde önceki sapmanın ağırlığı azalır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: 10 okumada 0,50 olağan bir rastlantıdır. Az sayıda tekrarda gözlenen oran olasılıktan belirgin biçimde sapabilir; bu sapma gerçek frekansı yalanlamaz. Rastgele süreçler önceki sonuçları "telafi etmez"; oran, yalnızca okuma sayısı büyüdükçe gerçek değere yaklaşır.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 2. Bir genomda P(G) = 0,21 ve P(G | önceki C) = 0,05 olarak ölçülmüştür. Bu ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Ardışık bazlar bağımsızdır.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>C'den sonra G gelmesi, G'nin genel sıklığına göre çok daha seyrektir; iki olay bağımsız değildir.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Genomda G bazı C bazından daha azdır.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Ölçüm hatalıdır; koşullu olasılık genel olasılıktan küçük olamaz.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Bağımsızlıkta P(G | C) = P(G) olurdu; burada koşullu olasılık genel olasılığın dörtte biridir. Bu, omurgalı genomlarındaki CpG tükenmesinin tam karşılığıdır. Koşullu olasılık genel olasılıktan küçük de büyük de olabilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: İki olay bağımsız değildir. Bağımsızlık P(G | C) = P(G) demektir; 0,05 ile 0,21 eşit olmadığından önceki bazın C olması, sonraki bazın G olma olasılığını düşürmektedir. Bu değerler G ile C'nin genel sıklıkları hakkında bilgi vermez ve koşullu olasılığın genel olasılıktan küçük olması tamamen mümkündür.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. Bayes ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Bayes kuralı ve tanı testleri</h2>
+    <p>Bu bölümde, pozitif bir test sonucunun gerçekten ne anlama geldiğini hesaplayabilmek amacıyla koşullu olasılığın yönünü tersine çeviren Bayes kuralına bakıyoruz. Bir tarama testinin iki özelliği vardır: <span class="term">duyarlılık</span> <span class="en">(sensitivity)</span>, hasta bir kişide testin pozitif çıkma olasılığı P(pozitif | hasta); <span class="term">özgüllük</span> <span class="en">(specificity)</span> ise sağlıklı bir kişide testin negatif çıkma olasılığı P(negatif | sağlıklı). Klinikte sorulan soru ise bunların tersidir: test pozitif çıktığında kişinin hasta olma olasılığı nedir? Bu olasılık <span class="term">pozitif tahmin değeri</span> <span class="en">(positive predictive value)</span>, P(hasta | pozitif) olarak adlandırılmaktadır. Negatif bir sonuçta kişinin sağlıklı olma olasılığı ise <span class="term">negatif tahmin değeri</span> <span class="en">(negative predictive value)</span>, P(sağlıklı | negatif) olarak adlandırılır.</p>
+    <p>Bu iki yön birbirine eşit değildir ve aradaki farkı hastalığın <span class="term">yaygınlığı</span> <span class="en">(prevalence)</span> belirler. <span class="term">Bayes kuralı</span> <span class="en">(Bayes' rule)</span>, P(hasta | pozitif) değerini duyarlılık, özgüllük ve yaygınlıktan hesaplar. Bunu kavramanın sezgisel yolu, sayılarla düşünmektir: 10 000 kişilik bir popülasyonda hastalık yüzde 1 yaygınlıktaysa 100 hasta, 9 900 sağlıklı kişi vardır. Yüzde 95 duyarlılıkla hastaların 95'i pozitif çıkar; yüzde 95 özgüllükle sağlıklıların yüzde 5'i, yani 495 kişi de <span class="term">yanlış pozitif</span> <span class="en">(false positive)</span> çıkar. Pozitif çıkan 590 kişiden yalnızca 95'i hastadır: pozitif tahmin değeri yüzde 16 kadardır. Dolayısıyla nadir bir durum için yapılan taramada pozitif sonuçların çoğunluğu yanlış alarm olabilmektedir; bu durum testin kötü olduğunu değil, yaygınlığın düşük olduğunu göstermektedir.</p>
+
+    <div class="card icons">
+      <h3 style="margin-top:0">Simülasyon: 10 000 kişilik bir tarama</h3>
+      <p>Her kare yaklaşık 10 kişiyi temsil etmektedir; çok küçük gruplar görünür kalabilmesi için en az bir kareyle gösterilir. Sayımlar aşağıda bir <span class="term">çapraz tabloda</span> <span class="en">(contingency table)</span> da verilmektedir: satırlar gerçek durumu, sütunlar test sonucunu gösterir. Yaygınlığı, duyarlılığı ve özgüllüğü değiştirerek pozitif sonuçlar arasında gerçek hastaların payının nasıl değiştiğini görebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="prev">Yaygınlık (yüzde)</label>
+          <output id="prev-out" for="prev">1</output>
+          <input type="range" id="prev" min="0.1" max="50" step="0.1" value="1">
+        </div>
+        <div class="slider-wrap">
+          <label for="sens">Duyarlılık (yüzde)</label>
+          <output id="sens-out" for="sens">95</output>
+          <input type="range" id="sens" min="50" max="100" step="1" value="95">
+        </div>
+        <div class="slider-wrap">
+          <label for="spec">Özgüllük (yüzde)</label>
+          <output id="spec-out" for="spec">95</output>
+          <input type="range" id="spec" min="50" max="100" step="1" value="95">
+        </div>
+      </div>
+      <div class="chart">
+        <h4>Popülasyon: 1 000 kare × 10 kişi</h4>
+        <canvas id="icons" role="img" aria-label="Kare ızgara: gerçek pozitifler turuncu, yanlış pozitifler taralı turuncu, yanlış negatifler taralı mavi, gerçek negatifler açık mavi."></canvas>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--c2)"></span>hasta, test pozitif (gerçek pozitif)</span>
+          <span><span class="swatch hatch" style="color:var(--c2)"></span>sağlıklı, test pozitif (yanlış pozitif)</span>
+          <span><span class="swatch hatch" style="color:var(--c1)"></span>hasta, test negatif (yanlış negatif)</span>
+          <span><span class="swatch" style="background:var(--c1);opacity:0.35"></span>sağlıklı, test negatif (gerçek negatif)</span>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption class="visually-hidden">Test sonuçlarının çapraz tablosu</caption>
+          <thead><tr><th></th><th class="num">Test pozitif</th><th class="num">Test negatif</th><th class="num">Toplam</th></tr></thead>
+          <tbody>
+            <tr><th scope="row">Hasta</th><td class="num" id="tp">-</td><td class="num" id="fn">-</td><td class="num" id="dis">-</td></tr>
+            <tr><th scope="row">Sağlıklı</th><td class="num" id="fp">-</td><td class="num" id="tn">-</td><td class="num" id="hea">-</td></tr>
+            <tr><th scope="row">Toplam</th><td class="num" id="pos">-</td><td class="num" id="neg">-</td><td class="num">10 000</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Pozitif tahmin değeri <small>P(hasta | pozitif)</small></div><div class="v" id="ppv">-</div></div>
+        <div class="stat"><div class="k">Negatif tahmin değeri <small>P(sağlıklı | negatif)</small></div><div class="v" id="npv">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Yaygınlık yüzde 1 iken pozitiflerin yalnızca altıda biri gerçekten hastadır; yaygınlığı yüzde 20'ye çıkardığımızda bu pay yüzde 80'in üzerine çıkar. Duyarlılığı artırmak pozitif tahmin değerini çok az değiştirirken özgüllüğü yüzde 95'ten yüzde 99'a çıkarmak onu belirgin biçimde yükseltmektedir; çünkü nadir hastalıkta pozitiflerin çoğu yanlış pozitiflerden gelir ve yanlış pozitif sayısını özgüllük belirler.</p></div>
+    </div>
+
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Yaygınlık π, duyarlılık Sn ve özgüllük Sp olmak üzere Bayes kuralı:</p>
+      <div class="formula">P(hasta | pozitif) = <span class="frac"><span>Sn × π</span><span>Sn × π + (1 − Sp) × (1 − π)</span></span></div>
+      <p>Pay gerçek pozitiflerin oranını, payda ise tüm pozitiflerin oranını vermektedir. Yukarıdaki sayısal örnekte 0,95 × 0,01 / (0,95 × 0,01 + 0,05 × 0,99) = 0,0095 / 0,059 ≈ 0,16 elde edilir.</p>
+    </details>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Varyant çağrılarında pozitif tahmin değeri</h3>
+      <p>Aynı mantık sekanslama verisinde varyant çağırmaya da uygulanmaktadır. Bir genomda 3 milyar konumdan yalnızca birkaç milyonu gerçekten varyant taşır; dolayısıyla "varyant" olayı her konum için nadirdir. Bir çağırma aracının konum başına yanlış pozitif oranı milyonda bir gibi çok düşük olsa bile, 3 milyar konumda bu, binlerce yanlış çağrı anlamına gelmektedir. Bu nedenle varyant çağırma araçları, bir konumun varyant olma olasılığını hesaplarken <span class="term">önsel</span> <span class="en">(prior)</span> bilgiyi, yani varyantların genel seyrekliğini de hesaba katar ve kalite eşik değerleri bu önsel bilgiye göre belirlenir. Ünite 9'da binlerce test arasındaki yanlış pozitifleri kontrol ederken aynı düşünce biçimiyle yeniden karşılaşıyoruz.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 3. Yüzde 99 duyarlılık ve yüzde 99 özgüllüğe sahip bir test, yaygınlığı binde bir olan bir hastalık için kullanılmaktadır. Pozitif çıkan bir kişinin hasta olma olasılığı yaklaşık kaçtır?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>Yüzde 99</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>Yüzde 50</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Yüzde 9 kadar</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>Binde bir</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. 100 000 kişide 100 hasta vardır; 99'u pozitif çıkar. 99 900 sağlıklı kişinin yüzde 1'i, yani 999 kişi yanlış pozitif çıkar. Pozitiflerin 99 / (99 + 999) ≈ yüzde 9 kadarı hastadır. Test çok iyi olsa da hastalık nadir olduğundan yanlış pozitifler çoğunluktadır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yüzde 9 kadar. 100 000 kişilik bir popülasyonda 100 hasta (99 pozitif) ve 99 900 sağlıklı (999 yanlış pozitif) bulunur; pozitiflerin yalnızca 99 / 1 098 ≈ yüzde 9 kadarı hastadır. Duyarlılığın yüzde 99 olması, pozitif çıkan kişinin yüzde 99 olasılıkla hasta olduğu anlamına gelmez; bu iki koşullu olasılığın yönü farklıdır.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 4. Nadir bir hastalık taramasında pozitif tahmin değerini en çok hangisi artırır?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Duyarlılığı yüzde 90'dan yüzde 99'a çıkarmak.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>Özgüllüğü yüzde 95'ten yüzde 99,9'a çıkarmak.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Test edilen kişi sayısını artırmak.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>Testi iki kez yerine bir kez uygulamak.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Nadir hastalıkta pozitiflerin büyük kısmı sağlıklı kişilerden gelen yanlış pozitiflerdir; bu sayıyı özgüllük belirler. Özgüllüğü yüzde 95'ten yüzde 99,9'a çıkarmak yanlış pozitifleri elli kat azaltır. Duyarlılık ise zaten az sayıda olan hastaların kaçının yakalandığını etkiler ve pozitif tahmin değerini çok az değiştirir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Özgüllüğü artırmak. Pozitif tahmin değeri, gerçek pozitiflerin tüm pozitiflere oranıdır; nadir hastalıkta tüm pozitiflerin çoğu yanlış pozitiftir ve yanlış pozitif sayısı özgüllüğe bağlıdır. Test edilen kişi sayısı oranı değiştirmez; duyarlılık ise pozitif tahmin değerini yalnızca çok az etkiler.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Normal dağılım ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Rastgele değişken, normal dağılım ve z-skoru</h2>
+    <p>Bu bölümde, bir ölçümün "olağan" mı yoksa "sıra dışı" mı olduğunu söyleyebilmek amacıyla olasılık dağılımlarına bakıyoruz. Bir <span class="term">rastgele değişken</span> <span class="en">(random variable)</span>, rastgele bir sürecin sayısal sonucudur: bir okumanın varyant taşıyıp taşımaması (0 ya da 1), bir hücredeki transkript sayısı, bir hastanın log ölçeğindeki ifade düzeyi. Değişkenin alabileceği her değere ya da aralığa bir olasılık atayan kurala <span class="term">olasılık dağılımı</span> <span class="en">(probability distribution)</span> denir; dağılımın ağırlık merkezine ise <span class="term">beklenen değer</span> <span class="en">(expected value)</span> adı verilir. Beklenen değer, uzun vadede gözlenen ortalamadır: p = 0,3 olan bir okumanın beklenen değeri 0,3'tür, oysa tek bir okuma yalnızca 0 ya da 1 olabilir.</p>
+    <p>Sürekli değişkenler için en önemli dağılım, simetrik ve çan biçimli <span class="term">normal dağılımdır</span> <span class="en">(normal distribution)</span>. Normal dağılım iki sayıyla tamamen belirlenir: ortalama μ (merkez) ve standart sapma σ (genişlik). Bir değerin ortalamadan kaç standart sapma uzakta olduğunu veren sayıya <span class="term">z-skoru</span> <span class="en">(z-score)</span> denir: z = (x − μ) / σ. Z-skoru, farklı birimlerdeki ölçümleri ortak bir ölçeğe taşır ve "sıra dışılığı" ölçer. Normal dağılımda gözlemlerin yaklaşık yüzde 68'i ortalamanın 1 standart sapma, yüzde 95'i 2 standart sapma, yüzde 99,7'si ise 3 standart sapma içinde kalır; bu, 68-95-99,7 kuralı olarak bilinir. Ünite 2'de gördüğümüz satır ölçekleme, her genin değerlerini z-skoruna çeviren işlemdir.</p>
+    <p>Biyolojik ölçümlerin çoğu ham ölçekte normal dağılmaz; sağa çarpıktır. Buna karşın logaritması alınmış ifade düzeyleri, boy, kan basıncı gibi birçok sürekli ölçüm yaklaşık normaldir ve Ünite 4'te göreceğimiz üzere, popülasyon normal olmasa bile örneklem ortalamaları normal dağılıma yaklaşır. Normal dağılımın merkezi rolü buradan gelmektedir.</p>
+
+    <div class="card dist">
+      <h3 style="margin-top:0">Simülasyon: Normal eğri altındaki alan</h3>
+      <p>Bir hasta grubunda bir genin log2 ifade düzeyinin ortalaması μ, standart sapması σ olan normal dağılıma uyduğunu varsayıyoruz. Aralığın sınırlarını değiştirerek bu aralıkta kalan hastaların oranını okuyabilirsiniz; z-skorları aynı anda hesaplanır.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="mu">Ortalama μ</label>
+          <output id="mu-out" for="mu">8,0</output>
+          <input type="range" id="mu" min="4" max="12" step="0.5" value="8">
+        </div>
+        <div class="slider-wrap">
+          <label for="sig">Standart sapma σ</label>
+          <output id="sig-out" for="sig">1,0</output>
+          <input type="range" id="sig" min="0.5" max="2.5" step="0.1" value="1">
+        </div>
+        <div class="slider-wrap">
+          <label for="xa">Aralığın alt sınırı</label>
+          <output id="xa-out" for="xa">7,0</output>
+          <input type="range" id="xa" min="2" max="14" step="0.1" value="7">
+        </div>
+        <div class="slider-wrap">
+          <label for="xb">Aralığın üst sınırı</label>
+          <output id="xb-out" for="xb">9,0</output>
+          <input type="range" id="xb" min="2" max="14" step="0.1" value="9">
+        </div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>Normal dağılım ve seçilen aralık</h4>
+        <canvas id="normal" role="img" aria-label="Normal eğri; seçilen aralığın altı boyalı."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Alt sınırın z-skoru</div><div class="v" id="za">-</div></div>
+        <div class="stat"><div class="k">Üst sınırın z-skoru</div><div class="v" id="zb">-</div></div>
+        <div class="stat"><div class="k">Aralıkta kalan oran</div><div class="v" id="area">-</div></div>
+        <div class="stat"><div class="k">Üst sınırın üstünde kalan</div><div class="v" id="upper">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Sınırları μ − σ ile μ + σ arasına çektiğimizde aralıkta kalan oranın yüzde 68 civarında, μ − 2σ ile μ + 2σ arasında ise yüzde 95 civarında olduğunu görüyoruz; μ ve σ değişse de bu oranlar değişmemektedir. Normal dağılımın gücü buradadır: z-skorunu bilen, oranı bilir.</p></div>
+    </div>
+
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Z-skoru ve tersi:</p>
+      <div class="formula">z = <span class="frac"><span>x − μ</span><span>σ</span></span> &#8203; , &#8203; x = μ + z × σ</div>
+      <p>Normal eğrinin altındaki alanlar kapalı bir formülle değil, tablolar ya da yazılımla hesaplanır; bu sayfa da aynı hesabı yapmaktadır. Ezberlenmesi yararlı üç değer: z = ±1 için yüzde 68, z = ±1,96 için yüzde 95, z = ±2,58 için yüzde 99.</p>
+    </details>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: "Bu hasta sıra dışı mı?"</h3>
+      <p>Bir genin sağlıklı bireylerdeki log2 ifade düzeyinin, ortalaması 8,0 ve standart sapması 1,0 olan bir normal dağılıma yaklaşık olarak uyduğunu varsayalım. Yeni bir hastada 10,5 ölçülmüştür; z-skoru (10,5 − 8,0) / 1,0 = 2,5'tir. Normal dağılımda z-skoru 2,5'in üstünde kalan oran yüzde 0,6 kadardır; dolayısıyla bu değer, sağlıklı bireylerde 160 kişide bir görülecek kadar sıra dışıdır. Aynı mantık Ünite 2'deki satır ölçeklenmiş heatmap'te ve ileride göreceğimiz test istatistiklerinde de kullanılmaktadır: bir gözlemin "ne kadar uçta" olduğu, hep ortalamadan kaç standart sapma uzakta olduğuyla ölçülür. Burada dikkat edilmesi gereken nokta, bu yorumun dağılımın gerçekten normal olduğu varsayımına dayanmasıdır; sağa çarpık ham sayımlarda z-skoru yanıltıcı olabilmektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 5. Bir ölçümün z-skoru −2'dir. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>Ölçüm, ortalamadan 2 birim küçüktür.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>Ölçüm, ortalamanın 2 standart sapma altındadır; normal dağılımda gözlemlerin yalnızca yüzde 2-2,5 kadarı bu kadar ya da daha düşüktür.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>Ölçüm negatiftir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Ölçüm, veri setindeki en düşük değerdir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Z-skoru ölçümün ortalamadan uzaklığını standart sapma biriminde verir. Normal dağılımda z = −2'nin altında kalan oran yüzde 2,3 kadardır; 68-95-99,7 kuralıyla kabaca yüzde 2,5 olarak da düşünülebilir (yüzde 95'in dışında kalan yüzde 5'in alt kuyruğu). Ölçümün kendisi negatif olmak zorunda değildir; ortalama 8 ve standart sapma 1 ise z = −2 değeri 6'dır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Ortalamanın 2 standart sapma altında. Z-skoru birim cinsinden bir fark değil, standart sapma cinsinden bir uzaklıktır; işareti ölçümün değil, ortalamaya göre konumun işaretidir. En düşük değer olması da gerekmez; normal dağılımda gözlemlerin yaklaşık yüzde 2,3'ü z = −2'nin altındadır.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 6. Bir hücre popülasyonunda bir genin ham transkript sayıları belirgin biçimde sağa çarpıktır. Aşağıdakilerden hangisi uygun bir yaklaşımdır?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Ham sayımların normal dağıldığını varsaymak yerine logaritmik dönüşüm sonrası ya da sayım dağılımlarıyla çalışmak.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Ham sayımlara 68-95-99,7 kuralını doğrudan uygulamak.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Büyük değerleri silip kalan veriyi normal saymak.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Normal dağılım her sayısal değişken için geçerlidir; ek işlem gerekmez.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. 68-95-99,7 kuralı yalnızca normal dağılım için geçerlidir. Sağa çarpık sayımlarda ya logaritmik ölçeğe geçilir ya da bir sonraki bölümdeki Poisson ve negatif binom gibi sayım dağılımları kullanılır. Büyük değerleri silmek ise gerçek biyolojik sinyali yok edebilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Logaritmik dönüşüm ya da sayım dağılımları. Normal dağılım bir varsayımdır ve sağa çarpık ham sayımlar bu varsayımı sağlamaz; 68-95-99,7 kuralı böyle bir veride yanlış oranlar verir. Büyük değerleri silmek veriyi "normalleştirmez", yalnızca bilgi kaybına yol açar.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 4. Binom ve Poisson ============ -->
+  <section aria-labelledby="b4">
+    <h2 id="b4">4. Sayımların dağılımı: binom ve Poisson</h2>
+    <p>Bu bölümde, sekanslama verisinin ham hâli olan sayımların hangi dağılımlarla modellendiğini görebilmek amacıyla iki kesikli dağılıma bakıyoruz. <span class="term">Binom dağılımı</span> <span class="en">(binomial distribution)</span>, her biri p olasılıkla "başarı" veren n bağımsız denemede toplam başarı sayısının dağılımıdır. Bir konumu kapsayan n okumadan kaçının varyant aleli taşıdığı (1. bölümdeki simülasyonun sorusu) binom dağılımına uyar: beklenen değer n × p, standart sapma √(n × p × (1 − p)). Genotip atama araçları, gözlenen varyant okuma sayısının p = 0,5 ve p = 1 altında ne kadar olası olduğunu bu dağılımla karşılaştırmaktadır.</p>
+    <p><span class="term">Poisson dağılımı</span> <span class="en">(Poisson distribution)</span>, belirli bir bölgede ya da sürede, nadir ve birbirinden bağımsız olayların sayısını modeller: bir genomik pencereye düşen okuma sayısı, bir hastada bir yıl içinde gelişen mutasyon sayısı, bir mililitredeki koloni sayısı. Tek bir parametresi vardır: ortalama λ (lambda). Poisson dağılımının belirleyici özelliği, varyansının ortalamasına eşit olmasıdır; λ büyüdükçe dağılım simetrikleşir ve normal dağılıma yaklaşır. Düzgün kapsanmış bir genomda okuma derinliği pencereden pencereye yaklaşık Poisson dalgalanması gösterir ve bundan çok daha büyük dalgalanmalar kopya sayısı değişimlerine (copy number variation) işaret edebilmektedir.</p>
+    <p>Biyolojik tekrarlar söz konusu olduğunda Poisson varsayımı çoğu zaman yetersiz kalır. Aynı koşuldaki üç farenin bir gendeki okuma sayıları, yalnızca sekanslamanın rastgeleliğinden değil, farelerin biyolojik farkından da değişir; bu nedenle gözlenen varyans Poisson'un öngördüğü ortalamadan büyüktür. Bu olguya <span class="term">aşırı yayılım</span> <span class="en">(overdispersion)</span> denir. RNA-seq diferansiyel ifade araçlarının (DESeq2, edgeR) negatif binom dağılımını (negative binomial distribution) kullanmasının nedeni budur: negatif binom, Poisson'un üzerine her gen için ek bir yayılım parametresi (dispersion parameter) ekleyerek biyolojik değişkenliği hesaba katmaktadır.</p>
+
+    <div class="card dist">
+      <h3 style="margin-top:0">Simülasyon: Binom dağılımı (n okumada varyant sayısı)</h3>
+      <p>n ve p değerlerini değiştirerek varyant okuma sayısının kuramsal dağılımını görebilir, "1 örneklem" ve "200 örneklem" düğmeleriyle rastgele çekilişlerin bu dağılıma nasıl oturduğunu izleyebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="bn">Okuma derinliği n</label>
+          <output id="bn-out" for="bn">20</output>
+          <input type="range" id="bn" min="1" max="60" step="1" value="20">
+        </div>
+        <div class="slider-wrap">
+          <label for="bp">Varyant alel olasılığı p</label>
+          <output id="bp-out" for="bp">0,50</output>
+          <input type="range" id="bp" min="0.05" max="0.95" step="0.05" value="0.5">
+        </div>
+        <div class="control-row"><div class="seg">
+          <button type="button" class="primary" id="b1">1 örneklem</button>
+          <button type="button" id="b200">200 örneklem</button>
+          <button type="button" id="b-reset">Sıfırlayınız</button>
+        </div></div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>Kuramsal olasılıklar ve <span class="swatch" style="background:var(--c2)"></span> gözlenen sıklıklar</h4>
+        <canvas id="binom" role="img" aria-label="Binom dağılımının çubukları (kuramsal) ve çekilen örneklemlerin sıklıkları (gözlenen)."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Beklenen değer n × p</div><div class="v" id="b-ev">-</div></div>
+        <div class="stat"><div class="k">Standart sapma</div><div class="v" id="b-sd">-</div></div>
+        <div class="stat"><div class="k">Çekilen örneklem</div><div class="v" id="b-n">0</div></div>
+        <div class="stat"><div class="k">Son çekiliş</div><div class="v" id="b-last">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> n = 20 ve p = 0,5 iken 10 varyant okuması en olası sonuçtur; buna karşın 7 ile 13 arasındaki her sonuç olağandır ve 20 okumada 6 ya da 14 varyant görmek de şaşırtıcı değildir. n büyüdükçe dağılım hem simetrikleşir hem de oran (k / n) olarak daralır; bu, 1. bölümdeki yakınsamanın dağılım dilindeki karşılığıdır.</p></div>
+    </div>
+
+    <div class="card dist">
+      <h3 style="margin-top:0">Simülasyon: Poisson dağılımı ve aşırı yayılım</h3>
+      <p>Bir genomik pencereye düşen okuma sayısının ortalamasını λ ile belirleyebilirsiniz. "Biyolojik değişkenlik" kaydırıcısı sıfırdayken sayımlar Poisson dağılımına uyar; kaydırıcı sağa çekildikçe aynı ortalamalı negatif binom dağılımı ortaya çıkar ve yayılım büyür.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="lam">Ortalama λ</label>
+          <output id="lam-out" for="lam">10</output>
+          <input type="range" id="lam" min="1" max="40" step="1" value="10">
+        </div>
+        <div class="slider-wrap">
+          <label for="disp">Biyolojik değişkenlik (yayılım parametresi)</label>
+          <output id="disp-out" for="disp">0,00</output>
+          <input type="range" id="disp" min="0" max="0.5" step="0.05" value="0">
+        </div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c3)"></span>Sayım dağılımı (kuramsal olasılıklar)</h4>
+        <canvas id="pois" role="img" aria-label="Poisson ya da negatif binom dağılımının çubukları; kesikli çizgi ortalama."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Ortalama</div><div class="v" id="p-mean">-</div></div>
+        <div class="stat"><div class="k">Varyans</div><div class="v" id="p-var">-</div></div>
+        <div class="stat"><div class="k">Varyans / ortalama</div><div class="v" id="p-ratio">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Poisson'da varyans / ortalama oranı her λ için 1'dir. Biyolojik değişkenlik eklendiğinde ortalama sabit kalırken varyans büyür ve dağılımın sağ kuyruğu uzar. Üç biyolojik tekrarlı bir RNA-seq deneyinde bu oranın 1'in çok üzerinde olması olağandır; bunu görmezden gelip Poisson varsayan bir analiz, rastlantısal farkları "anlamlı" sayma eğilimindedir.</p></div>
+    </div>
+
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Binom dağılımında n denemede tam k başarı olasılığı ve Poisson dağılımında tam k olay olasılığı:</p>
+      <div class="formula">P(k) = C(n, k) × p<sup>k</sup> × (1 − p)<sup>n − k</sup> &#8203; , &#8203; P(k) = <span class="frac"><span>λ<sup>k</sup> × e<sup>−λ</sup></span><span>k!</span></span></div>
+      <p>C(n, k), n denemeden k tanesinin kaç farklı biçimde seçilebileceğini verir. Binom için beklenen değer n × p ve varyans n × p × (1 − p); Poisson için beklenen değer ve varyans λ'dır. Negatif binomda varyans λ + φ × λ² olur; φ (fi) yayılım parametresidir ve φ = 0 Poisson'a karşılık gelir.</p>
+    </details>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Üç tekrar ve neden "sayımlar Poisson değildir"</h3>
+      <p>Bir gen, kontrol koşulundaki üç biyolojik tekrarda 100, 180 ve 260 okuma vermiş olsun; ortalama 180'dir. Poisson geçerli olsaydı standart sapma √180 ≈ 13 olurdu ve 100 ile 260 gibi değerler neredeyse olanaksız sayılırdı. Oysa üç tekrarın standart sapması 80'dir; varyans ortalamanın yaklaşık 35 katıdır. Bu, teknik değil biyolojik değişkenliktir ve diferansiyel ifade analizinde her gen için ayrı bir yayılım parametresi tahmin edilerek modele eklenir. Az tekrarlı deneylerde bu tahmin gürültülü olduğundan araçlar, tüm genlerin bilgisini paylaştırarak yayılım değerlerini ortak bir düzeye doğru çeker; bu işleme ılımlaştırma (shrinkage) denir. Ünite 10'da sonuç tablosunu okurken aynı düşüncenin kat değişimlerine uygulanmış biçimini göreceğiz.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 7. Heterozigot bir konumda (p = 0,5) 40 okuma derinliğinde kaç varyant okuması beklenir ve bu sayının standart sapması kaçtır?</legend>
+        <label class="opt"><input type="radio" name="q7" value="a"><span>20 beklenir; standart sapma 20'dir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="b"><span>20 beklenir; standart sapma 0,5'tir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="c"><span>20 beklenir; standart sapma √(40 × 0,5 × 0,5) ≈ 3,2'dir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="d"><span>Tam olarak 20 gözlenir; sapma olmaz.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Beklenen değer n × p = 20, standart sapma √(n × p × (1 − p)) = √10 ≈ 3,2'dir. Dolayısıyla 14 ile 26 arasındaki sonuçlar (yaklaşık ±2 standart sapma) heterozigot bir konum için olağandır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: 20 beklenir, standart sapma yaklaşık 3,2. Binom dağılımında beklenen değer n × p, varyans n × p × (1 − p) = 10, standart sapma ise bunun karekökü √10 ≈ 3,2'dir. Rastgele bir süreçte sonuç tam olarak beklenen değere eşit çıkmak zorunda değildir.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 8. Bir gen için üç biyolojik tekrarda okuma sayılarının ortalaması 200, varyansı 6 400'dür. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q8" value="a"><span>Veri Poisson dağılımına uyar; çünkü sayımlar her zaman Poisson'dur.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="b"><span>Varyans ortalamanın 32 katıdır; belirgin aşırı yayılım vardır ve negatif binom gibi bir model gereklidir.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="c"><span>Varyansın ortalamadan büyük olması ölçüm hatasını gösterir.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="d"><span>Varyans 6 400 olamaz; sayım verisinde varyans ortalamayı aşamaz.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Poisson'da varyans ortalamaya eşit (200) olurdu; 6 400, biyolojik tekrarlar arası değişkenliğin eklendiğini gösterir. Bu aşırı yayılımdır ve RNA-seq araçlarının negatif binom kullanmasının nedenidir; hata değil, biyolojinin kendisidir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Belirgin aşırı yayılım vardır. Sayımlar yalnızca tek bir örneğin teknik tekrarlarında Poisson'a yaklaşır; biyolojik tekrarlarda varyans ortalamayı çoğu zaman kat kat aşar. Bu, ölçüm hatası değil bireyler arası gerçek değişkenliktir ve negatif binom gibi bir modelle hesaba katılır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Olasılık uzun vadeli orandır; az sayıda tekrarda gözlenen oran ondan belirgin biçimde sapabilir ve rastgele süreçler önceki sapmayı "telafi etmez".</li>
+        <li>Koşullu olasılık P(A | B), B bilindiğinde A'nın olasılığıdır; bağımsızlıkta P(A | B) = P(A). CpG tükenmesi bağımsızlıktan sapmanın biyolojik örneğidir.</li>
+        <li>Bayes kuralı koşullu olasılığın yönünü çevirir; nadir bir durumda pozitif sonuçların çoğu yanlış pozitif olabilir ve pozitif tahmin değerini en çok özgüllük ile yaygınlık belirler.</li>
+        <li>Normal dağılım μ ve σ ile belirlenir; z-skoru bir değerin ortalamadan kaç standart sapma uzakta olduğunu verir; 68-95-99,7 kuralı yalnızca normal dağılım için geçerlidir.</li>
+        <li>Binom: n denemede başarı sayısı (varyant okumaları); Poisson: nadir olayların sayısı, varyans = ortalama; biyolojik tekrarlarda aşırı yayılım vardır ve negatif binom gerekir.</li>
+      </ul>
+    </div>
+    <p class="meta">Bir sonraki ünitede, tek bir örneklemden ne kadar emin olabileceğimizi ölçebilmek amacıyla örnekleme dağılımına, standart hataya, merkezi limit teoremine ve güven aralığına bakıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u02-ozet/index.html">Önceki: Ünite 2</a><a href="../index.html">Dizin</a><a href="../u04-ornekleme/index.html">Sonraki: Ünite 4, Örnekleme ve belirsizlik</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 3. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 1a. Yakınsama ---------- */
+  var cv = { p: 0.3, rng: BI.rng(BI.DEFAULT_SEED), n: 0, k: 0, path: [] };
+  function addReads(m) {
+    for (var i = 0; i < m; i++) {
+      cv.n++; if (cv.rng() < cv.p) { cv.k++; }
+      cv.path.push([cv.n, cv.k / cv.n]);
+    }
+    renderConv();
+  }
+  function resetConv() { cv.n = 0; cv.k = 0; cv.path = []; renderConv(); }
+  function renderConv() {
+    var c = document.getElementById("conv");
+    var xmax = Math.max(100, BI.niceMax(cv.n));
+    var p = BI.plot(c, { x: [0, xmax], y: [0, 1], pad: { l: 36, r: 10, t: 10, b: 40 } });
+    p.axes({ xticks: [0, xmax / 2, xmax], yticks: [{ v: 0, l: "0" }, { v: 0.5, l: "0,5" }, { v: 1, l: "1" }], grid: true, xlabel: "okuma sayısı", ylabel: "oran" });
+    p.hline(cv.p, p.col.text2, { dashed: true, label: "gerçek p = " + BI.fmt(cv.p, 2) });
+    if (cv.path.length) { p.line(cv.path, p.col.c2, { width: 2 }); var last = cv.path[cv.path.length - 1]; p.dot(last[0], last[1], p.col.c2, 5, { ring: true }); }
+    BI.text("c-n", BI.fmtInt(cv.n)); BI.text("c-k", BI.fmtInt(cv.k)); BI.text("c-p", cv.n ? BI.fmt(cv.k / cv.n, 3) : "-"); BI.text("c-true", BI.fmt(cv.p, 2));
+  }
+  BI.slider("pp", function (v) { cv.p = v; resetConv(); }, { digits: 2 });
+  BI.on("r1", "click", function () { addReads(1); });
+  BI.on("r100", "click", function () { addReads(100); });
+  BI.on("r1000", "click", function () { addReads(1000); });
+  BI.on("r-reset", "click", resetConv);
+  BI.onReseed(function (seed) { cv.rng = BI.rng(seed); resetConv(); });
+  BI.onRedraw(renderConv);
+  renderConv();
+
+  /* ---------- 1b. CpG tablosu ---------- */
+  var bases = ["A", "C", "G", "T"], freq = [0.29, 0.21, 0.21, 0.29], N = 100000;
+  function renderCpg(dep) {
+    // bağımsızlık tablosu; CG hücresi (1 - dep) ile çarpılır, eksilen kısım C satırının diğer hücrelerine orantılı dağıtılır
+    var t = [], i, j;
+    for (i = 0; i < 4; i++) { t.push([]); for (j = 0; j < 4; j++) { t[i].push(N * freq[i] * freq[j]); } }
+    var removed = t[1][2] * dep; t[1][2] -= removed;
+    var others = t[1][0] + t[1][1] + t[1][3];
+    [0, 1, 3].forEach(function (j2) { t[1][j2] += removed * t[1][j2] / others; });
+    var html = "<thead><tr><th>önceki \\ sonraki</th>";
+    for (j = 0; j < 4; j++) { html += "<th class=\"num\">" + bases[j] + "</th>"; }
+    html += "<th class=\"num\">Toplam</th></tr></thead><tbody>";
+    for (i = 0; i < 4; i++) {
+      html += "<tr" + (i === 1 ? " class=\"hl\"" : "") + "><th scope=\"row\">" + bases[i] + "</th>";
+      var rs = 0;
+      for (j = 0; j < 4; j++) { rs += t[i][j]; html += "<td class=\"num\">" + BI.fmtInt(t[i][j]) + "</td>"; }
+      html += "<td class=\"num\">" + BI.fmtInt(rs) + "</td></tr>";
+    }
+    html += "</tbody>";
+    document.getElementById("cpg-table").innerHTML = html;
+    var colG = t[0][2] + t[1][2] + t[2][2] + t[3][2];
+    var rowC = t[1][0] + t[1][1] + t[1][2] + t[1][3];
+    var pG = colG / N, pGC = t[1][2] / rowC, expCG = rowC * colG / N; // beklenen = N x P(C) x P(G), tablodaki kenar toplamlarıyla
+    BI.text("pg", BI.fmt(pG, 3)); BI.text("pgc", BI.fmt(pGC, 3)); BI.text("oe", BI.fmt(t[1][2] / expCG, 2));
+  }
+  BI.slider("dep", renderCpg, { digits: 2 });
+  renderCpg(0.75);
+
+  /* ---------- 2. Bayes ikon dizisi ---------- */
+  var by = { prev: 1, sens: 95, spec: 95 };
+  function renderBayes() {
+    var total = 10000, dis = Math.round(total * by.prev / 100), hea = total - dis;
+    var tp = Math.round(dis * by.sens / 100), fn = dis - tp;
+    var tn = Math.round(hea * by.spec / 100), fp = hea - tn;
+    var pos = tp + fp, neg = fn + tn;
+    ["tp", "fn", "dis", "fp", "tn", "hea", "pos", "neg"].forEach(function (id) { BI.text(id, BI.fmtInt({ tp: tp, fn: fn, dis: dis, fp: fp, tn: tn, hea: hea, pos: pos, neg: neg }[id])); });
+    BI.text("ppv", pos ? "yüzde " + BI.fmt(100 * tp / pos, 1) : "-");
+    BI.text("npv", neg ? "yüzde " + BI.fmt(100 * tn / neg, 1) : "-");
+    // ikon dizisi: 1000 kare (her biri 10 kişi), sıra: TP, FP, FN, TN; her kare en yakın tam sayıya yuvarlanır
+    var c = document.getElementById("icons");
+    var COLS = 50, ROWS = 20;
+    var p = BI.plot(c, { x: [0, COLS], y: [0, ROWS], pad: { l: 2, r: 2, t: 2, b: 2 } });
+    var cw = p.plotW / COLS, ch = p.plotH / ROWS;
+    var nTp = Math.round(tp / 10), nFp = Math.round(fp / 10), nFn = Math.round(fn / 10);
+    if (tp > 0 && nTp === 0) { nTp = 1; } if (fp > 0 && nFp === 0) { nFp = 1; } if (fn > 0 && nFn === 0) { nFn = 1; }
+    for (var k = 0; k < COLS * ROWS; k++) {
+      var cx = k % COLS, cy = Math.floor(k / COLS);
+      var x = p.sx(cx) + 1, y = p.sy(cy + 1) + 1, w = cw - 2, h = ch - 2;
+      if (k < nTp) { p.ctx.fillStyle = p.col.c2; p.ctx.fillRect(x, y, w, h); }
+      else if (k < nTp + nFp) { p.hatchRect(x, y, w, h, p.col.c2); }
+      else if (k < nTp + nFp + nFn) { p.hatchRect(x, y, w, h, p.col.c1); }
+      else { p.ctx.save(); p.ctx.globalAlpha = 0.35; p.ctx.fillStyle = p.col.c1; p.ctx.fillRect(x, y, w, h); p.ctx.restore(); }
+    }
+  }
+  BI.slider("prev", function (v) { by.prev = v; renderBayes(); }, { digits: 1 });
+  BI.slider("sens", function (v) { by.sens = v; renderBayes(); });
+  BI.slider("spec", function (v) { by.spec = v; renderBayes(); });
+  BI.onRedraw(renderBayes);
+  renderBayes();
+
+  /* ---------- 3. Normal dağılım ---------- */
+  var nd = { mu: 8, sig: 1, a: 7, b: 9 };
+  function renderNormal() {
+    var c = document.getElementById("normal");
+    var ymax = BI.normPdf(0, 0, 0.5) * 1.1;
+    var p = BI.plot(c, { x: [2, 14], y: [0, ymax], pad: { l: 12, r: 12, t: 10, b: 40 } });
+    p.axes({ xticks: [2, 4, 6, 8, 10, 12, 14], xlabel: "log2 ifade düzeyi" });
+    var f = function (x) { return BI.normPdf(x, nd.mu, nd.sig); };
+    var a = Math.min(nd.a, nd.b), b = Math.max(nd.a, nd.b);
+    p.fillUnder(f, a, b, p.col.c1, 0.35);
+    p.curve(f, p.col.c1);
+    p.vline(nd.mu, p.col.text2, { dashed: true, label: "μ = " + BI.fmt(nd.mu, 1) });
+    p.vline(a, p.col.c2, { width: 1.5 }); p.vline(b, p.col.c2, { width: 1.5 });
+    var za = (a - nd.mu) / nd.sig, zb = (b - nd.mu) / nd.sig;
+    var area = BI.normCdf(zb) - BI.normCdf(za);
+    BI.text("za", BI.fmt(za, 2)); BI.text("zb", BI.fmt(zb, 2));
+    BI.text("area", "yüzde " + BI.fmt(100 * area, 1)); BI.text("upper", "yüzde " + BI.fmt(100 * (1 - BI.normCdf(zb)), 1));
+  }
+  BI.slider("mu", function (v) { nd.mu = v; renderNormal(); }, { digits: 1 });
+  BI.slider("sig", function (v) { nd.sig = v; renderNormal(); }, { digits: 1 });
+  BI.slider("xa", function (v) { nd.a = v; renderNormal(); }, { digits: 1 });
+  BI.slider("xb", function (v) { nd.b = v; renderNormal(); }, { digits: 1 });
+  BI.onRedraw(renderNormal);
+  renderNormal();
+
+  /* ---------- 4a. Binom ---------- */
+  var bi = { n: 20, p: 0.5, rng: BI.rng(BI.DEFAULT_SEED + 3), draws: [], last: null };
+  function renderBinom() {
+    var c = document.getElementById("binom");
+    var probs = [], k, maxp = 0;
+    for (k = 0; k <= bi.n; k++) { probs.push(BI.binomPmf(k, bi.n, bi.p)); maxp = Math.max(maxp, probs[k]); }
+    var obs = new Array(bi.n + 1); for (k = 0; k <= bi.n; k++) { obs[k] = 0; }
+    bi.draws.forEach(function (d) { obs[d]++; });
+    var maxObs = 0; if (bi.draws.length) { for (k = 0; k <= bi.n; k++) { maxObs = Math.max(maxObs, obs[k] / bi.draws.length); } }
+    var top = BI.niceMax(Math.max(maxp, maxObs) * 1.15);
+    var p = BI.plot(c, { x: [-0.5, bi.n + 0.5], y: [0, top], pad: { l: 40, r: 10, t: 10, b: 40 } });
+    var step = bi.n <= 20 ? 2 : bi.n <= 40 ? 5 : 10, xt = []; for (k = 0; k <= bi.n; k += step) { xt.push(k); }
+    p.axes({ xticks: xt, yticks: BI.yTicks(top).map(function (v) { return { v: v, l: BI.fmt(v, 2) }; }), grid: true, xlabel: "varyant okuma sayısı k", ylabel: "olasılık" });
+    for (k = 0; k <= bi.n; k++) {
+      p.barAt(k, probs[k], 0.8, p.col.c1);
+      if (bi.draws.length) { p.barAt(k, obs[k] / bi.draws.length, 0.45, p.col.c2); }
+    }
+    if (bi.last !== null) { p.text("son: " + bi.last, bi.last, top * 0.95, { align: "center", color: p.col.c2 }); }
+    BI.text("b-ev", BI.fmt(bi.n * bi.p, 1)); BI.text("b-sd", BI.fmt(Math.sqrt(bi.n * bi.p * (1 - bi.p)), 2));
+    BI.text("b-n", BI.fmtInt(bi.draws.length)); BI.text("b-last", bi.last === null ? "-" : String(bi.last));
+  }
+  function drawBinom(m) { for (var i = 0; i < m; i++) { bi.last = BI.randBinom(bi.rng, bi.n, bi.p); bi.draws.push(bi.last); } renderBinom(); }
+  BI.slider("bn", function (v) { bi.n = v; bi.draws = []; bi.last = null; renderBinom(); });
+  BI.slider("bp", function (v) { bi.p = v; bi.draws = []; bi.last = null; renderBinom(); }, { digits: 2 });
+  BI.on("b1", "click", function () { drawBinom(1); });
+  BI.on("b200", "click", function () { drawBinom(200); });
+  BI.on("b-reset", "click", function () { bi.draws = []; bi.last = null; renderBinom(); });
+  BI.onRedraw(renderBinom);
+  renderBinom();
+
+  /* ---------- 4b. Poisson / negatif binom ---------- */
+  var po = { lam: 10, phi: 0 };
+  function nbPmf(k, mu, phi) { // negatif binom, ortalama mu, yayılım phi (varyans mu + phi mu^2)
+    if (phi <= 0) { return BI.poisPmf(k, mu); }
+    var r = 1 / phi, q = r / (r + mu);
+    return Math.exp(BI.lgamma(k + r) - BI.lgamma(r) - BI.lgamma(k + 1) + r * Math.log(q) + k * Math.log(1 - q));
+  }
+  function renderPois() {
+    var c = document.getElementById("pois");
+    var kmax = Math.ceil(po.lam + 4 * Math.sqrt(po.lam + po.phi * po.lam * po.lam)) + 2;
+    kmax = Math.min(kmax, 120);
+    var probs = [], k, maxp = 0;
+    for (k = 0; k <= kmax; k++) { probs.push(nbPmf(k, po.lam, po.phi)); maxp = Math.max(maxp, probs[k]); }
+    var top = BI.niceMax(maxp * 1.15);
+    var p = BI.plot(c, { x: [-0.5, kmax + 0.5], y: [0, top], pad: { l: 40, r: 10, t: 10, b: 40 } });
+    var step = kmax <= 25 ? 5 : kmax <= 60 ? 10 : 20, xt = []; for (k = 0; k <= kmax; k += step) { xt.push(k); }
+    p.axes({ xticks: xt, yticks: BI.yTicks(top).map(function (v) { return { v: v, l: BI.fmt(v, 2) }; }), grid: true, xlabel: "pencereye düşen okuma sayısı", ylabel: "olasılık" });
+    for (k = 0; k <= kmax; k++) { p.barAt(k, probs[k], 0.8, p.col.c3); }
+    p.vline(po.lam, p.col.text2, { dashed: true, label: "ortalama " + BI.fmt(po.lam, 0) });
+    var v = po.lam + po.phi * po.lam * po.lam;
+    BI.text("p-mean", BI.fmt(po.lam, 0)); BI.text("p-var", BI.fmt(v, 1)); BI.text("p-ratio", BI.fmt(v / po.lam, 2));
+  }
+  BI.slider("lam", function (v) { po.lam = v; renderPois(); });
+  BI.slider("disp", function (v) { po.phi = v; renderPois(); }, { digits: 2 });
+  BI.onRedraw(renderPois);
+  renderPois();
+})();
+</script>
+</body>
+</html>

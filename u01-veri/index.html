@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 1: Veri, ölçüm ve çalışma tasarımı</title>
+<meta name="description" content="Popülasyon ve örneklem, değişken türleri, omik verinin üç tablosu, gözlemsel çalışma ile deney, karıştırıcılar ve batch etkisi, biyolojik ve teknik tekrar.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .tissue canvas { height: 220px; }
+  .strip canvas { height: 136px; }
+  .classify .item { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; margin: 10px 0; }
+  .classify .item .q { font-weight: 600; margin-bottom: 6px; }
+  .classify .item .seg button { font-size: 0.9rem; }
+  .classify .item .fb { margin-top: 8px; font-size: 0.95rem; display: none; padding: 8px 10px; border-radius: 8px; }
+  .classify .item .fb.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+  .classify .item .fb.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+  .three { display: grid; gap: 14px; grid-template-columns: 1fr; }
+  .three > div { min-width: 0; }
+  @media (min-width: 760px) { .three { grid-template-columns: 1.3fr 1fr; } .three .matrix { grid-column: 1 / -1; } }
+  .three table { font-size: 0.88rem; margin: 6px 0 0; }
+  .three th, .three td { padding: 5px 7px; white-space: nowrap; }
+  .three td.cell { cursor: pointer; text-align: right; }
+  .three td.cell:hover { outline: 2px solid var(--accent); outline-offset: -2px; }
+  .three .hl-row td, .three .hl-row th { background: var(--warn-bg); }
+  .three th.hl-col, .three td.hl-col { background: var(--warn-bg); }
+  .three td.sel { outline: 3px solid var(--accent); outline-offset: -3px; font-weight: 700; }
+  .three th.cond-a, .three td.cond-a { border-top: 3px solid var(--c1); }
+  .three th.cond-b, .three td.cond-b { border-top: 3px solid var(--c2); }
+  .three th.batch-1, .three td.batch-1 { border-bottom: 3px solid var(--c3); }
+  .three th.batch-2, .three td.batch-2 { border-bottom: 3px solid var(--c7); }
+  .three .cap { font-size: 0.88rem; color: var(--text-2); margin: 8px 0 0; }
+  .design canvas { height: 230px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../index.html">Dizin</a><a href="../u02-ozet/index.html">Sonraki: Ünite 2</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 1 · yaklaşık 60 dakika</p>
+    <h1>Veri, ölçüm ve çalışma tasarımı</h1>
+    <p class="lead">Bu ünitede, bir istatistiksel analizin neyi ölçtüğünü ve ölçülen şeyin hangi soruyu yanıtlayabileceğini anlayabilmek amacıyla verinin kendisine bakıyoruz: ölçtüğümüz grup ile hakkında konuşmak istediğimiz bütün arasındaki fark, değişkenlerin türleri, bir omik veri setinin yapısı ve veri toplama biçiminin yorumu nasıl belirlediği.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>Popülasyon ile örneklem arasındaki farkı bir sekanslama deneyi üzerinden açıklayabilirsiniz.</li>
+      <li>Bir değişkenin kategorik mi sayısal mı, kesikli mi sürekli mi olduğunu ayırt edebilirsiniz.</li>
+      <li>Bir omik veri setinin üç tablosunu (ölçüm matrisi, örnek bilgileri, özellik bilgileri) tanıyabilirsiniz.</li>
+      <li>Gözlemsel çalışma ile deneyi ayırt edebilir, karıştırıcı değişkenin ve batch etkisinin bir farkı nasıl taklit edebileceğini açıklayabilirsiniz.</li>
+      <li>Biyolojik tekrar ile teknik tekrarın neden aynı şey olmadığını gerekçelendirebilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Popülasyon ve örneklem</a></li>
+      <li><a href="#b2">Değişken türleri</a></li>
+      <li><a href="#b3">Omik verinin üç tablosu</a></li>
+      <li><a href="#b4">Gözlemsel çalışma, deney ve karıştırıcılar</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Popülasyon ve örneklem ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Popülasyon ve örneklem</h2>
+    <p>Bu bölümde, tek bir deneyden elde edilen sayının neyi temsil ettiğini anlayabilmek amacıyla ölçtüğümüz birimler ile hakkında bilgi edinmek istediğimiz bütün arasındaki ilişkiye bakıyoruz. Bir dokuda bir genin ifade düzeyini merak ettiğimizde, dokudaki her hücreyi ölçmek ne mümkün ne de gereklidir; bunun yerine sınırlı sayıda hücre ya da örnek ölçülür ve bütün hakkında bu sınırlı ölçümden yola çıkarak bir yargıya varılır. (Bu derste "örnek" sözcüğü bir hastadan, dokudan ya da kültürden alınan biyolojik materyali; "örneklem" ise ölçülen birimlerin istatistiksel kümesini anlatmaktadır.)</p>
+    <p>Hakkında bilgi edinmek istediğimiz birimlerin tamamına <span class="term">popülasyon</span> <span class="en">(population)</span>, gerçekten ölçtüğümüz alt kümeye ise <span class="term">örneklem</span> <span class="en">(sample)</span> diyoruz. Popülasyona ait bir sayı, örneğin tüm hücrelerdeki ortalama ifade düzeyi, bir <span class="term">parametre</span> <span class="en">(parameter)</span> olarak adlandırılır ve çoğu zaman bilinmez. Örneklemden hesapladığımız karşılığı ise bir <span class="term">istatistik</span> <span class="en">(statistic)</span> olarak adlandırılmaktadır. İstatistiksel çıkarımın temel işi, elimizdeki istatistikten bilinmeyen parametre hakkında ne söyleyebileceğimizi belirlemektir.</p>
+    <p>Burada önemli olan, örneklemin popülasyonu temsil edebilmesidir. Hücreler ya da örnekler <span class="term">rastgele örnekleme</span> <span class="en">(random sampling)</span> ile seçildiğinde hiçbir birim sistematik olarak dışlanmaz ve her birimin seçilme şansı önceden bilinir; bu durumda örneklem popülasyona benzemek zorunda değildir, ancak sistematik olarak ondan farklı olması beklenmez. Buna karşın, örneğin yalnızca kolay izole edilen büyük hücrelerin ölçülmesi, popülasyonun bir kısmını sistematik olarak dışarıda bırakır ve hiçbir örneklem büyüklüğü bu yanlılığı düzeltemez.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Simülasyon: Bir doku kesitinden hücre örneklemek</h3>
+      <p>Aşağıdaki kare, 2 000 hücreden oluşan bir doku kesitini temsil etmektedir; her hücrenin rengi, bir genin o hücredeki ifade düzeyini göstermektedir (soluk mavi düşük, canlı mavi yüksek ifade). Bu simülasyonda popülasyon ortalaması μ bilinmektedir; gerçek bir deneyde bilinmez. Örneklem büyüklüğünü (sample size, n) seçip örneklem çekebilirsiniz; seçilen hücreler turuncu halkayla işaretlenir ve örneklem ortalaması x̄ hesaplanır.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="n1-label">Örneklem büyüklüğü (n)</span>
+          <div class="seg" id="n1-seg" role="group" aria-labelledby="n1-label">
+            <button type="button" data-value="5" aria-pressed="false">5 hücre</button>
+            <button type="button" data-value="20" aria-pressed="true">20 hücre</button>
+            <button type="button" data-value="100" aria-pressed="false">100 hücre</button>
+          </div>
+        </div>
+        <div class="control-row">
+          <div class="seg">
+            <button type="button" class="primary" id="draw1">Tek örneklem</button>
+            <button type="button" id="draw1-20">20 örneklem art arda</button>
+            <button type="button" data-reseed>Rastgeleliği yenileyiniz</button>
+          </div>
+        </div>
+      </div>
+      <div class="charts two">
+        <div class="chart tissue">
+          <h4><span class="swatch" style="background:var(--c1)"></span>Doku kesiti: 2 000 hücre</h4>
+          <canvas id="tissue" role="img" aria-label="Doku kesitindeki hücreler; seçilen örneklem turuncu halkalarla işaretlenir."></canvas>
+          <p class="caption" id="tissue-cap"></p>
+        </div>
+        <div class="chart strip">
+          <h4><span class="swatch" style="background:var(--c2)"></span>Son örneklemlerin ortalamaları</h4>
+          <canvas id="strip" role="img" aria-label="Çekilen her örneklemin ortalaması bir nokta olarak, popülasyon ortalaması kesikli çizgi olarak gösterilir."></canvas>
+          <p class="caption" id="strip-cap">Henüz örneklem çekilmedi.</p>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Popülasyon ortalaması μ</div><div class="v" id="s1-mu">-</div></div>
+        <div class="stat"><div class="k">Son örneklem ortalaması x̄</div><div class="v" id="s1-xbar">-</div></div>
+        <div class="stat"><div class="k">Fark x̄ − μ</div><div class="v" id="s1-diff">-</div></div>
+        <div class="stat"><div class="k">Çekilen örneklem sayısı</div><div class="v" id="s1-count">0</div></div>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> n = 5 ile art arda 20 örneklem çektiğimizde ortalamaların μ etrafında geniş bir bantta dağıldığını, n = 100 ile ise aynı bandın belirgin biçimde daraldığını görüyoruz. Örneklem ortalaması popülasyon ortalamasına tam olarak eşit çıkmaz; ancak rastgele örneklemede ortalamaların μ'nün bir tarafına sistematik olarak kayması beklenmez. Bu değişkenliğin ölçüsünü Ünite 4'te ele alıyoruz.</p>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Single-cell deneyinde "ortalama ifade"</h3>
+      <p>Bir single-cell RNA sekanslama deneyinde bir dokudan 3 000 hücre yakalanmış ve bir genin ortalama ifadesi hesaplanmış olsun. Bu 3 000 hücre, dokunun milyonlarca hücresinden oluşan popülasyonun bir örneklemidir; hesaplanan ortalama ise bir istatistiktir. Bu nedenle "bu dokuda genin ortalama ifadesi şu kadardır" cümlesi her zaman örtük bir belirsizlik taşır. Dahası, hücre yakalama işleminin bazı hücre tiplerini (örn. büyük ya da kırılgan hücreleri) sistematik olarak kaçırması, örneklemi popülasyondan uzaklaştıran bir <span class="term">seçim yanlılığıdır</span> <span class="en">(selection bias)</span>; bu yanlılık daha fazla hücre yakalayarak giderilemez.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. Bir araştırmacı, 40 hastadan alınan tümör örneklerinde bir genin ortalama ifadesini ölçüyor ve "bu tümör tipinde genin ortalama ifadesi 12,4 birimdir" diyor. Aşağıdakilerden hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>12,4 bir parametredir; çünkü gerçek ölçümlerden hesaplanmıştır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>12,4 bir istatistiktir; popülasyon parametresi bilinmemektedir ve 40 başka hasta biraz farklı bir değer verirdi.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>40 hasta ölçüldüğü için popülasyon ortalaması tam olarak 12,4'tür.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>Popülasyon, bu 40 hastadır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. 40 hasta örneklemdir; hakkında konuşulan "bu tümör tipi" ise popülasyondur. Hesaplanan ortalama bir istatistiktir ve başka bir 40 hastalık örneklemde biraz farklı çıkması beklenir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: 12,4 bir istatistiktir. Ölçülen 40 hasta örneklemi, "bu tümör tipi" ifadesi ise popülasyonu temsil eder. Örneklemden hesaplanan her sayı bir istatistiktir; popülasyon ortalaması (parametre) bilinmez ve başka bir örneklemde istatistik biraz farklı çıkar.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 2. Aşağıdaki örnekleme yöntemlerinden hangisi, örneklemi popülasyondan sistematik olarak uzaklaştırma riski taşır?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Doku kesitindeki hücrelerin rastgele seçilmesi.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>Hasta listesinden kura ile 40 hastanın seçilmesi.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Yalnızca izolasyon sırasında sağlam kalan büyük hücrelerin ölçülmesi.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Örneklem büyüklüğünün 20'den 100'e çıkarılması.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Belirli bir hücre türünün sistematik olarak dışarıda kalması bir seçim yanlılığıdır; örneklem büyüdükçe bu yanlılık azalmaz, yalnızca daha kesin biçimde yanlış bir değere yaklaşılır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yalnızca sağlam kalan büyük hücrelerin ölçülmesi. Rastgele seçim ve kura, her birime eşit şans verdiği için sistematik yanlılık yaratmaz; örneklemi büyütmek ise değişkenliği azaltır, ancak yanlılığı değiştirmez. Belirli bir hücre türünün dışarıda kalması ise sistematik bir yanlılıktır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. Değişken türleri ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Değişken türleri</h2>
+    <p>Bu bölümde, bir veri setinde hangi özet ve hangi grafiğin anlamlı olduğunu ve daha sonra hangi testin uygulanabileceğini belirleyebilmek amacıyla değişkenlerin türlerine bakıyoruz. Bir <span class="term">değişken</span> <span class="en">(variable)</span>, her birim (hücre, örnek, hasta) için ölçülen ya da kaydedilen bir özelliktir. Değişkenin aldığı değerlerin türü, onunla yapılabilecek işlemleri belirlemektedir.</p>
+    <ul>
+      <li><span class="term">Kategorik değişken</span> <span class="en">(categorical variable)</span>: Değerler birer etikettir; doku tipi, genotip (AA, AG, GG), tedavi grubu gibi. Etiketlerin doğal bir sırası varsa (tümör evresi I-IV gibi) değişken <span class="term">sıralı kategorik değişken</span> <span class="en">(ordinal variable)</span> olarak adlandırılır; sıra bilgisi vardır, ancak evreler arasındaki uzaklık tanımlı değildir (I ile II arasındaki fark, III ile IV arasındaki farkla karşılaştırılamaz).</li>
+      <li><span class="term">Sayısal değişken</span> <span class="en">(numerical variable)</span>: Değerler birer sayıdır ve aralarındaki fark anlamlıdır. Sayısal değişkenler ikiye ayrılır: <span class="term">kesikli</span> <span class="en">(discrete)</span> değişkenler yalnızca sayılabilir değerler alır (bir gene düşen okuma sayısı: 0, 1, 2, ...); <span class="term">sürekli</span> <span class="en">(continuous)</span> değişkenler ise bir aralıktaki her değeri alabilir (normalize edilmiş ifade düzeyi, metilasyon oranı).</li>
+    </ul>
+    <p>Bu ayrım biyoinformatikte özellikle önemlidir; çünkü sekanslama verisinin ham hâli neredeyse her zaman <span class="term">sayım verisidir</span> <span class="en">(count data)</span>: bir gene, bir bölgeye ya da bir varyanta düşen okuma sayısı. Sayım verisi kesiklidir, sıfırdan küçük olamaz ve çoğu zaman sağa çarpıktır (right-skewed; az sayıda çok büyük değer uzun bir sağ kuyruk oluşturur); bu özellikler, ileride göreceğimiz üzere, hangi modelin uygun olduğunu doğrudan etkilemektedir. Aynı değerin normalize edilmiş ya da logaritması alınmış biçimi ise sürekli bir değişken gibi ele alınır.</p>
+
+    <div class="card classify">
+      <h3 style="margin-top:0">Etkinlik: Değişkeni sınıflandırma</h3>
+      <p>Aşağıdaki her değişken için türünü seçebilirsiniz; yanıt anında değerlendirilir ve gerekçesi görünür.</p>
+      <div id="classify-list"></div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Doğru</div><div class="v" id="cl-ok">0</div></div>
+        <div class="stat"><div class="k">Yanıtlanan</div><div class="v" id="cl-n">0 / 10</div></div>
+      </div>
+      <div class="control-row" style="margin-top:10px"><button type="button" id="cl-reset">Etkinliği sıfırlayınız</button></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Bir RNA-seq örnek tablosundaki sütunlar</h3>
+      <p>Bir RNA sekanslama (RNA-seq) çalışmasının örnek tablosunda şu sütunların bulunduğunu düşünelim: <code>ornek_id</code>, <code>kosul</code> (kontrol / tedavi), <code>cinsiyet</code>, <code>yas</code>, <code>batch</code> (1. gün / 2. gün), <code>toplam_okuma</code> ve <code>RIN</code> (RNA bütünlük sayısı, 1-10 arası sürekli bir kalite ölçüsü). Burada <code>kosul</code>, <code>cinsiyet</code> ve <code>batch</code> kategorik, <code>yas</code> (yıl olarak yuvarlanıp kaydedilse de sürekli bir ölçümdür) ve <code>RIN</code> sürekli sayısal, <code>toplam_okuma</code> ise kesikli sayısal bir değişkendir. Ünite 5'te iki koşul arasındaki ifade farkını karşılaştırırken kategorik bir değişkeni (koşul) sayısal bir değişkenle (ifade) ilişkilendireceğiz; Ünite 6'da ise iki kategorik değişken (genotip ve hastalık durumu) arasındaki ilişkiye bakacağız. Test seçimi, değişkenin türüne ilişkin bu bilgiden başlamaktadır.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 3. "Bir örnekte tespit edilen somatik mutasyon sayısı" değişkeni için en doğru sınıflandırma hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>Kategorik; çünkü mutasyonlar birer etikettir.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>Sayısal, kesikli; çünkü yalnızca 0, 1, 2, ... değerlerini alabilir ve farklar anlamlıdır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Sayısal, sürekli; çünkü çok büyük değerler alabilir.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>Sıralı kategorik; çünkü az, orta ve çok olarak gruplanabilir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Mutasyon sayısı bir sayımdır: tam sayı değerleri alır, sıfırın altına inemez ve 5 ile 10 arasındaki fark anlamlıdır. Büyük değerler alabilmesi onu sürekli yapmaz; gruplanabilmesi ise verinin kendisinin sayısal olduğunu değiştirmez.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Sayısal, kesikli. Bir sayım yalnızca tam sayı değerleri alır ve farklar anlamlıdır; bu, kesikli sayısal değişkenin tanımıdır. Sayımın büyük değerler alabilmesi onu sürekli yapmaz; sonradan "az / orta / çok" biçiminde gruplanabilmesi de ham değişkenin türünü değiştirmez.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 4. Bir genin normalize edilmiş ifade düzeyi (örn. log2 ölçeğinde TPM) için hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Kesikli sayısaldır; çünkü okuma sayısından türetilmiştir.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>Kategoriktir; çünkü genler birer etikettir.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Sürekli sayısal olarak ele alınır; çünkü bir aralıktaki her değeri alabilir.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>Sıralı kategoriktir; çünkü düşükten yükseğe sıralanabilir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Normalizasyon ve logaritma, kesikli sayımı sürekli bir ölçeğe taşır; analizlerde bu değer sürekli sayısal bir değişken gibi ele alınmaktadır. Gen adının kategorik olması, genin ifade düzeyinin kategorik olduğu anlamına gelmez.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Sürekli sayısal. Ham okuma sayısı kesiklidir; ancak normalize edilip logaritması alındığında değer bir aralıktaki her sayıyı alabilir ve sürekli olarak ele alınır. Gen adı kategorik bir değişkendir, genin ifade düzeyi ise sayısaldır; sıralanabilir olmak her sayısal değişkenin özelliğidir ve onu kategorik yapmaz.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Üç tablo ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Omik verinin üç tablosu</h2>
+    <p>Bu bölümde, bir omik veri setini ilk kez açtığımızda ne gördüğümüzü anlayabilmek amacıyla verinin yapısına bakıyoruz. Bir RNA-seq, metilasyon ya da proteomik <span class="term">veri seti</span> <span class="en">(data set)</span>, tek bir tablo değil, birbirine bağlı üç tablodan oluşmaktadır:</p>
+    <ol>
+      <li><strong>Ölçüm matrisi</strong> <span class="en">(assay / count matrix)</span>: Satırlarda özellikler (genler, bölgeler, proteinler), sütunlarda örnekler; tablonun her gözesinde (cell) bir ölçüm (okuma sayısı ya da normalize edilmiş düzey). Bir insan RNA-seq deneyinde bu matris 20 000'den fazla satır ve örnek sayısı kadar sütun içerir.</li>
+      <li><strong>Örnek bilgileri</strong> <span class="en">(sample metadata, colData)</span>: Her örnek için bir satır; koşul, doku, cinsiyet, yaş, işlem günü (batch) gibi değişkenler. Bu tablonun satırları, ölçüm matrisinin sütunlarıyla birebir eşleşir.</li>
+      <li><strong>Özellik bilgileri</strong> <span class="en">(feature annotation, rowData)</span>: Her gen için bir satır; gen sembolü, kromozom, gen uzunluğu, biyotip gibi. Bu tablonun satırları, ölçüm matrisinin satırlarıyla birebir eşleşir.</li>
+    </ol>
+    <p>İstatistiksel soruların çoğu bu üç tabloyu birleştirir: "tedavi grubunda hangi genler artıyor?" sorusu, ölçüm matrisinin her satırını örnek bilgilerindeki <code>kosul</code> sütunuyla ilişkilendirir; sonuç ise özellik bilgileriyle (gen adı) etiketlenir. Dolayısıyla örnek bilgilerinin satır sırasının ölçüm matrisinin sütun sırasıyla eşleşmesi, analizin doğruluğu için özellikle önemlidir: sıranın karışması, hiçbir hata mesajı vermeden tamamen yanlış sonuçlar üretebilmektedir.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Etkinlik: Bağlı üç tablo</h3>
+      <p>Aşağıdaki küçük veri seti 6 gen ve 6 örnekten oluşmaktadır. Ölçüm matrisinde bir gözeye tıklayarak (ya da klavyeyle seçip Enter'a basarak) o gözenin ait olduğu örneği ve geni diğer iki tabloda vurgulayabilirsiniz. Sütun başlıklarının üst çizgisi koşulu, alt çizgisi işlem batch'ini göstermektedir.</p>
+      <div class="three">
+        <div class="matrix">
+          <h4>Ölçüm matrisi (okuma sayısı)</h4>
+          <div class="table-wrap"><table id="t-matrix"></table></div>
+          <p class="cap" id="t-cap">Bir göze seçildiğinde burada açıklaması görünür.</p>
+        </div>
+        <div>
+          <h4>Örnek bilgileri</h4>
+          <div class="table-wrap"><table id="t-samples"></table></div>
+        </div>
+        <div>
+          <h4>Özellik (gen) bilgileri</h4>
+          <div class="table-wrap"><table id="t-genes"></table></div>
+        </div>
+      </div>
+      <div class="legend" style="margin-top:10px">
+        <span><span class="swatch" style="background:var(--c1)"></span>kontrol</span>
+        <span><span class="swatch" style="background:var(--c2)"></span>tedavi</span>
+        <span><span class="swatch" style="background:var(--c3)"></span>1. gün batch'i</span>
+        <span><span class="swatch" style="background:var(--c7)"></span>2. gün batch'i</span>
+      </div>
+      <div class="note warn">
+        <p><strong>Dikkat edilmesi gereken nokta:</strong> Bu küçük veri setinde kontrol örneklerinin tamamı 1. gün, tedavi örneklerinin tamamı 2. gün işlenmiştir. Bir sonraki bölümde bu tasarımın neden sorun yarattığını ele alıyoruz.</p>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Halka açık bir veri setini indirmek</h3>
+      <p>GEO (Gene Expression Omnibus) gibi bir arşivden bir RNA-seq çalışması indirildiğinde genellikle iki ya da üç dosya gelir: bir sayım matrisi (satırlar gen kimlikleri, sütunlar örnek kimlikleri), bir örnek tablosu (her örneğin koşulu, dokusu ve diğer bilgileri) ve çoğu zaman ayrı bir gen açıklama dosyası (gen kimliğinden gen sembolüne eşleme). Analize başlamadan önce yapılması gereken ilk kontrol, sayım matrisindeki sütun kimliklerinin örnek tablosundaki satır kimlikleriyle aynı sırada ve aynı yazımda olduğunu doğrulamaktır; ikinci kontrol ise örnek tablosunda koşul ile batch gibi değişkenlerin çakışıp çakışmadığına bakmaktır.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 5. Bir RNA-seq sayım matrisinde 22 000 satır ve 12 sütun bulunmaktadır. Örnek bilgileri tablosunun kaç satırı olması beklenir?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>22 000; her gen için bir satır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>12; her örnek için bir satır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>22 000 × 12; her ölçüm için bir satır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Değişkenlerin sayısı kadar.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Örnek bilgileri tablosunda her örnek bir satırdır ve bu satırlar ölçüm matrisinin sütunlarıyla (12 örnek) eşleşir. Genler (22 000 satır) ise özellik bilgileri tablosunda yer alır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: 12 satır. Örnek bilgileri tablosunun satırları, ölçüm matrisinin sütunlarıyla (örneklerle) birebir eşleşmektedir. Genler özellik bilgileri tablosunda (22 000 satır) tutulur; ölçümlerin kendisi ise matrisin gözeleridir.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 6. Örnek bilgileri tablosunun satır sırası yanlışlıkla karıştırılmış ve ölçüm matrisiyle artık eşleşmiyor. En olası sonuç nedir?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Analiz programı bir hata mesajı verir ve durur.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Sonuçlar değişmez; çünkü sayılar aynı kalır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Analiz hatasız çalışır, ancak örneklere yanlış koşul etiketleri atandığı için sonuçlar anlamsız olur.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Yalnızca gen adları yanlış görünür.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Satır sayısı değişmediği için çoğu araç bir hata vermez; buna karşın her örneğe yanlış koşul atanmış olur ve gruplar arası karşılaştırma tamamen anlamını yitirir. Bu nedenle kimliklerin eşleşmesini elle kontrol etmek özellikle önemlidir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Analiz hatasız çalışır, ancak sonuçlar anlamsız olur. Birçok araç yalnızca boyutların uyuştuğunu kontrol eder; kimlikleri karşılaştıran araçlar bile kimlikler de birlikte karışmışsa hatayı yakalayamaz. Sayıların aynı kalması yeterli değildir; çünkü hangi sayının hangi koşula ait olduğu değişmiştir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 4. Gözlemsel çalışma, deney, karıştırıcılar ============ -->
+  <section aria-labelledby="b4">
+    <h2 id="b4">4. Gözlemsel çalışma, deney ve karıştırıcılar</h2>
+    <p>Bu bölümde, bir fark gördüğümüzde ona ne kadar güvenebileceğimizi anlayabilmek amacıyla verinin nasıl toplandığına bakıyoruz. Bir <span class="term">deneyde</span> <span class="en">(experiment)</span> araştırmacı, birimleri koşullara <span class="term">rastgele atama</span> <span class="en">(random assignment)</span> ile dağıtır; örneğin hücre kültürlerinin yarısına kura ile ilaç verilir. Bir <span class="term">gözlemsel çalışmada</span> <span class="en">(observational study)</span> ise koşullar zaten vardır ve araştırmacı yalnızca gözlemler; sigara içen ve içmeyen bireylerin metilasyon profillerini karşılaştırmak böyle bir çalışmadır.</p>
+    <p>Aradaki fark, neden-sonuç yorumunu belirlemektedir. Gözlemsel çalışmada gruplar yalnızca ilgilendiğimiz özellikte değil, başka özelliklerde de farklı olabilir: sigara içenler ortalama olarak daha yaşlı ya da farklı bir sosyoekonomik gruptan olabilir. Hem grup üyeliğiyle hem de sonuçla ilişkili olan ve tedavinin bir sonucu olmayan böyle bir üçüncü değişkene <span class="term">karıştırıcı değişken</span> <span class="en">(confounder)</span> denir; karıştırıcı, hiç gerçek etki yokken bir fark yaratabilir ya da gerçek bir etkiyi gizleyebilir. Rastgele atama, bilinen ve bilinmeyen tüm özellikleri gruplar arasında ortalama olarak dengelediği için bu sorunu kaynağında çözmektedir.</p>
+    <p>Omik deneylerde en sık karşılaşılan karıştırıcılardan biri biyolojik değil tekniktir: farklı günlerde, farklı kişiler tarafından ya da farklı reaktif batch'leriyle işlenen örnekler, yalnızca bu nedenle sistematik olarak farklı ölçümler verir. Bu olguya <span class="term">batch etkisi</span> <span class="en">(batch effect)</span> denir. Batch etkisi tek başına bir yanlılık kaynağı değildir; asıl sorun, batch'in koşulla çakışmasıdır: tüm kontroller 1. gün, tüm tedavi örnekleri 2. gün işlendiğinde, gördüğümüz farkın ne kadarının tedaviden ne kadarının günden kaynaklandığını hiçbir analiz ayıramaz. Buna karşın her batch'te her koşuldan örnek bulunduğunda batch etkisi ölçülebilir ve düzeltilebilir hâle gelmektedir.</p>
+
+    <div class="card design">
+      <h3 style="margin-top:0">Simülasyon: Batch etkisi gerçek bir farkı nasıl taklit eder?</h3>
+      <p>Bu simülasyonda 6 tedavi ve 6 kontrol örneğinde bir genin ifadesine bakıyoruz. Tedavinin gerçek etkisini ve batch'in (işlem gününün) etkisini ayrı ayrı belirleyebilirsiniz. Tasarım seçeneği, örneklerin günlere nasıl dağıtıldığını belirler. Her nokta bir örnektir; dolu noktalar 1. gün, içi boş noktalar 2. gün işlenen örnekleri göstermektedir.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="eff">Tedavinin gerçek etkisi (birim)</label>
+          <output id="eff-out" for="eff">0,0</output>
+          <input type="range" id="eff" min="0" max="3" step="0.5" value="0">
+        </div>
+        <div class="slider-wrap">
+          <label for="batch">Batch etkisi: 2. gün ölçümleri şu kadar yüksek (birim)</label>
+          <output id="batch-out" for="batch">2,0</output>
+          <input type="range" id="batch" min="0" max="3" step="0.5" value="2">
+        </div>
+        <div class="control-row">
+          <span class="block" id="design-label">Tasarım</span>
+          <div class="seg" id="design-seg" role="group" aria-labelledby="design-label">
+            <button type="button" data-value="confounded" aria-pressed="true">Çakışık: kontroller 1. gün, tedavi 2. gün</button>
+            <button type="button" data-value="balanced" aria-pressed="false">Dengeli: her gün 3 kontrol, 3 tedavi</button>
+          </div>
+        </div>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart">
+        <h4>Her örneğin ölçülen ifade düzeyi</h4>
+        <canvas id="design-chart" role="img" aria-label="Kontrol ve tedavi gruplarının ölçümleri; dolu noktalar 1. gün, boş noktalar 2. gün işlenen örnekler. Kısa yatay çizgiler grup ortalamalarıdır."></canvas>
+        <div class="legend">
+          <span><span class="swatch" style="background:var(--c1)"></span>kontrol</span>
+          <span><span class="swatch" style="background:var(--c2)"></span>tedavi</span>
+          <span>● 1. gün</span><span>○ 2. gün</span>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Gözlenen fark (tedavi − kontrol)</div><div class="v" id="d-obs">-</div></div>
+        <div class="stat"><div class="k">Gerçek etki</div><div class="v" id="d-true">-</div></div>
+        <div class="stat"><div class="k">Batch'ten gelen pay</div><div class="v" id="d-batch">-</div></div>
+        <div class="stat"><div class="k">Gürültüden gelen pay</div><div class="v" id="d-noise">-</div></div>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> Çakışık tasarımda gerçek etki sıfırken bile gözlenen fark yaklaşık olarak batch etkisi kadar çıkmaktadır; aradaki küçük fark, ölçüm gürültüsünden gelen rastgele sapmadır (Ünite 4). Veriye bakan biri bu farkı tedavinin etkisi sanabilir. Dengeli tasarıma geçtiğimizde batch etkisi her iki grubu eşit ölçüde etkiler; gruplar içinde yayılım artar, ancak gözlenen fark gerçek etkiye yakın kalır. Dolayısıyla batch etkisini önlemenin en güvenilir yolu, deney başlamadan önce örnekleri batch'lere dengeli ve rastgele dağıtmaktır.</p>
+      </div>
+    </div>
+
+    <h3>Biyolojik tekrar ve teknik tekrar</h3>
+    <p>Bir sonucu genellemek için aynı koşulun birden fazla birimde ölçülmesi gerekir; buna <span class="term">tekrar</span> <span class="en">(replicate)</span> denir. Ancak tekrarın hangi düzeyde yapıldığı belirleyicidir. <span class="term">Biyolojik tekrar</span> <span class="en">(biological replicate)</span>, aynı koşulun farklı biyolojik birimlerde (farklı fareler, farklı hastalar, bağımsız hücre kültürleri) ölçülmesidir. <span class="term">Teknik tekrar</span> <span class="en">(technical replicate)</span> ise aynı biyolojik örneğin birden fazla kez işlenmesi ya da sekanslanmasıdır. Teknik tekrar yalnızca ölçüm gürültüsünü azaltır; biyolojik birimler arasındaki doğal değişkenlik hakkında hiçbir bilgi vermez. "Tedavi bu genin ifadesini artırır" türünden bir genelleme ise tam olarak bu biyolojik değişkenliğin ölçülmesini gerektirmektedir. Bu nedenle, aynı farenin üç kez sekanslanması, istatistiksel açıdan tek bir biyolojik tekrardır.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Simülasyon: Tekrarın düzeyi belirsizliği nasıl değiştirir?</h3>
+      <p>Bu simülasyonda, bir koşulun ortalama ifadesini tahmin etmek amacıyla aynı deneyi 200 kez yineliyoruz ve her yinelemede hesaplanan ortalamanın ne kadar değiştiğine bakıyoruz. Biyolojik birimler arasındaki değişkenlik teknik gürültüden daha büyüktür (değerlerin ortalama çevresinde ne kadar yayıldığının ölçüsü olan standart sapmaları (standard deviation) sırasıyla 1,0 ve 0,4 birimdir; bu ölçüyü Ünite 2'de ele alıyoruz). Toplam sekanslama sayısı aynıyken farklı kombinasyonları karşılaştırabilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="nbio">Biyolojik tekrar sayısı</label>
+          <output id="nbio-out" for="nbio">1</output>
+          <input type="range" id="nbio" min="1" max="8" step="1" value="1">
+        </div>
+        <div class="slider-wrap">
+          <label for="ntech">Her biyolojik örnek için teknik tekrar sayısı</label>
+          <output id="ntech-out" for="ntech">6</output>
+          <input type="range" id="ntech" min="1" max="6" step="1" value="6">
+        </div>
+      </div>
+      <div class="chart">
+        <h4>200 yinelenen deneyde hesaplanan ortalamalar</h4>
+        <canvas id="rep-chart" role="img" aria-label="Yinelenen deneylerin ortalamalarının histogramı; kesikli çizgi gerçek popülasyon ortalaması."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Toplam sekanslama sayısı</div><div class="v" id="r-total">-</div></div>
+        <div class="stat"><div class="k">Ortalamaların yayılımı <small>(standart sapma)</small></div><div class="v" id="r-sd">-</div></div>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> 1 biyolojik × 6 teknik tekrar ile 6 biyolojik × 1 teknik tekrar aynı sayıda sekanslama gerektirir; ancak ikincisinde yinelenen deneylerin ortalamaları çok daha dar bir bantta toplanmaktadır. Teknik tekrarı artırmak, biyolojik tekrar sayısı 1 iken belirsizliği neredeyse hiç azaltmaz; çünkü tek bir bireyin ne kadar "tipik" olduğu bilinemez.</p>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Çok merkezli bir RNA-seq çalışması</h3>
+      <p>İki merkezin ortak bir çalışmasında tüm hasta örneklerinin A merkezinde, tüm kontrol örneklerinin ise B merkezinde sekanslandığını düşünelim. İki merkez farklı kütüphane hazırlama kitleri ve farklı cihazlar kullanmaktadır. Analiz sonucunda binlerce genin "hastalıkla ilişkili" çıkması şaşırtıcı olmayacaktır; ancak bu farkların ne kadarının hastalıktan, ne kadarının merkezden kaynaklandığı veri içinden ayırt edilemez. Aynı çalışma, her merkezin hem hasta hem kontrol örneklerini işlemesiyle tasarlansaydı merkez etkisi modele eklenip düzeltilebilirdi (Ünite 7). Bu nedenle deney tasarımı aşamasında koşul ile batch'in çakışmamasına dikkat etmek özellikle önemlidir; sonradan yapılan hiçbir düzeltme, baştan çakışık bir tasarımı kurtaramamaktadır.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 7. Bir araştırmacı, hastanede yatan 30 hastanın ve gönüllü 30 sağlıklı bireyin kan örneklerini karşılaştırıyor; hasta örnekleri hastanenin laboratuvarında, sağlıklı örnekler ise üniversite laboratuvarında işleniyor. Bulunan ifade farkları için en doğru yorum hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q7" value="a"><span>Farklar hastalığın etkisidir; çünkü gruplar yeterince büyüktür.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="b"><span>Farklar kesinlikle laboratuvar farkından kaynaklanmaktadır.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="c"><span>Hastalık ile laboratuvar çakıştığı için farkın kaynağı veriden ayırt edilemez.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="d"><span>Örnek sayısı artırılırsa sorun ortadan kalkar.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Koşul (hasta / sağlıklı) ile batch (laboratuvar) tamamen çakışmaktadır; gözlenen fark ikisinin toplamıdır ve hangi payın hangisine ait olduğu veriden çıkarılamaz. Örnek sayısını artırmak bu çakışmayı değiştirmez; yalnızca aynı karışık farkı daha kesin ölçer.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Farkın kaynağı ayırt edilemez. Hastalık ile laboratuvar birebir çakıştığı için gözlenen fark iki etkinin toplamıdır. Farkın "kesinlikle" laboratuvardan geldiğini söylemek de mümkün değildir; gerçek bir hastalık etkisi de olabilir. Örnek sayısı çakışmayı gidermez; tasarım aşamasında her laboratuvarın her iki gruptan örnek işlemesi gerekirdi.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 8. Bir tedavinin bir genin ifadesini değiştirip değiştirmediğini test etmek için aşağıdaki tasarımlardan hangisi en bilgilendiricidir? (Her tasarımda 6 sekanslama kütüphanesi hazırlanmaktadır.)</legend>
+        <label class="opt"><input type="radio" name="q8" value="a"><span>1 tedavi edilmiş fare, 1 kontrol fare; her birinin örneği 3 kez sekanslanır.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="b"><span>3 tedavi edilmiş fare, 3 kontrol fare; her biri 1 kez sekanslanır.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="c"><span>6 tedavi edilmiş fare; kontrol grubu için literatür değerleri kullanılır.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="d"><span>Üç tasarım eşdeğerdir; çünkü sekanslama sayısı aynıdır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Tedavinin etkisini genellemek, fareler arasındaki biyolojik değişkenliğin ölçülmesini gerektirir; bunu yalnızca birden fazla biyolojik tekrar sağlar. Tek bir farenin üç kez sekanslanması teknik tekrardır ve biyolojik açıdan n = 1 demektir. Kontrol grubunun başka bir çalışmadan alınması ise batch etkisini (farklı laboratuvar, farklı zaman) tedavi etkisiyle çakıştırır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: 3 tedavi, 3 kontrol fare, her biri 1 kez. Sekanslama sayısı aynı olsa da bilgi düzeyi aynı değildir: teknik tekrar (aynı farenin tekrar sekanslanması) biyolojik değişkenlik hakkında bilgi vermez; literatürden alınan kontrol ise tedavi etkisini laboratuvar ve zaman farkıyla çakıştırır. Genelleme için biyolojik tekrar gereklidir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Ölçtüğümüz grup örneklem, hakkında konuşmak istediğimiz bütün ise popülasyondur; örneklemden hesaplanan her sayı bir istatistiktir ve örneklemden örnekleme değişir.</li>
+        <li>Rastgele örnekleme değişkenlik yaratır, ancak yanlılık yaratmaz; belirli birimleri dışarıda bırakan seçim ise örneklem büyüse de düzelmeyen bir yanlılıktır.</li>
+        <li>Değişkenler kategorik ya da sayısal, sayısal olanlar kesikli ya da süreklidir; sekanslama verisinin ham hâli kesikli sayım verisidir.</li>
+        <li>Bir omik veri seti üç bağlı tablodan oluşur: ölçüm matrisi, örnek bilgileri ve özellik bilgileri. Örnek sırasının matrisle eşleşmesi analizin ön koşuludur.</li>
+        <li>Deneyde rastgele atama karıştırıcıları dengeler; gözlemsel çalışmada karıştırıcılar gerçek olmayan farklar yaratabilir. Batch etkisi, koşulla çakıştığında ayırt edilemez; dengeli tasarımda ise düzeltilebilir.</li>
+        <li>Genelleme biyolojik tekrar gerektirir; teknik tekrar yalnızca ölçüm gürültüsünü azaltır.</li>
+      </ul>
+    </div>
+    <p class="meta">Bir sonraki ünitede, bir değişkenin dağılımını tek bakışta okuyabilmek amacıyla histogram, ortalama, standart sapma ve logaritmik ölçeğe bakıyoruz.</p>
+    <nav class="pager" aria-label="Sonraki sayfa"><a href="../index.html">Dizin</a><a href="../u02-ozet/index.html">Sonraki: Ünite 2, Veriyi özetlemek ve görselleştirmek</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 1. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 1. Doku kesiti ---------- */
+  var COLS = 50, ROWS = 40, NCELL = COLS * ROWS;
+  var popRng = BI.rng(101);
+  var pop = new Float64Array(NCELL);
+  var i;
+  for (i = 0; i < NCELL; i++) { var v; do { v = 8 + 12 * Math.exp(0.8 * BI.randn(popRng)); } while (v > 100); pop[i] = v; }
+  var mu = BI.mean(pop);
+  var s1 = { n: 20, rng: BI.rng(BI.DEFAULT_SEED), sel: [], means: [], last: null, total: 0 };
+
+  function drawSample1() {
+    var idx = [], s = 0;
+    for (var k = 0; k < s1.n; k++) { var j = Math.floor(s1.rng() * NCELL); idx.push(j); s += pop[j]; }
+    s1.sel = idx; s1.last = s / s1.n; s1.means.push(s1.last); s1.total++;
+    if (s1.means.length > 30) { s1.means.shift(); }
+    render1();
+  }
+  function lerpColor(t, dark) { // açık->koyu mavi
+    var a = dark ? [40, 60, 90] : [205, 226, 251], b = dark ? [120, 175, 240] : [13, 54, 107];
+    var r = Math.round(a[0] + (b[0] - a[0]) * t), g = Math.round(a[1] + (b[1] - a[1]) * t), bl = Math.round(a[2] + (b[2] - a[2]) * t);
+    return "rgb(" + r + "," + g + "," + bl + ")";
+  }
+  function render1() {
+    var c = document.getElementById("tissue");
+    var p = BI.plot(c, { x: [0, COLS], y: [0, ROWS], pad: { l: 4, r: 4, t: 4, b: 4 } });
+    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var cw = p.plotW / COLS, ch = p.plotH / ROWS;
+    for (var k = 0; k < NCELL; k++) {
+      var cx = k % COLS, cy = Math.floor(k / COLS);
+      var t = Math.min(1, Math.log(pop[k] / 8) / Math.log(12));
+      p.ctx.fillStyle = lerpColor(t, dark);
+      p.ctx.fillRect(p.sx(cx) + 0.5, p.sy(cy + 1) + 0.5, Math.max(1, cw - 1), Math.max(1, ch - 1));
+    }
+    p.ctx.strokeStyle = p.col.c2; p.ctx.lineWidth = 2;
+    for (k = 0; k < s1.sel.length; k++) {
+      var j = s1.sel[k], jx = j % COLS, jy = Math.floor(j / COLS);
+      p.ctx.beginPath(); p.ctx.arc(p.sx(jx + 0.5), p.sy(jy + 0.5), Math.max(3, cw * 0.7), 0, 2 * Math.PI); p.ctx.stroke();
+    }
+    BI.text("tissue-cap", s1.sel.length ? "Turuncu halkalar son çekilen " + s1.n + " hücreyi göstermektedir. Aynı hücre birden fazla kez seçilebilir." : "Henüz örneklem çekilmedi.");
+
+    var sc = document.getElementById("strip");
+    var q = BI.plot(sc, { x: [0, 60], y: [0, 1], pad: { l: 8, r: 8, t: 14, b: 40 } });
+    q.axes({ xticks: [0, 20, 40, 60], xlabel: "örneklem ortalaması" });
+    q.vline(mu, q.col.text2, { dashed: true, label: "μ = " + BI.fmt(mu, 1) });
+    for (k = 0; k < s1.means.length; k++) {
+      var yy = 0.15 + 0.7 * ((k * 7) % 11) / 11;
+      q.dot(s1.means[k], yy, k === s1.means.length - 1 ? q.col.c2 : q.col.c4, k === s1.means.length - 1 ? 6 : 4, { ring: true });
+    }
+    BI.text("strip-cap", s1.means.length ? "Son " + s1.means.length + " örneklemin ortalamaları (en son çekilen turuncu renkte). Yatay konum ortalamayı gösterir; dikey konum yalnızca noktaların üst üste binmesini önlemek içindir." : "Henüz örneklem çekilmedi.");
+    BI.text("s1-mu", BI.fmt(mu, 1));
+    BI.text("s1-xbar", s1.last === null ? "-" : BI.fmt(s1.last, 1));
+    BI.text("s1-diff", s1.last === null ? "-" : BI.fmt(s1.last - mu, 1));
+    BI.text("s1-count", BI.fmtInt(s1.total));
+  }
+  BI.seg("#n1-seg", function (v) { s1.n = parseInt(v, 10); s1.means = []; s1.sel = []; s1.last = null; s1.total = 0; render1(); });
+  BI.on("draw1", "click", drawSample1);
+  BI.on("draw1-20", "click", function () { for (var k = 0; k < 20; k++) { drawSample1(); } });
+  BI.onReseed(function (seed) { s1.rng = BI.rng(seed); s1.means = []; s1.total = 0; drawSample1(); });
+  BI.onRedraw(render1);
+  render1();
+
+  /* ---------- 2. Sınıflandırma etkinliği ---------- */
+  var items = [
+    { q: "Genotip (AA / AG / GG)", a: "kat", why: "Üç etiket vardır; etiketler arasında sayısal bir fark anlamı yoktur." },
+    { q: "Bir gene düşen okuma sayısı", a: "kes", why: "Bir sayımdır: yalnızca 0, 1, 2, ... değerlerini alır; farklar anlamlıdır." },
+    { q: "Normalize edilmiş ifade düzeyi (TPM)", a: "sur", why: "Bir aralıktaki her değeri alabilen sayısal bir ölçümdür." },
+    { q: "Doku tipi (karaciğer, böbrek, kalp)", a: "kat", why: "Etiketlerden oluşur; doğal bir sırası da yoktur." },
+    { q: "Vücut ağırlığı (kg)", a: "sur", why: "Sürekli bir ölçek üzerinde her değeri alabilir; kayıtta yuvarlanması türünü değiştirmez." },
+    { q: "Tümör evresi (I, II, III, IV)", a: "kat", why: "Sıralı kategoriktir: sıra bilgisi vardır, ancak evreler arasındaki aralıklar eşit sayılamaz." },
+    { q: "Bir örnekteki somatik mutasyon sayısı", a: "kes", why: "Bir sayımdır; tam sayı değerleri alır." },
+    { q: "Bir CpG bölgesinin metilasyon oranı (0 ile 1 arası)", a: "sur", why: "0 ile 1 arasında her değeri alabilen sürekli bir orandır." },
+    { q: "Tedavi grubu (kontrol / ilaç)", a: "kat", why: "İki etiketli kategorik bir değişkendir; çoğu karşılaştırmanın grup değişkeni budur." },
+    { q: "Bir hücrede tespit edilen gen sayısı", a: "kes", why: "Bir sayımdır; single-cell kalite kontrolünde sık kullanılır." }
+  ];
+  var labels = { kat: "Kategorik", kes: "Sayısal, kesikli", sur: "Sayısal, sürekli" };
+  var clState = { ok: 0, n: 0, done: {} };
+  function buildClassify() {
+    var host = document.getElementById("classify-list");
+    host.innerHTML = "";
+    clState = { ok: 0, n: 0, done: {} };
+    items.forEach(function (it, idx) {
+      var div = document.createElement("div"); div.className = "item";
+      var q = document.createElement("div"); q.className = "q"; q.textContent = (idx + 1) + ". " + it.q; div.appendChild(q);
+      var seg = document.createElement("div"); seg.className = "seg"; seg.setAttribute("role", "group"); seg.setAttribute("aria-label", it.q);
+      var fb = document.createElement("div"); fb.className = "fb"; fb.setAttribute("role", "status");
+      ["kat", "kes", "sur"].forEach(function (key) {
+        var b = document.createElement("button"); b.type = "button"; b.textContent = labels[key]; b.setAttribute("aria-pressed", "false");
+        b.addEventListener("click", function () {
+          Array.prototype.forEach.call(seg.querySelectorAll("button"), function (x) { x.setAttribute("aria-pressed", "false"); });
+          b.setAttribute("aria-pressed", "true");
+          var correct = key === it.a;
+          if (!clState.done[idx]) { clState.n++; if (correct) { clState.ok++; } clState.done[idx] = true; }
+          fb.className = "fb " + (correct ? "ok" : "no");
+          fb.textContent = (correct ? "Doğru. " : "Doğru yanıt: " + labels[it.a] + ". ") + it.why;
+          BI.text("cl-ok", String(clState.ok)); BI.text("cl-n", clState.n + " / " + items.length);
+        });
+        seg.appendChild(b);
+      });
+      div.appendChild(seg); div.appendChild(fb); host.appendChild(div);
+    });
+    BI.text("cl-ok", "0"); BI.text("cl-n", "0 / " + items.length);
+  }
+  buildClassify();
+  BI.on("cl-reset", "click", buildClassify);
+
+  /* ---------- 3. Üç tablo ---------- */
+  var samples = [
+    { id: "K1", kosul: "kontrol", cins: "E", yas: 54, batch: 1 }, { id: "K2", kosul: "kontrol", cins: "K", yas: 61, batch: 1 }, { id: "K3", kosul: "kontrol", cins: "K", yas: 47, batch: 1 },
+    { id: "T1", kosul: "tedavi", cins: "E", yas: 58, batch: 2 }, { id: "T2", kosul: "tedavi", cins: "K", yas: 50, batch: 2 }, { id: "T3", kosul: "tedavi", cins: "E", yas: 63, batch: 2 }
+  ];
+  var genes = [
+    { id: "ENSG00000141510", sym: "TP53", chr: "17", uz: 19149, tip: "protein kodlayan" },
+    { id: "ENSG00000012048", sym: "BRCA1", chr: "17", uz: 81189, tip: "protein kodlayan" },
+    { id: "ENSG00000111640", sym: "GAPDH", chr: "12", uz: 3918, tip: "protein kodlayan" },
+    { id: "ENSG00000171862", sym: "PTEN", chr: "10", uz: 105338, tip: "protein kodlayan" },
+    { id: "ENSG00000251562", sym: "MALAT1", chr: "11", uz: 8779, tip: "lncRNA" },
+    { id: "ENSG00000136997", sym: "MYC", chr: "8", uz: 7679, tip: "protein kodlayan" }
+  ];
+  var counts = [
+    [812, 790, 845, 1203, 1180, 1251],
+    [210, 198, 225, 240, 231, 219],
+    [15420, 15210, 15880, 15605, 15190, 15730],
+    [605, 640, 590, 310, 298, 325],
+    [4210, 4005, 4320, 4180, 4290, 4100],
+    [330, 345, 318, 920, 880, 955]
+  ];
+  function buildTables() {
+    var tm = document.getElementById("t-matrix"), ts = document.getElementById("t-samples"), tg = document.getElementById("t-genes");
+    var h = "<thead><tr><th scope=\"col\">gen</th>";
+    samples.forEach(function (s, j) { h += "<th scope=\"col\" class=\"col-" + j + " " + (s.kosul === "kontrol" ? "cond-a" : "cond-b") + " batch-" + s.batch + "\">" + s.id + "</th>"; });
+    h += "</tr></thead><tbody>";
+    genes.forEach(function (g, i) {
+      h += "<tr class=\"row-" + i + "\"><th scope=\"row\">" + g.sym + "</th>";
+      counts[i].forEach(function (v, j) { h += "<td class=\"cell col-" + j + "\" tabindex=\"0\" role=\"button\" data-i=\"" + i + "\" data-j=\"" + j + "\" aria-label=\"" + g.sym + ", " + samples[j].id + ": " + BI.fmtInt(v) + "\">" + BI.fmtInt(v) + "</td>"; });
+      h += "</tr>";
+    });
+    tm.innerHTML = h + "</tbody>";
+    var hs = "<thead><tr><th>örnek</th><th>koşul</th><th>cinsiyet</th><th>yaş</th><th>batch</th></tr></thead><tbody>";
+    samples.forEach(function (s, j) { hs += "<tr class=\"srow-" + j + "\"><th scope=\"row\">" + s.id + "</th><td>" + s.kosul + "</td><td>" + s.cins + "</td><td>" + s.yas + "</td><td>" + s.batch + ". gün</td></tr>"; });
+    ts.innerHTML = hs + "</tbody>";
+    var hg = "<thead><tr><th>sembol</th><th>Ensembl kimliği</th><th>krom.</th><th>uzunluk (bç)</th><th>biyotip</th></tr></thead><tbody>";
+    genes.forEach(function (g, i) { hg += "<tr class=\"grow-" + i + "\"><th scope=\"row\">" + g.sym + "</th><td>" + g.id + "</td><td>" + g.chr + "</td><td>" + BI.fmtInt(g.uz) + "</td><td>" + g.tip + "</td></tr>"; });
+    tg.innerHTML = hg + "</tbody>";
+    function select(i, j) {
+      Array.prototype.forEach.call(document.querySelectorAll(".three .hl-row, .three .hl-col, .three .sel"), function (el) { el.classList.remove("hl-row", "hl-col", "sel"); });
+      var row = tm.querySelector(".row-" + i); if (row) { row.classList.add("hl-row"); }
+      Array.prototype.forEach.call(tm.querySelectorAll(".col-" + j), function (el) { el.classList.add("hl-col"); });
+      var cell = tm.querySelector("td[data-i=\"" + i + "\"][data-j=\"" + j + "\"]"); if (cell) { cell.classList.add("sel"); }
+      var sr = ts.querySelector(".srow-" + j); if (sr) { sr.classList.add("hl-row"); }
+      var gr = tg.querySelector(".grow-" + i); if (gr) { gr.classList.add("hl-row"); }
+      var s = samples[j], g = genes[i];
+      BI.text("t-cap", g.sym + " geninin " + s.id + " örneğindeki okuma sayısı: " + BI.fmtInt(counts[i][j]) + ". Örnek bilgileri: " + s.kosul + ", " + (s.cins === "E" ? "erkek" : "kadın") + ", " + s.yas + " yaş, " + s.batch + ". gün batch'i. Gen bilgileri: kromozom " + g.chr + ", " + BI.fmtInt(g.uz) + " baz çifti, " + g.tip + ".");
+    }
+    Array.prototype.forEach.call(tm.querySelectorAll("td.cell"), function (td) {
+      td.addEventListener("click", function () { select(parseInt(td.getAttribute("data-i"), 10), parseInt(td.getAttribute("data-j"), 10)); });
+      td.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); td.click(); } });
+    });
+  }
+  buildTables();
+
+  /* ---------- 4. Batch etkisi simülasyonu ---------- */
+  var d = { eff: 0, batch: 2, design: "confounded", rng: BI.rng(BI.DEFAULT_SEED + 1), noise: [] };
+  function regenNoise() { d.noise = []; for (var k = 0; k < 12; k++) { d.noise.push(0.6 * BI.randn(d.rng)); } }
+  regenNoise();
+  function designData() {
+    // 0-5 kontrol, 6-11 tedavi; batch ataması tasarıma göre
+    var pts = [];
+    for (var k = 0; k < 12; k++) {
+      var treat = k >= 6;
+      var batch = d.design === "confounded" ? (treat ? 2 : 1) : ((k % 6) < 3 ? 1 : 2);
+      var y = 10 + (treat ? d.eff : 0) + (batch === 2 ? d.batch : 0) + d.noise[k];
+      pts.push({ treat: treat, batch: batch, y: y });
+    }
+    return pts;
+  }
+  function renderDesign() {
+    var pts = designData();
+    var c = document.getElementById("design-chart");
+    var p = BI.plot(c, { x: [0, 2], y: [6, 18], pad: { l: 36, r: 10, t: 10, b: 28 } });
+    p.axes({ xticks: [{ v: 0.5, l: "kontrol" }, { v: 1.5, l: "tedavi" }], yticks: [6, 9, 12, 15, 18], grid: true, ylabel: "ifade (birim)" });
+    var mC = BI.mean(pts.filter(function (q) { return !q.treat; }).map(function (q) { return q.y; }));
+    var mT = BI.mean(pts.filter(function (q) { return q.treat; }).map(function (q) { return q.y; }));
+    var jit = [-0.22, -0.13, -0.04, 0.04, 0.13, 0.22];
+    pts.forEach(function (q, k) {
+      var x = (q.treat ? 1.5 : 0.5) + jit[k % 6];
+      var color = q.treat ? p.col.c2 : p.col.c1;
+      p.dot(x, q.y, color, 6, { hollow: q.batch === 2 });
+    });
+    p.line([[0.2, mC], [0.8, mC]], p.col.c1, { width: 3 });
+    p.line([[1.2, mT], [1.8, mT]], p.col.c2, { width: 3 });
+    p.text("ortalama " + BI.fmt(mC, 1), 0.5, mC, { align: "center", dy: 14, size: 11 });
+    p.text("ortalama " + BI.fmt(mT, 1), 1.5, mT, { align: "center", dy: 14, size: 11 });
+    var obs = mT - mC;
+    var batchShare = d.design === "confounded" ? d.batch : 0;
+    BI.text("d-obs", BI.fmt(obs, 1));
+    BI.text("d-true", BI.fmt(d.eff, 1));
+    BI.text("d-noise", BI.fmt(obs - d.eff - batchShare, 1));
+    document.getElementById("d-batch").innerHTML = d.design === "confounded" ? BI.fmt(batchShare, 1) + " <small>tamamı tedavi farkına karışır</small>" : "0 <small>iki grupta dengeli</small>";
+  }
+  BI.slider("eff", function (v) { d.eff = v; renderDesign(); }, { digits: 1 });
+  BI.slider("batch", function (v) { d.batch = v; renderDesign(); }, { digits: 1 });
+  BI.seg("#design-seg", function (v) { d.design = v; renderDesign(); });
+  BI.onReseed(function (seed) { d.rng = BI.rng(seed); regenNoise(); renderDesign(); });
+  BI.onRedraw(renderDesign);
+  renderDesign();
+
+  /* ---------- 5. Tekrar simülasyonu ---------- */
+  var r = { nbio: 1, ntech: 6 };
+  var SIG_B = 1.0, SIG_T = 0.4, TRUE_MEAN = 10, NREP = 200;
+  function renderRep() {
+    var rng = BI.rng(BI.DEFAULT_SEED + 2);
+    var means = [];
+    for (var e = 0; e < NREP; e++) {
+      var tot = 0, cnt = 0;
+      for (var b = 0; b < r.nbio; b++) {
+        var bio = TRUE_MEAN + SIG_B * BI.randn(rng);
+        for (var t = 0; t < r.ntech; t++) { tot += bio + SIG_T * BI.randn(rng); cnt++; }
+      }
+      means.push(tot / cnt);
+    }
+    var c = document.getElementById("rep-chart");
+    var counts = BI.hist(means, 40, 6, 14);
+    var p = BI.plot(c, { x: [6, 14], y: [0, BI.niceMax(Math.max.apply(null, counts) * 1.1)], pad: { l: 36, r: 10, t: 12, b: 40 } });
+    p.axes({ xticks: [6, 8, 10, 12, 14], yticks: BI.yTicks(p.y[1]), grid: true, xlabel: "deneyin ortalaması (birim)", ylabel: "deney sayısı" });
+    p.bars(counts, 6, 14, p.col.c3);
+    p.vline(TRUE_MEAN, p.col.text2, { dashed: true, label: "gerçek ortalama" });
+    var seTheory = Math.sqrt(SIG_B * SIG_B / r.nbio + SIG_T * SIG_T / (r.nbio * r.ntech));
+    BI.text("r-total", BI.fmtInt(r.nbio * r.ntech));
+    BI.text("r-sd", BI.fmt(BI.sd(means), 2) + " (kuramsal " + BI.fmt(seTheory, 2) + ")");
+  }
+  BI.slider("nbio", function (v) { r.nbio = v; renderRep(); });
+  BI.slider("ntech", function (v) { r.ntech = v; renderRep(); });
+  BI.onRedraw(renderRep);
+  renderRep();
+})();
+</script>
+</body>
+</html>

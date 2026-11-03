@@ -1,0 +1,1242 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 2: Veriyi özetlemek ve görselleştirmek</title>
+<meta name="description" content="Histogram ve dağılımın şekli; ortalama, medyan, standart sapma ve çeyrekler açıklığı; kutu grafiği ve aykırı değerler; saçılım grafiği; logaritmik ölçek ve kat değişimi; heatmap okuma.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .chart.box canvas { height: 110px; }
+  .heat { display: grid; grid-template-columns: 1fr; gap: 12px; }
+  .heat canvas { height: 300px; }
+  .heat .scale { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text-2); }
+  .heat .scale .bar { flex: 1; height: 12px; border-radius: 3px; }
+  .fc-table td { padding: 6px 10px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u01-veri/index.html">Önceki: Ünite 1</a><a href="../index.html">Dizin</a><a href="../u03-olasilik/index.html">Sonraki: Ünite 3</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 2 · yaklaşık 80 dakika</p>
+    <h1>Veriyi özetlemek ve görselleştirmek</h1>
+    <p class="lead">Bu ünitede, binlerce sayıdan oluşan bir veri setini birkaç sayı ve birkaç grafikle anlayabilmek amacıyla dağılımın şekline, merkezine ve yayılımına bakıyoruz. Omik verinin en belirgin özelliği olan sağa çarpıklık ve bunun çözümü olan logaritmik ölçek, bu ünitenin odağındadır.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>Bir histogramdan dağılımın şeklini (simetrik, çarpık, iki tepeli) okuyabilirsiniz.</li>
+      <li>Ortalama ile medyanın ne zaman ayrıştığını ve hangisinin ne zaman tercih edildiğini açıklayabilirsiniz.</li>
+      <li>Standart sapma ve çeyrekler açıklığının neyi ölçtüğünü, kutu grafiğinin hangi beş sayıyı gösterdiğini söyleyebilirsiniz.</li>
+      <li>Logaritmik ölçeğin sağa çarpık veriyi neden okunur kıldığını ve log2 kat değişiminin ne anlama geldiğini açıklayabilirsiniz.</li>
+      <li>Bir heatmap'i ve satır ölçeklemenin etkisini yorumlayabilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Histogram, dağılımın şekli ve merkez</a></li>
+      <li><a href="#b2">Yayılım: standart sapma, çeyrekler ve kutu grafiği</a></li>
+      <li><a href="#b3">Saçılım grafiği, logaritmik ölçek ve kat değişimi</a></li>
+      <li><a href="#b4">Heatmap okumak</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Histogram ve merkez ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Histogram, dağılımın şekli ve merkez</h2>
+    <p>Bu bölümde, bir değişkenin aldığı değerlerin nasıl dağıldığını tek bakışta görebilmek amacıyla histograma bakıyoruz. <span class="term">Histogram</span> <span class="en">(histogram)</span>, değer aralığını eşit genişlikte parçalara, yani aralıklara <span class="en">(bins)</span> böler ve her parçaya düşen gözlem sayısını bir çubukla gösterir. Çubukların oluşturduğu şekil, <span class="term">dağılımın şekli</span> <span class="en">(shape of the distribution)</span> olarak adlandırılmaktadır: her iki yanı benzer ise <span class="term">simetrik</span>, uzun kuyruk sağa uzanıyorsa <span class="term">sağa çarpık</span> <span class="en">(right-skewed)</span>, sola uzanıyorsa <span class="term">sola çarpık</span> <span class="en">(left-skewed)</span>, iki ayrı yığılma varsa <span class="term">iki tepeli</span> <span class="en">(bimodal)</span> bir dağılımdan söz ediyoruz. Aralık genişliği seçimi şekli etkileyebildiğinden, aynı veriye birkaç genişlikte bakmak yol gösterici olur.</p>
+    <p>Dağılımın merkezini özetlemek için üç ölçü kullanılmaktadır. <span class="term">Ortalama</span> <span class="en">(mean)</span>, değerlerin toplamının gözlem sayısına bölümüdür ve her değeri hesaba katar. <span class="term">Medyan</span> <span class="en">(median)</span>, değerler sıralandığında tam ortada kalan değerdir; gözlemlerin yarısı medyanın altında, yarısı üstündedir. <span class="term">Mod</span> <span class="en">(mode)</span> ise en sık görülen değer ya da histogramın en yüksek çubuğudur. Simetrik bir dağılımda ortalama ile medyan büyük ölçüde çakışır; sağa çarpık bir dağılımda ise uzun kuyruktaki büyük değerler ortalamayı sağa çeker, medyan ise yerinde kalır. Bu nedenle ortalama ile medyan arasındaki fark, çarpıklığın kendisi hakkında bilgi vermektedir.</p>
+    <p>Omik veride bu durum istisna değil kuraldır: bir hücredeki transkript sayıları, bir gene düşen okuma sayıları ya da bir örnekteki mutasyon sayıları neredeyse her zaman sağa çarpıktır; çoğu değer küçüktür, az sayıda değer ise çok büyüktür. Böyle bir veride "ortalama ifade düzeyi", birkaç uç hücrenin belirlediği, tipik bir hücreyi temsil etmeyen bir sayı olabilir. Buna karşın medyan, birkaç uç değerden etkilenmediği için <span class="term">dayanıklı</span> <span class="en">(robust)</span> bir merkez ölçüsü olarak kabul edilmektedir.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Simülasyon: Histogram, aralık genişliği ve uç değerin etkisi</h3>
+      <p>Aşağıdaki veri seti, 80 hücrede bir genin ifade düzeyini (normalize edilmiş birim) temsil etmektedir. Dağılımın şeklini ve aralık genişliğini değiştirebilir, veri setine tek bir uç değer ekleyerek ortalama ile medyanın nasıl tepki verdiğini karşılaştırabilirsiniz.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="shape-label">Dağılımın şekli</span>
+          <div class="seg" id="shape-seg" role="group" aria-labelledby="shape-label">
+            <button type="button" data-value="sym" aria-pressed="false">Simetrik</button>
+            <button type="button" data-value="skew" aria-pressed="true">Sağa çarpık</button>
+            <button type="button" data-value="bimodal" aria-pressed="false">İki tepeli</button>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <label for="bins">Aralık sayısı</label>
+          <output id="bins-out" for="bins">20</output>
+          <input type="range" id="bins" min="5" max="50" step="1" value="20">
+        </div>
+        <label class="check"><input type="checkbox" id="outlier"><span>Veri setine bir uç değer (95 birim) eklensin</span></label>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart tall">
+        <h4><span class="swatch" style="background:var(--c1)"></span>80 hücrede ifade düzeyi</h4>
+        <canvas id="hist1" role="img" aria-label="Verinin histogramı; düz çizgi ortalamayı, kesikli çizgi medyanı göstermektedir."></canvas>
+        <div class="legend"><span><span class="swatch" style="background:var(--c2)"></span>ortalama (düz çizgi)</span><span><span class="swatch" style="background:var(--c3)"></span>medyan (kesikli çizgi)</span></div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Ortalama</div><div class="v" id="h-mean">-</div></div>
+        <div class="stat"><div class="k">Medyan</div><div class="v" id="h-median">-</div></div>
+        <div class="stat"><div class="k">Fark (ortalama − medyan)</div><div class="v" id="h-diff">-</div></div>
+        <div class="stat"><div class="k">Gözlem sayısı</div><div class="v" id="h-n">-</div></div>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> Sağa çarpık dağılımda ortalamanın medyanın sağında kaldığını görüyoruz. Uç değer eklendiğinde ortalama yukarı kayarken medyan neredeyse hiç değişmemektedir; 80 gözlem arasındaki tek bir hücre, ortalamayı tipik hücreden uzaklaştırabilmektedir. "İki tepeli" şekil seçiliyken aralık sayısı çok küçük seçildiğinde iki tepeli yapı kaybolur, çok büyük seçildiğinde ise şekil parçalanır; dolayısıyla şekil yorumu birkaç genişlikte doğrulanmalıdır.</p>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Hücre başına tespit edilen transkript sayısı</h3>
+      <p>Bir single-cell deneyinde hücre başına yakalanan toplam transkript sayısına baktığımızda dağılımın belirgin biçimde sağa çarpık olduğunu görürüz: çoğu hücre birkaç bin transkript verirken az sayıda hücre on binlerce transkript içerir. Bu büyük değerler çoğu zaman tek bir damlacığa iki hücrenin düşmesinden, yani çift hücreden <span class="en">(doublet)</span> kaynaklanmaktadır. Böyle bir veride ortalama transkript sayısı tipik bir hücreyi temsil etmez; kalite kontrol eşik değerleri bu nedenle medyan ve çeyrekler gibi dayanıklı özetlere dayandırılır. Örneğin "medyanın 3 katından fazla transkript içeren hücreler" biçiminde bir eşik değer, birkaç uç hücrenin kendi eşiğini kaydırmasını engellemektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. Bir gen için 50 hastada ölçülen ifade değerlerinin ortalaması 18,4, medyanı 9,1 birimdir. Dağılım hakkında en doğru çıkarım hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>Dağılım simetriktir; iki ölçü arasındaki fark rastlantısaldır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>Dağılım sağa çarpıktır; birkaç hastadaki çok yüksek değerler ortalamayı yukarı çekmektedir.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>Dağılım sola çarpıktır; çoğu hasta yüksek değerlere sahiptir.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>Ölçüm hatası vardır; ortalama ile medyan her zaman yakın olmalıdır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Ortalamanın medyanın iki katı olması, uzun bir sağ kuyruğun işaretidir: hastaların yarısı 9,1'in altındadır, ancak az sayıdaki büyük değer ortalamayı 18,4'e taşımaktadır. Böyle bir veride tipik hastayı medyan daha iyi temsil eder.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Dağılım sağa çarpıktır. Ortalama her değeri hesaba kattığı için uzun kuyruktaki büyük değerler onu yukarı çeker; medyan ise yalnızca sıralamadaki konumu dikkate aldığından yerinde kalır. Ortalamanın medyandan belirgin biçimde büyük olması sağa çarpıklığı gösterir; ikisinin her zaman yakın olması gerektiği yanlış bir beklentidir.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 2. 200 hücrelik bir veri setinde ortalama transkript sayısı 4 100'dür. Veri setine çift hücreden kaynaklanan 25 000 transkriptli tek bir hücre eklendiğinde hangisi beklenir?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Ortalama ve medyan aynı ölçüde artar.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>Medyan belirgin biçimde artar; ortalama değişmez.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Ortalama yaklaşık 100 transkript artar; medyan neredeyse hiç değişmez.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Hiçbiri değişmez; tek bir hücre 200 hücreyi etkileyemez.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Yeni ortalama (200 × 4 100 + 25 000) / 201 ≈ 4 204 olur; tek bir hücre ortalamayı yaklaşık 100 transkript kaydırır. Medyan ise sıralamada yalnızca yarım konum kayar ve komşu değerler birbirine yakın olduğundan neredeyse aynı kalır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Ortalama yaklaşık 100 transkript artar, medyan neredeyse değişmez. Ortalama (200 × 4 100 + 25 000) / 201 ≈ 4 204 olur. Medyan, sıralı listede ortadaki değerdir; listeye en sona bir değer eklemek ortadaki konumu yalnızca yarım adım kaydırır. Tek bir uç değerin ortalamayı etkileyip medyanı etkilememesi, medyanın dayanıklı olmasının anlamıdır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. Yayılım ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Yayılım: standart sapma, çeyrekler ve kutu grafiği</h2>
+    <p>Bu bölümde, iki veri setinin merkezi aynıyken birbirinden ne kadar farklı olabileceğini görebilmek amacıyla yayılım ölçülerine bakıyoruz. Aynı ortalamaya sahip iki gen, hücreden hücreye çok farklı ölçüde değişebilir; birinde tüm hücreler ortalamaya yakınken diğerinde değerler geniş bir aralığa yayılabilir. Yayılım, bu farkı sayıya dökmektedir.</p>
+    <p><span class="term">Standart sapma</span> <span class="en">(standard deviation, SS)</span>, gözlemlerin ortalamadan tipik olarak ne kadar uzakta olduğunu, verinin kendi biriminde ifade eder. Her gözlemin ortalamadan sapması alınır, sapmaların karelerinin ortalaması alınır (bu ara sonuç <span class="term">varyans</span> <span class="en">(variance)</span> olarak adlandırılır) ve karekök alınarak orijinal birime dönülür. Simetrik, çan biçimli bir dağılımda gözlemlerin yaklaşık üçte ikisi ortalamadan en fazla bir standart sapma uzakta kalır; bu kuralı Ünite 3'te ele alıyoruz.</p>
+    <p><span class="term">Çeyrekler</span> <span class="en">(quartiles)</span> veriyi sıraladıktan sonra dörde bölen üç değerdir: birinci çeyrek (Q1) gözlemlerin yüzde 25'ini, medyan yüzde 50'sini, üçüncü çeyrek (Q3) ise yüzde 75'ini altında bırakır. Q3 ile Q1 arasındaki fark, <span class="term">çeyrekler açıklığı</span> <span class="en">(interquartile range, IQR)</span>, verinin orta yarısının genişliğidir ve tıpkı medyan gibi uç değerlerden etkilenmez. En küçük değer, Q1, medyan, Q3 ve en büyük değer birlikte <span class="term">beş sayı özeti</span> <span class="en">(five-number summary)</span> olarak adlandırılır. <span class="term">Kutu grafiği</span> <span class="en">(boxplot)</span> bu beş sayıyı tek bir şekilde göstermektedir: kutu Q1'den Q3'e uzanır, kutunun içindeki çizgi medyandır, bıyıklar kutudan en fazla 1,5 çeyrekler açıklığı uzaklıktaki en uç gözleme kadar uzanır ve bu sınırın ötesinde kalan gözlemler ayrı noktalar olarak çizilir. Bu noktalar <span class="term">aykırı değer</span> <span class="en">(outlier)</span> adaylarıdır; adaydırlar, çünkü bir değerin uzak olması tek başına hatalı olduğu anlamına gelmez.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Simülasyon: Aynı veri, histogram ve kutu grafiği</h3>
+      <p>Aşağıdaki iki grafik aynı veriyi göstermektedir ve yatay eksenleri aynıdır. Yayılımı ve çarpıklığı değiştirerek histogramdaki şeklin kutu grafiğine nasıl yansıdığını, aykırı değer eklendiğinde ise standart sapma ile çeyrekler açıklığının nasıl farklı tepki verdiğini görebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="spread">Yayılım (yaklaşık standart sapma, birim)</label>
+          <output id="spread-out" for="spread">5</output>
+          <input type="range" id="spread" min="2" max="10" step="1" value="5">
+        </div>
+        <div class="slider-wrap">
+          <label for="skew">Çarpıklık</label>
+          <output id="skew-out" for="skew">0,0</output>
+          <input type="range" id="skew" min="0" max="1" step="0.1" value="0">
+        </div>
+        <label class="check"><input type="checkbox" id="outlier2"><span>Üç uç değer (80, 85 ve 92 birim) eklensin</span></label>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>Histogram (<span id="b-count">100</span> gözlem)</h4>
+        <canvas id="hist2" role="img" aria-label="Verinin histogramı."></canvas>
+      </div>
+      <div class="chart box">
+        <h4><span class="swatch" style="background:var(--c3)"></span>Kutu grafiği (aynı veri)</h4>
+        <canvas id="box2" role="img" aria-label="Aynı verinin kutu grafiği: kutu birinci ve üçüncü çeyrekler arasında, çizgi medyan, bıyıklar 1,5 çeyrekler açıklığına kadar, ötesindeki gözlemler ayrı noktalar."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Ortalama</div><div class="v" id="b-mean">-</div></div>
+        <div class="stat"><div class="k">Standart sapma</div><div class="v" id="b-sd">-</div></div>
+        <div class="stat"><div class="k">Medyan</div><div class="v" id="b-med">-</div></div>
+        <div class="stat"><div class="k">Q1 ve Q3</div><div class="v" id="b-q">-</div></div>
+        <div class="stat"><div class="k">Çeyrekler açıklığı</div><div class="v" id="b-iqr">-</div></div>
+        <div class="stat"><div class="k">Bıyık dışındaki gözlem sayısı</div><div class="v" id="b-out">-</div></div>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> Yayılım küçükken (örneğin 5 birim) üç uç değer eklendiğinde standart sapmanın neredeyse iki katına çıktığını, çeyrekler açıklığının ise yüzde 5'ten az değiştiğini görüyoruz; kutu grafiğinde bu üç gözlem bıyığın ötesinde ayrı noktalar olarak belirmektedir. Yayılım 10 birime çıkarıldığında aynı üç değer dağılımın kuyruğuna yaklaşır ve iki ölçü de daha az etkilenir; bir gözlemin aykırı sayılması dağılımın kendi yayılımına göredir. Çarpıklık arttığında kutunun sağ yarısı uzar, medyan kutunun içinde sola kayar ve uzun kuyruktaki gözlemlerin bir kısmı, hatalı olmadıkları hâlde bıyığın ötesine düşer. Dolayısıyla kutu grafiği, dağılımın hem merkezini hem yayılımını hem de çarpıklığını tek bakışta okumamızı sağlar; buna karşın iki tepeli bir yapıyı gizleyebildiğinden histogramla birlikte değerlendirilmesi gereklidir.</p>
+      </div>
+    </div>
+
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>n gözlemden oluşan bir örneklemde ortalama x̄ ve standart sapma s şöyle tanımlanır:</p>
+      <div class="formula">x̄ = <span class="frac"><span>x₁ + x₂ + ... + xₙ</span><span>n</span></span>, <span style="display:inline-block;width:1.5em"></span>s = √<span class="frac"><span>(x₁ − x̄)² + ... + (xₙ − x̄)²</span><span>n − 1</span></span></div>
+      <p>Paydadaki n − 1, örneklemden hesaplanan varyansın popülasyon varyansını sistematik olarak düşük tahmin etmesini önleyen bir düzeltmedir; büyük n için n ile n − 1 arasındaki fark önemsizleşir. Kareler alındığı için ortalamadan uzak gözlemler standart sapmayı orantısız biçimde etkiler; tek bir uç değerin standart sapmayı büyütmesinin nedeni budur.</p>
+    </details>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Örnekler arası kütüphane boyutu</h3>
+      <p>Bir RNA-seq çalışmasında 24 örneğin toplam okuma sayısına, yani <span class="term">kütüphane boyutuna</span> <span class="en">(library size)</span> baktığımızı düşünelim. Kutu grafiğinde 23 örnek 18 ile 26 milyon okuma arasında yer alırken bir örnek 4 milyon okumayla bıyığın çok altında kalmaktadır. Bu gözlem tek başına örneğin hatalı olduğunu söylemez; ancak hangi örnek olduğuna bakmayı gerektirir: düşük RNA kalitesi, kütüphane hazırlama sırasında bir sorun ya da yalnızca sekanslama şeridindeki <span class="en">(lane)</span> dengesiz dağılım olabilir. Bu tür bir örnek, normalizasyon (normalization; Ünite 8) sonrasında bile diğerlerinden farklı davranabildiğinden, kalite kontrol aşamasında kutu grafiğiyle görünür kılınması özellikle önemlidir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 3. İki genin 100 hücredeki ifade değerleri aynı ortalamaya (20 birim) sahiptir; A geninin standart sapması 2, B geninin standart sapması 9'dur. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>B geni daha yüksek ifade edilmektedir.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>A geninin ölçümünde daha fazla hata vardır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>B geninin ifadesi hücreden hücreye çok daha fazla değişmektedir; A geninde hücreler birbirine benzer.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>İki gen her bakımdan aynıdır; çünkü ortalamaları eşittir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Standart sapma, değerlerin ortalamadan tipik uzaklığıdır; B geninde bu uzaklık dört buçuk kat büyüktür. Ortalama aynı olsa da iki genin hücreler arası davranışı tamamen farklıdır. Yüksek standart sapma ölçüm hatası anlamına gelmek zorunda değildir; gerçek biyolojik değişkenliği de yansıtabilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: B geninin ifadesi hücreden hücreye çok daha fazla değişmektedir. Ortalama eşit olduğundan "daha yüksek ifade" söz konusu değildir; standart sapma yayılımı ölçer, ifade düzeyini değil. Düşük standart sapma hata değil tutarlılık işaretidir. Aynı ortalamaya sahip iki dağılım yayılım bakımından tamamen farklı olabilir.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 4. Bir kutu grafiğinde bıyığın ötesinde kalan bir gözlem için en doğru yorum hangisidir?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Gözlem hatalıdır ve veri setinden çıkarılmalıdır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>Gözlem, verinin orta yarısından alışılmadık ölçüde uzaktır; nedeninin incelenmesi gerekir.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Gözlem ortalamadan en az üç standart sapma uzaktadır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>Dağılım iki tepelidir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Bıyık kuralı (1,5 çeyrekler açıklığı) yalnızca dikkat çekilmesi gereken gözlemleri işaretler; bu gözlemler gerçek bir biyolojik durumu da, teknik bir sorunu da yansıtabilir. Karar, gözlemin kaynağına bakılarak verilir; gözlemin otomatik olarak çıkarılması uygun değildir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Gözlem alışılmadık ölçüde uzaktır ve nedeninin incelenmesi gerekir. Bıyık kuralı standart sapmaya değil çeyrekler açıklığına dayanır; aykırı değer adayı olmak hatalı olmak anlamına gelmez ve otomatik çıkarma, gerçek biyolojik sinyali de silebilir. Kutu grafiği iki tepeli yapıyı göstermez; bunun için histogram gereklidir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Saçılım, log, kat değişimi ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Saçılım grafiği, logaritmik ölçek ve kat değişimi</h2>
+    <p>Bu bölümde, iki ölçümün birlikte nasıl değiştiğini görebilmek ve çok geniş aralıklı sayım verisini okunur kılabilmek amacıyla saçılım grafiğine ve logaritmik ölçeğe bakıyoruz. <span class="term">Saçılım grafiği</span> <span class="en">(scatter plot)</span>, her gözlemi iki değişkendeki değerine göre bir nokta olarak yerleştirir; aynı genin iki örnekteki ifadesi, iki genin aynı hücrelerdeki ifadesi ya da bir genin ifadesi ile hastanın yaşı bu biçimde incelenebilir. İlişkinin yönü ve kuvveti Ünite 6'nın konusudur; burada grafiğin kendisine odaklanıyoruz.</p>
+    <p>Sekanslama verisinde iki teknik tekrarın gen başına okuma sayılarını ham ölçekte çizdiğimizde, grafiğin neredeyse tamamı birkaç çok yüksek ifadeli gen tarafından belirlenir; genlerin büyük çoğunluğu ise sol alt köşede tek bir yığın hâlinde sıkışır. Bunun nedeni, okuma sayılarının 0 ile yüz binler arasında değişmesidir. <span class="term">Logaritmik dönüşüm</span> <span class="en">(log transformation)</span>, her değerin yerine logaritmasını koyarak bu aralığı sıkıştırır: 2 tabanlı logaritmada 1, 2, 4, 8, 16, ... değerleri 0, 1, 2, 3, 4, ... olur. Böylece eşit aralıklar, eşit farkları değil eşit <em>oranları</em> göstermektedir. Sayım verisinde sıfırlar bulunduğundan ve sıfırın logaritması tanımsız olduğundan, uygulamada her değere önce 1 eklenir (log2(x + 1)).</p>
+    <p>Logaritmik ölçek, diferansiyel ifade (differential expression) analizinin dilini de belirlemektedir. Bir genin iki koşuldaki ifadesinin oranına <span class="term">kat değişimi</span> <span class="en">(fold change)</span> denir; 2 tabanlı logaritması ise <span class="term">log2 kat değişimi</span> <span class="en">(log2 fold change)</span> olarak adlandırılır. Log2 kat değişimi 1 ise ifade iki katına çıkmış, 2 ise dört katına çıkmış, −1 ise yarıya inmiştir. Bu ölçeğin önemli bir özelliği simetrisidir: iki kat artış (+1) ile yarıya iniş (−1) sıfırdan eşit uzaklıktadır; oysa ham kat değişiminde 2 ile 0,5 simetrik görünmez. Volkan grafiğinin (volcano plot; Ünite 9) yatay ekseni bu nedenle log2 kat değişimidir.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Simülasyon: Ham ölçek ve log2 ölçeği</h3>
+      <p>Aşağıdaki saçılım grafiği, 400 genin iki teknik tekrardaki okuma sayılarını göstermektedir. Ölçeği değiştirerek aynı verinin nasıl göründüğünü karşılaştırabilirsiniz. Gerçek ifade farkı olmadığından noktaların köşegen çevresinde toplanması beklenir.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="scale-label">Eksen ölçeği</span>
+          <div class="seg" id="scale-seg" role="group" aria-labelledby="scale-label">
+            <button type="button" data-value="raw" aria-pressed="true">Ham okuma sayısı</button>
+            <button type="button" data-value="log" aria-pressed="false">log2(okuma sayısı + 1)</button>
+          </div>
+        </div>
+      </div>
+      <div class="chart tall">
+        <h4><span class="swatch" style="background:var(--c1)"></span>400 gen, iki teknik tekrar</h4>
+        <canvas id="scatter" role="img" aria-label="İki teknik tekrarın gen başına okuma sayılarının saçılım grafiği; ham ölçekte noktalar sol altta yığılır, log2 ölçeğinde köşegen boyunca dağılır."></canvas>
+        <p class="caption" id="scatter-cap"></p>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> Ham ölçekte genlerin yüzde 90'dan fazlası sol alt köşedeki tek bir yığının içinde kalmakta ve grafiği birkaç yüksek ifadeli gen belirlemektedir. Log2 ölçeğine geçtiğimizde aynı genler köşegen boyunca okunur biçimde yayılır; düşük ifadeli genlerdeki göreli dağınıklık da görünür hâle gelir. Bu nedenle omik verinin neredeyse her grafiği logaritmik ölçekte çizilmektedir.</p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-top:0">Hesaplayıcı: Kat değişimi ve log2 kat değişimi</h3>
+      <p>İki koşuldaki ortalama okuma sayılarını değiştirerek kat değişimi ile log2 kat değişimi arasındaki ilişkiyi görebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="ca">Kontrol koşulunda ortalama okuma sayısı</label>
+          <output id="ca-out" for="ca">100</output>
+          <input type="range" id="ca" min="10" max="1000" step="10" value="100">
+        </div>
+        <div class="slider-wrap">
+          <label for="cb">Tedavi koşulunda ortalama okuma sayısı</label>
+          <output id="cb-out" for="cb">400</output>
+          <input type="range" id="cb" min="10" max="1000" step="10" value="400">
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Kat değişimi (tedavi / kontrol)</div><div class="v" id="fc">-</div></div>
+        <div class="stat"><div class="k">log2 kat değişimi</div><div class="v" id="lfc">-</div></div>
+        <div class="stat"><div class="k">Yorum</div><div class="v" id="fc-text" style="font-size:1rem">-</div></div>
+      </div>
+      <div class="table-wrap">
+        <table class="fc-table">
+          <caption class="visually-hidden">Kat değişimi ile log2 kat değişiminin karşılıkları</caption>
+          <thead><tr><th>Kat değişimi</th><th>log2 kat değişimi</th><th>Anlamı</th></tr></thead>
+          <tbody>
+            <tr><td>8</td><td>3</td><td>sekiz kat artış</td></tr>
+            <tr><td>4</td><td>2</td><td>dört kat artış</td></tr>
+            <tr><td>2</td><td>1</td><td>iki kat artış</td></tr>
+            <tr><td>1</td><td>0</td><td>değişim yok</td></tr>
+            <tr><td>0,5</td><td>−1</td><td>yarıya iniş</td></tr>
+            <tr><td>0,25</td><td>−2</td><td>dörtte bire iniş</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Logaritma, üs almanın tersidir: 2³ = 8 olduğundan log2(8) = 3'tür. Logaritmanın en kullanışlı özelliği çarpımı toplama çevirmesidir: log2(a × b) = log2(a) + log2(b) ve log2(a / b) = log2(a) − log2(b). Bu nedenle iki koşulun log2 ifadeleri arasındaki <em>fark</em>, ifadelerin <em>oranının</em> log2'sine, yani log2 kat değişimine eşittir. Diferansiyel ifade tablolarındaki log2FoldChange sütunu tam olarak bu farktır.</p>
+    </details>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: "İki kat arttı" ne demektir?</h3>
+      <p>Bir diferansiyel ifade tablosunda bir gen için log2 kat değişiminin 1,58 olarak verildiğini düşünelim. 2 üzeri 1,58 yaklaşık 3'tür; dolayısıyla genin ifadesi tedavi koşulunda yaklaşık üç katına çıkmıştır. Başka bir genin log2 kat değişimi −0,5 ise ifade 2 üzeri −0,5, yani yaklaşık 0,71 katına inmiş, başka bir deyişle yüzde 29 azalmıştır. Bu çevirinin alışkanlık hâline gelmesi, Ünite 9'daki volkan grafiğini okurken yatay eksendeki her değerin bir oran olduğunu hatırlamayı kolaylaştırmaktadır. Burada dikkat edilmesi gereken bir nokta, aynı log2 kat değişiminin 10 okumadan 30 okumaya çıkan bir gen için de 10 000'den 30 000'e çıkan bir gen için de 1,58 olmasıdır; düşük sayımlardaki oranlar ise rastlantıya çok daha açıktır. Bu belirsizlik konusunu Ünite 4 ve Ünite 9'da ele alıyoruz.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 5. Bir genin log2 kat değişimi −2 olarak verilmiştir. Bu ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>İfade 2 birim azalmıştır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>İfade dörtte birine inmiştir (0,25 kat).</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>İfade yarıya inmiştir (0,5 kat).</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>İfade yüzde 2 azalmıştır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Kat değişimi 2 üzeri −2 = 0,25'tir; ifade dörtte birine inmiştir. Log2 ölçeğinde her birim bir "ikiye katlanma" ya da "yarıya inme" adımıdır; −2, iki kez yarıya inmek demektir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: İfade dörtte birine inmiştir. Log2 kat değişimi bir fark değil, oranın logaritmasıdır: 2 üzeri −2 = 0,25. Yarıya inme log2 kat değişimi −1'e, dörtte bire inme ise −2'ye karşılık gelir. "2 birim azalma" ya da "yüzde 2" yorumları, ölçeğin oransal olduğunu gözden kaçırmaktadır.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 6. Ham okuma sayılarıyla çizilen bir saçılım grafiğinde genlerin büyük çoğunluğunun sol alt köşede yığılmasının nedeni nedir?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Okuma sayıları sağa çarpıktır: çoğu gen düşük, az sayıda gen çok yüksek sayım verir ve eksenler bu birkaç gene göre ölçeklenir.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Teknik tekrarlar birbirine benzemediği için.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Düşük ifadeli genler ölçülememiştir.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Grafik yanlış çizilmiştir; saçılım grafiği sayım verisi için kullanılamaz.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Birkaç çok yüksek ifadeli gen eksenlerin üst sınırını belirler; genlerin büyük çoğunluğu ise bu sınırın küçük bir yüzdesinde kaldığından tek bir yığın hâlinde görünür. Logaritmik ölçek bu aralığı sıkıştırarak yığını açar.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Okuma sayılarının sağa çarpık olması. Teknik tekrarların benzerliği ya da düşük ifadeli genlerin ölçülüp ölçülmemesi bu yığılmanın nedeni değildir; yığılma, eksenlerin birkaç uç gene göre ölçeklenmesinden kaynaklanır. Saçılım grafiği sayım verisi için uygundur; yalnızca ölçeğin logaritmik olması gerekir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 4. Heatmap ============ -->
+  <section aria-labelledby="b4">
+    <h2 id="b4">4. Heatmap okumak</h2>
+    <p>Bu bölümde, yüzlerce gen ve onlarca örneği aynı anda görebilmek amacıyla heatmap'e bakıyoruz. Bir <span class="term">heatmap</span>, ölçüm matrisinin her gözesini <span class="en">(cell)</span> bir renkle gösterir: satırlar genler, sütunlar örnekler, renk ise değerdir. Böylece Ünite 1'de ele aldığımız ölçüm matrisi, sayılar yerine renk desenleriyle okunabilir hâle gelmektedir. Makalelerde en sık görülen omik grafiklerinden biri olan heatmap'in doğru okunması, renk ölçeğinin neyi gösterdiğinin bilinmesine bağlıdır.</p>
+    <p>Ham değerlerle çizilen bir heatmap'te renk, genler arasındaki ifade düzeyi farkını yansıtır: yüksek ifadeli bir gen her örnekte koyu, düşük ifadeli bir gen her örnekte açık görünür ve örnekler arasındaki farklar bu büyük gen-gen farkının gölgesinde kalır. Bu nedenle heatmap'ler çoğunlukla <span class="term">satır ölçekleme</span> <span class="en">(row scaling)</span> ile çizilir: her genin değerlerinden o genin ortalaması çıkarılır ve standart sapmasına bölünür. Elde edilen sayıya <span class="term">z-skoru</span> <span class="en">(z-score)</span> denir ve "bu örnekte bu gen, kendi ortalamasının kaç standart sapma üstünde ya da altında?" sorusunu yanıtlar. Satır ölçeklenmiş bir heatmap'te renk artık ifade düzeyini değil, örnekler arasındaki göreli farkı göstermektedir; bu, hangi genlerin hangi örnek grubunda yükseldiğini görmeyi kolaylaştırır, ancak düşük ifadeli bir gendeki küçük bir dalgalanmayı da yüksek ifadeli bir gendeki büyük bir fark kadar koyu gösterebilir.</p>
+
+    <div class="card">
+      <h3 style="margin-top:0">Etkinlik: Ham değerler ve satır ölçekleme</h3>
+      <p>Aşağıdaki heatmap, 12 genin 8 örnekteki log2 ifade değerlerini göstermektedir; ilk 4 örnek kontrol, son 4 örnek tedavi grubudur. Ölçeklemeyi değiştirerek aynı matrisin nasıl farklı okunduğunu görebilir, bir gözeye tıklayarak (ya da klavyeyle odaklanıp Enter'a basarak) sayısal değerini okuyabilirsiniz.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="hm-label">Renk ölçeği</span>
+          <div class="seg" id="hm-seg" role="group" aria-labelledby="hm-label">
+            <button type="button" data-value="raw" aria-pressed="true">Ham log2 ifade</button>
+            <button type="button" data-value="z" aria-pressed="false">Satır ölçeklenmiş (z-skoru)</button>
+          </div>
+        </div>
+      </div>
+      <div class="heat">
+        <div class="chart">
+          <h4>12 gen × 8 örnek</h4>
+          <canvas id="heat" role="img" aria-label="Genler satırlarda, örnekler sütunlarda; renk ifade değerini ya da z-skorunu gösterir." tabindex="0" data-drag></canvas>
+          <div class="scale"><span id="scale-lo">-</span><div class="bar" id="scale-bar"></div><span id="scale-hi">-</span></div>
+          <p class="caption" id="heat-cap">Bir göze seçildiğinde değeri burada görünür. Klavyede ok tuşları gözeler arasında gezinmeyi sağlar.</p>
+        </div>
+      </div>
+      <div class="note">
+        <p><strong>Gözlem:</strong> Ham ölçekte GAPDH ve ACTB gibi yüksek ifadeli genlerin satırları her örnekte koyu, düşük ifadeli genlerin satırları her örnekte açık görünmektedir; tedavi ile kontrol arasındaki fark bu desenin içinde zor seçilir. Satır ölçeklemeye geçtiğimizde her satır kendi içinde karşılaştırılır ve tedavi grubunda yükselen genler ile düşen genler iki renk bloğu olarak ortaya çıkar. Buna karşın bu görünüm, hangi genlerin gerçekten yüksek ifade edildiğini artık söylememektedir; her iki ölçek de ayrı bir soruyu yanıtlar.</p>
+      </div>
+    </div>
+
+    <div class="note warn">
+      <p><strong>Kaçınılması gereken grafikler:</strong> Grup ortalamalarını yalnızca çubuk ve hata çubuğuyla <span class="en">(error bar)</span> gösteren "dinamit" grafikleri <span class="en">(dynamite plot)</span>, dağılımın şeklini, gözlem sayısını ve aykırı değerleri gizlemektedir; aynı çubuk, 3 gözlemle de 300 gözlemle de çizilebilir. Küçük örneklemlerde ham noktaların gösterilmesi, büyük örneklemlerde ise kutu grafiği ya da histogram tercih edilmelidir. Benzer biçimde, sıfırdan başlamayan bir dikey eksen küçük farkları büyük gösterir; pasta grafiği ise açıları karşılaştırmayı gerektirdiğinden birkaç kategoriden fazlasında okunamaz hâle gelir.</p>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Diferansiyel ifade sonuçlarının heatmap'i</h3>
+      <p>Bir makalede "en anlamlı 50 genin heatmap'i" başlıklı bir şekil gördüğümüzde ilk bakılacak şey renk ölçeğinin etiketidir. Etiket "z-skoru" ya da "satır ölçeklenmiş" diyorsa renkler göreli farkları göstermektedir ve koyu bir göze o genin yüksek ifade edildiği anlamına gelmez; yalnızca o örnekte kendi ortalamasının üstünde olduğunu söyler. Etiket "log2 ifade" diyorsa renkler mutlak düzeyi gösterir ve tedavi etkisi daha zor görünür. İkinci bakılacak şey sütunların sırasıdır: sütunlar koşula göre gruplanmışsa iki blok hâlinde görünen desen beklenen bir sonuçtur; sütunlar kümelemeyle (Ünite 8) sıralanmışsa ve yine de koşula göre ayrışıyorsa bu, verinin kendi içinden gelen daha güçlü bir bulgudur.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 7. Satır ölçeklenmiş (z-skoru) bir heatmap'te bir genin tedavi örneklerindeki gözeleri koyu turuncu, kontrol örneklerindeki gözeleri koyu mavidir. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q7" value="a"><span>Bu gen, tedavi örneklerinde veri setindeki en yüksek ifadeli gendir.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="b"><span>Bu genin ifadesi tedavi örneklerinde en az dört katına çıkmıştır.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="c"><span>Bu genin ifadesi tedavi örneklerinde kendi ortalamasının üstünde, kontrol örneklerinde altındadır; mutlak düzey ve kat değişimi bu renkten okunamaz.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="d"><span>Renkler rastgeledir; z-skoru yalnızca kümeleme için kullanılır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Z-skoru her satırı kendi ortalaması ve standart sapmasına göre ölçeklediğinden, renk yalnızca örnekler arasındaki göreli konumu göstermektedir. Genin yüksek mi düşük mü ifade edildiği ve kat değişiminin ne olduğu, yalnızca ham değerlere ya da sonuç tablosuna bakılarak öğrenilebilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Renk, genin kendi ortalamasına göre konumunu gösterir. Satır ölçekleme mutlak düzeyi silmektedir; bu nedenle "en yüksek ifadeli gen" ya da "dört kat" gibi yargılar z-skorundan çıkarılamaz. Düşük ifadeli bir gendeki küçük ancak tutarlı bir fark da aynı koyu renkleri verebilir.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 8. Dört örneklik iki grubun ortalamalarını karşılaştıran bir şekil için hangisi en bilgilendiricidir?</legend>
+        <label class="opt"><input type="radio" name="q8" value="a"><span>İki çubuk ve hata çubukları.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="b"><span>Her örneğin ayrı bir nokta olarak gösterildiği, grup ortalamasının bir çizgiyle işaretlendiği bir grafik.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="c"><span>İki dilimli bir pasta grafiği.</span></label>
+        <label class="opt"><input type="radio" name="q8" value="d"><span>Yalnızca iki ortalamayı içeren bir tablo.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Dört gözlemlik gruplarda her noktayı göstermek hem gözlem sayısını hem yayılımı hem de olası aykırı değeri görünür kılar; çubuk ve hata çubuğu bu bilgilerin tümünü gizlemektedir. Pasta grafiği ortalama karşılaştırması için uygun değildir; yalnızca ortalamaları içeren tablo ise yayılımı göstermez.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Her örneğin nokta olarak gösterildiği grafik. Çubuk ve hata çubuğu, dört gözlemin nerede olduğu, birinin aykırı olup olmadığı ve dağılımın çarpık olup olmadığı gibi soruları gizler. Küçük örneklemlerde ham noktaların gösterilmesi en bilgilendirici seçenektir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Histogram dağılımın şeklini gösterir; şekil yorumu birkaç aralık genişliğinde doğrulanmalıdır.</li>
+        <li>Ortalama her değeri hesaba katar ve uç değerlerden etkilenir; medyan dayanıklıdır. Sağa çarpık veride ortalama medyanın sağındadır.</li>
+        <li>Standart sapma ortalamadan tipik uzaklıktır; çeyrekler açıklığı verinin orta yarısının genişliğidir ve uç değerlerden etkilenmez. Kutu grafiği beş sayıyı ve aykırı değer adaylarını gösterir.</li>
+        <li>Sayım verisi sağa çarpıktır; log2 ölçeği eşit aralıkları eşit oranlara çevirir ve omik grafiklerinin standart ölçeğidir.</li>
+        <li>log2 kat değişimi 1, iki kat artış; −1, yarıya iniş demektir; ölçek simetriktir.</li>
+        <li>Heatmap'te renk ölçeğinin ham mı satır ölçeklenmiş mi olduğu okumanın tamamını değiştirir.</li>
+      </ul>
+    </div>
+    <p class="meta">Bir sonraki ünitede, rastgeleliği modelleyebilmek amacıyla olasılığa, koşullu olasılığa ve biyolojik verinin en sık karşılaşılan dağılımlarına (normal, binom, Poisson) bakıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u01-veri/index.html">Önceki: Ünite 1</a><a href="../index.html">Dizin</a><a href="../u03-olasilik/index.html">Sonraki: Ünite 3, Olasılık ve dağılımlar</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 2. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+
+  /* ---------- 1. Histogram ve merkez ---------- */
+  var h = { shape: "skew", bins: 20, outlier: false, seed: BI.DEFAULT_SEED, data: [] };
+  function gen1() {
+    var rng = BI.rng(h.seed), out = [], v;
+    for (var i = 0; i < 80; i++) {
+      do {
+        if (h.shape === "sym") { v = 40 + 9 * BI.randn(rng); }
+        else if (h.shape === "skew") { v = 6 + 10 * Math.exp(0.75 * BI.randn(rng)); }
+        else { v = rng() < 0.5 ? 22 + 5 * BI.randn(rng) : 58 + 5 * BI.randn(rng); }
+      } while (v < 0 || v > 90);
+      out.push(v);
+    }
+    h.data = out;
+  }
+  function render1() {
+    var data = h.outlier ? h.data.concat([95]) : h.data;
+    var counts = BI.hist(data, h.bins, 0, 100);
+    var c = document.getElementById("hist1");
+    var p = BI.plot(c, { x: [0, 100], y: [0, BI.niceMax(Math.max.apply(null, counts) * 1.15)], pad: { l: 36, r: 10, t: 14, b: 40 } });
+    p.axes({ xticks: [0, 25, 50, 75, 100], yticks: BI.yTicks(p.y[1]), grid: true, xlabel: "ifade düzeyi (birim)", ylabel: "hücre sayısı" });
+    p.bars(counts, 0, 100, p.col.c1);
+    var m = BI.mean(data), md = BI.median(data);
+    p.vline(m, p.col.c2, { label: "ortalama " + BI.fmt(m, 1) });
+    p.vline(md, p.col.c3, { dashed: true, label: "medyan " + BI.fmt(md, 1), labelDy: 14 });
+    BI.text("h-mean", BI.fmt(m, 1)); BI.text("h-median", BI.fmt(md, 1)); BI.text("h-diff", BI.fmt(m - md, 1)); BI.text("h-n", String(data.length));
+  }
+  gen1();
+  BI.seg("#shape-seg", function (v) { h.shape = v; gen1(); render1(); });
+  BI.slider("bins", function (v) { h.bins = v; render1(); });
+  BI.on("outlier", "change", function (e) { h.outlier = e.target.checked; render1(); });
+  BI.onReseed(function (seed) { h.seed = seed; gen1(); render1(); });
+  BI.onRedraw(render1);
+  render1();
+
+  /* ---------- 2. Yayılım ---------- */
+  var b = { sd: 5, skew: 0, outlier: false };
+  var baseZ = (function () { var rng = BI.rng(BI.DEFAULT_SEED + 33), z = []; for (var i = 0; i < 100; i++) { z.push(BI.randn(rng)); } return z; })();
+  function gen2() {
+    // çarpıklık: z'yi üstel dönüşümle sağa çarpıt, sonra ortalama 0 ve standart sapma 1 olacak biçimde ölçekle;
+    // böylece popülasyon standart sapması her çarpıklıkta sürgüdeki değere eşit kalır
+    var out = [], k = b.skew;
+    var muK = k > 0 ? (Math.exp(k * k / 2) - 1) / k : 0;
+    var sdK = k > 0 ? Math.sqrt((Math.exp(k * k) - 1) * Math.exp(k * k)) / k : 1;
+    for (var i = 0; i < 100; i++) {
+      var z = baseZ[i];
+      var sk = k > 0 ? ((Math.exp(k * z) - 1) / k - muK) / sdK : z;
+      out.push(40 + b.sd * sk);
+    }
+    if (b.outlier) { out = out.concat([80, 85, 92]); }
+    return out;
+  }
+  function boxStats(data) {
+    var s = BI.sorted(data);
+    var q1 = BI.quantile(s, 0.25), q2 = BI.quantile(s, 0.5), q3 = BI.quantile(s, 0.75), iqr = q3 - q1;
+    var lo = q1 - 1.5 * iqr, hi = q3 + 1.5 * iqr, inside = s.filter(function (x) { return x >= lo && x <= hi; });
+    var outs = s.filter(function (x) { return x < lo || x > hi; });
+    return { q1: q1, q2: q2, q3: q3, iqr: iqr, wlo: inside[0], whi: inside[inside.length - 1], outs: outs };
+  }
+  function render2() {
+    var data = gen2();
+    var counts = BI.hist(data, 25, 0, 100);
+    var c = document.getElementById("hist2");
+    var p = BI.plot(c, { x: [0, 100], y: [0, BI.niceMax(Math.max.apply(null, counts) * 1.15)], pad: { l: 36, r: 10, t: 10, b: 26 } });
+    p.axes({ xticks: [0, 25, 50, 75, 100], yticks: BI.yTicks(p.y[1]), grid: true, ylabel: "gözlem sayısı" });
+    p.bars(counts, 0, 100, p.col.c1);
+    var st = boxStats(data);
+    var bc = document.getElementById("box2");
+    var q = BI.plot(bc, { x: [0, 100], y: [0, 1], pad: { l: 36, r: 10, t: 8, b: 26 } });
+    q.axes({ xticks: [0, 25, 50, 75, 100], yaxis: false, xlabel: "değer (birim)" });
+    q.ctx.strokeStyle = q.col.c3; q.ctx.lineWidth = 2;
+    // bıyıklar
+    q.line([[st.wlo, 0.5], [st.q1, 0.5]], q.col.c3); q.line([[st.q3, 0.5], [st.whi, 0.5]], q.col.c3);
+    q.line([[st.wlo, 0.35], [st.wlo, 0.65]], q.col.c3); q.line([[st.whi, 0.35], [st.whi, 0.65]], q.col.c3);
+    // kutu
+    q.rect(st.q1, 0.2, st.q3, 0.8, q.col.c3, 0.25);
+    q.ctx.strokeStyle = q.col.c3; q.ctx.lineWidth = 2; q.ctx.strokeRect(q.sx(st.q1), q.sy(0.8), q.sx(st.q3) - q.sx(st.q1), q.sy(0.2) - q.sy(0.8));
+    q.line([[st.q2, 0.2], [st.q2, 0.8]], q.col.text, { width: 3 });
+    st.outs.forEach(function (x) { q.dot(x, 0.5, q.col.c2, 5, { ring: true }); });
+    BI.text("b-count", String(data.length));
+    BI.text("b-mean", BI.fmt(BI.mean(data), 1)); BI.text("b-sd", BI.fmt(BI.sd(data), 1)); BI.text("b-med", BI.fmt(st.q2, 1));
+    BI.text("b-q", BI.fmt(st.q1, 1) + " ve " + BI.fmt(st.q3, 1)); BI.text("b-iqr", BI.fmt(st.iqr, 1)); BI.text("b-out", String(st.outs.length));
+  }
+  BI.slider("spread", function (v) { b.sd = v; render2(); });
+  BI.slider("skew", function (v) { b.skew = v; render2(); }, { digits: 1 });
+  BI.on("outlier2", "change", function (e) { b.outlier = e.target.checked; render2(); });
+  BI.onRedraw(render2);
+  render2();
+
+  /* ---------- 3. Saçılım: ham ve log ---------- */
+  var sc = { scale: "raw" };
+  var genes = (function () {
+    var rng = BI.rng(BI.DEFAULT_SEED + 21), out = [];
+    for (var i = 0; i < 400; i++) {
+      var mu = Math.exp(1.2 + 1.9 * BI.randn(rng)); // log-normal ortalama
+      var a = BI.randPoisson(rng, mu), bb = BI.randPoisson(rng, mu);
+      out.push([a, bb]);
+    }
+    return out;
+  })();
+  function render3() {
+    var c = document.getElementById("scatter");
+    var maxv = 0; genes.forEach(function (g) { maxv = Math.max(maxv, g[0], g[1]); });
+    var p, i;
+    if (sc.scale === "raw") {
+      var top = BI.niceMax(maxv);
+      p = BI.plot(c, { x: [0, top], y: [0, top], pad: { l: 52, r: 12, t: 10, b: 40 } });
+      p.axes({ xticks: [0, top / 2, top], yticks: [0, top / 2, top], grid: true, xlabel: "1. tekrar, okuma sayısı", ylabel: "2. tekrar" });
+      p.line([[0, 0], [top, top]], p.col.text3, { dashed: true, width: 1 });
+      for (i = 0; i < genes.length; i++) { p.dot(genes[i][0], genes[i][1], p.col.c1, 3.5); }
+      var inCorner = genes.filter(function (g) { return g[0] < top * 0.1 && g[1] < top * 0.1; }).length;
+      BI.text("scatter-cap", "Genlerin " + BI.fmtInt(inCorner) + " tanesi (yüzde " + BI.fmt(100 * inCorner / genes.length, 0) + " kadarı) sol alt köşedeki, her iki eksenin ilk yüzde 10'una denk gelen bölgede yer almaktadır.");
+    } else {
+      var lt = Math.ceil(Math.log2(maxv + 1));
+      p = BI.plot(c, { x: [0, lt], y: [0, lt], pad: { l: 40, r: 12, t: 10, b: 40 } });
+      var tk = []; for (i = 0; i <= lt; i += 4) { tk.push(i); }
+      p.axes({ xticks: tk, yticks: tk, grid: true, xlabel: "1. tekrar, log2(okuma + 1)", ylabel: "2. tekrar" });
+      p.line([[0, 0], [lt, lt]], p.col.text3, { dashed: true, width: 1 });
+      for (i = 0; i < genes.length; i++) { p.dot(Math.log2(genes[i][0] + 1), Math.log2(genes[i][1] + 1), p.col.c1, 3.5); }
+      BI.text("scatter-cap", "Aynı 400 gen log2 ölçeğinde: her eksen birimi bir ikiye katlanmadır. Düşük sayımlı genlerde köşegenden sapmanın daha büyük olması, küçük sayıların oransal olarak daha gürültülü olmasındandır.");
+    }
+  }
+  BI.seg("#scale-seg", function (v) { sc.scale = v; render3(); });
+  BI.onRedraw(render3);
+  render3();
+
+  /* ---------- Kat değişimi hesaplayıcı ---------- */
+  var fcA = 100, fcB = 400;
+  function renderFc() {
+    var fc = fcB / fcA, l = Math.log2(fc);
+    BI.text("fc", BI.fmt(fc, 2)); BI.text("lfc", BI.fmt(l, 2));
+    var t;
+    if (Math.abs(l) < 0.05) { t = "Değişim yok."; }
+    else if (l > 0) { t = "İfade yaklaşık " + BI.fmt(fc, 1) + " katına çıkmıştır."; }
+    else { t = "İfade yaklaşık " + BI.fmt(fc, 2) + " katına inmiştir (yüzde " + BI.fmt(100 * (1 - fc), 0) + " azalış)."; }
+    BI.text("fc-text", t);
+  }
+  BI.slider("ca", function (v) { fcA = v; renderFc(); });
+  BI.slider("cb", function (v) { fcB = v; renderFc(); });
+  renderFc();
+
+  /* ---------- 4. Heatmap ---------- */
+  var hmGenes = ["GAPDH", "ACTB", "MYC", "CDK1", "CCNB1", "FOS", "JUN", "TP53", "CDKN1A", "PTEN", "BAX", "LINC-X"];
+  var hmSamples = ["K1", "K2", "K3", "K4", "T1", "T2", "T3", "T4"];
+  var hmBase = [14.2, 13.6, 7.5, 6.8, 6.1, 5.2, 5.9, 8.4, 7.0, 7.8, 6.5, 2.4];
+  var hmEff = [0, 0.05, 1.6, 1.3, 1.5, 2.2, 1.8, 0.1, -1.4, -1.1, -1.7, 0.9];
+  var hmData = (function () {
+    var rng = BI.rng(BI.DEFAULT_SEED + 31), m = [];
+    for (var i = 0; i < hmGenes.length; i++) { var row = []; for (var j = 0; j < 8; j++) { row.push(hmBase[i] + (j >= 4 ? hmEff[i] : 0) + 0.3 * BI.randn(rng)); } m.push(row); }
+    return m;
+  })();
+  var hm = { mode: "raw", sel: null };
+  function zRows(m) { return m.map(function (row) { var mu = BI.mean(row), sd = BI.sd(row); return row.map(function (v) { return (v - mu) / sd; }); }); }
+  function seqColor(t, dark) { var a = dark ? [38, 52, 72] : [230, 238, 250], b2 = dark ? [120, 175, 240] : [13, 54, 107]; return "rgb(" + Math.round(a[0] + (b2[0] - a[0]) * t) + "," + Math.round(a[1] + (b2[1] - a[1]) * t) + "," + Math.round(a[2] + (b2[2] - a[2]) * t) + ")"; }
+  function divColor(t, dark) { // t: 0 (mavi) .. 0,5 (gri) .. 1 (turuncu)
+    var blue = dark ? [57, 135, 229] : [42, 120, 214], mid = dark ? [60, 60, 58] : [225, 224, 218], or = dark ? [217, 89, 38] : [235, 104, 52];
+    var a, b2, u; if (t < 0.5) { a = blue; b2 = mid; u = t / 0.5; } else { a = mid; b2 = or; u = (t - 0.5) / 0.5; }
+    return "rgb(" + Math.round(a[0] + (b2[0] - a[0]) * u) + "," + Math.round(a[1] + (b2[1] - a[1]) * u) + "," + Math.round(a[2] + (b2[2] - a[2]) * u) + ")";
+  }
+  var hmGeom = null;
+  function renderHm() {
+    var dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+    var m = hm.mode === "raw" ? hmData : zRows(hmData);
+    var lo = hm.mode === "raw" ? 2 : -2, hi = hm.mode === "raw" ? 15 : 2;
+    var c = document.getElementById("heat");
+    var p = BI.plot(c, { x: [0, 8], y: [0, 12], pad: { l: 64, r: 6, t: 22, b: 6 } });
+    var cw = p.plotW / 8, ch = p.plotH / 12;
+    hmGeom = { p: p, cw: cw, ch: ch };
+    for (var i = 0; i < 12; i++) {
+      for (var j = 0; j < 8; j++) {
+        var t = Math.max(0, Math.min(1, (m[i][j] - lo) / (hi - lo)));
+        p.ctx.fillStyle = hm.mode === "raw" ? seqColor(t, dark) : divColor(t, dark);
+        p.ctx.fillRect(p.sx(j) + 1, p.sy(12 - i) + 1, cw - 2, ch - 2);
+      }
+      p.textPx(hmGenes[i], p.P.l - 6, p.sy(12 - i) + ch / 2, { align: "right", size: 11, color: p.col.text2 });
+    }
+    for (j = 0; j < 8; j++) { p.textPx(hmSamples[j], p.sx(j) + cw / 2, p.P.t - 6, { align: "center", baseline: "bottom", size: 11, color: j < 4 ? p.col.c1 : p.col.c2 }); }
+    if (hm.sel) {
+      p.ctx.strokeStyle = p.col.text; p.ctx.lineWidth = 3;
+      p.ctx.strokeRect(p.sx(hm.sel[1]) + 1.5, p.sy(12 - hm.sel[0]) + 1.5, cw - 3, ch - 3);
+      var g = hmGenes[hm.sel[0]], s = hmSamples[hm.sel[1]];
+      BI.text("heat-cap", g + " geni, " + s + " örneği: log2 ifade " + BI.fmt(hmData[hm.sel[0]][hm.sel[1]], 2) + "; satır ölçeklenmiş z-skoru " + BI.fmt(zRows(hmData)[hm.sel[0]][hm.sel[1]], 2) + ". Satır ortalaması " + BI.fmt(BI.mean(hmData[hm.sel[0]]), 2) + ".");
+    }
+    var bar = document.getElementById("scale-bar");
+    bar.style.background = hm.mode === "raw" ? "linear-gradient(90deg, " + seqColor(0, dark) + ", " + seqColor(1, dark) + ")" : "linear-gradient(90deg, " + divColor(0, dark) + ", " + divColor(0.5, dark) + ", " + divColor(1, dark) + ")";
+    BI.text("scale-lo", hm.mode === "raw" ? "log2 ifade 2" : "z = −2 (ortalamanın altı)");
+    BI.text("scale-hi", hm.mode === "raw" ? "15" : "z = +2 (ortalamanın üstü)");
+  }
+  function pickCell(ev) {
+    if (!hmGeom) { return; }
+    var c = document.getElementById("heat"), r = c.getBoundingClientRect();
+    var x = ev.clientX - r.left, y = ev.clientY - r.top;
+    var j = Math.floor((x - hmGeom.p.P.l) / hmGeom.cw), i = Math.floor((y - hmGeom.p.P.t) / hmGeom.ch);
+    if (i >= 0 && i < 12 && j >= 0 && j < 8) { hm.sel = [i, j]; renderHm(); }
+  }
+  var heatEl = document.getElementById("heat");
+  heatEl.addEventListener("click", pickCell);
+  heatEl.addEventListener("keydown", function (e) {
+    var k = e.key; if (["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight", "Enter", " "].indexOf(k) === -1) { return; }
+    e.preventDefault();
+    if (!hm.sel) { hm.sel = [0, 0]; }
+    else if (k === "ArrowUp") { hm.sel[0] = Math.max(0, hm.sel[0] - 1); }
+    else if (k === "ArrowDown") { hm.sel[0] = Math.min(11, hm.sel[0] + 1); }
+    else if (k === "ArrowLeft") { hm.sel[1] = Math.max(0, hm.sel[1] - 1); }
+    else if (k === "ArrowRight") { hm.sel[1] = Math.min(7, hm.sel[1] + 1); }
+    renderHm();
+  });
+  BI.seg("#hm-seg", function (v) { hm.mode = v; renderHm(); });
+  BI.onRedraw(renderHm);
+  renderHm();
+})();
+</script>
+</body>
+</html>

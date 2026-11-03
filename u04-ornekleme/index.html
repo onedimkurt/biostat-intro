@@ -1,0 +1,1209 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 4: Örnekleme ve belirsizlik</title>
+<meta name="description" content="Örnekleme dağılımı ve standart hata; merkezi limit teoremi; güven aralığı ve yorumu; bootstrap ile yeniden örnekleme.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .ci canvas { height: 320px; }
+  .boot canvas { height: 200px; }
+  .sd canvas { height: 180px; }
+  .sd .wide canvas { height: 220px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u03-olasilik/index.html">Önceki: Ünite 3</a><a href="../index.html">Dizin</a><a href="../u05-hipotez/index.html">Sonraki: Ünite 5</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 4 · yaklaşık 70 dakika</p>
+    <h1>Örnekleme ve belirsizlik</h1>
+    <p class="lead">Bu ünitede, tek bir örneklemden elde ettiğimiz sayının ne kadar güvenilir olduğunu ölçebilmek amacıyla örneklem ortalamasının örneklemden örnekleme nasıl değiştiğine bakıyoruz. Bu değişkenliğin ölçüsü olan standart hata, güven aralığının ve Ünite 5'teki testlerin ortak temelidir.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>Örnekleme dağılımının ne olduğunu ve neden ortaya çıktığını anlatabilirsiniz.</li>
+      <li>Standart hatanın örneklem büyüklüğüne nasıl bağlı olduğunu öngörebilirsiniz.</li>
+      <li>Merkezi limit teoreminin ne söylediğini ve ne söylemediğini ayırt edebilirsiniz.</li>
+      <li>Bir güven aralığını doğru yorumlayabilir, yaygın yanlış yorumları tanıyabilirsiniz.</li>
+      <li>Bootstrap yönteminin formül gerektirmeden belirsizliği nasıl tahmin ettiğini açıklayabilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Örnekleme dağılımı, standart hata ve merkezi limit teoremi</a></li>
+      <li><a href="#b2">Güven aralığı</a></li>
+      <li><a href="#b3">Bootstrap: yeniden örnekleme ile belirsizlik</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Örnekleme dağılımı ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Örnekleme dağılımı, standart hata ve merkezi limit teoremi</h2>
+    <p>Bu bölümde, bir örneklem ortalamasının "ne kadar oynayabileceğini" görebilmek amacıyla aynı popülasyondan tekrar tekrar örneklem çekiyoruz. Ünite 1'de her örneklemin ortalamasının biraz farklı çıktığını görmüştük; bu olguya <span class="term">örnekleme değişkenliği</span> <span class="en">(sampling variability)</span> denir. Aynı büyüklükteki çok sayıda örneklemden hesaplanan ortalamaların dağılımı ise <span class="term">örnekleme dağılımı</span> <span class="en">(sampling distribution)</span> olarak adlandırılmaktadır. Gerçek bir çalışmada elimizde yalnızca tek bir örneklem bulunur; buna karşın bilgisayarda bu deneyi istediğimiz kadar tekrarlayabilir ve örneklem ortalamasının davranışını doğrudan görebiliriz.</p>
+    <h3>Üç önemli sonuç</h3>
+    <ol>
+      <li><strong>Merkez:</strong> Örneklem ortalamalarının ortalaması, popülasyon ortalaması μ'ye yakındır. Bu nedenle örneklem ortalaması <span class="term">yansız</span> <span class="en">(unbiased)</span> bir tahmin olarak kabul edilir.</li>
+      <li><strong>Yayılım:</strong> Örneklem ortalamalarının standart sapmasına <span class="term">standart hata</span> <span class="en">(standard error, SH)</span> denir. Popülasyonun standart sapması σ ve örneklem büyüklüğü n olmak üzere standart hata σ/√n kadardır. Dolayısıyla örneklem büyüklüğü dört katına çıktığında standart hata yalnızca yarıya inmektedir.</li>
+      <li><strong>Şekil:</strong> Popülasyonun şekli ne olursa olsun, n yeterince büyük olduğunda örneklem ortalamalarının dağılımı normal dağılıma yaklaşır. Bu sonuç <span class="term">merkezi limit teoremi</span> <span class="en">(central limit theorem)</span> olarak adlandırılmaktadır. Teorem yalnızca ortalamalar (ve toplamlar) hakkındadır; örneklemdeki tek tek değerler popülasyonun şeklini korur.</li>
+    </ol>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Popülasyonun standart sapması σ ve örneklem büyüklüğü n ise, örneklem ortalamasının standart hatası:</p>
+      <div class="formula">SH = <span class="frac"><span>σ</span><span>√n</span></span></div>
+      <p>Paydadaki √n, belirsizliğin n ile değil n'in kareköküyle azaldığını gösterir: n'i 4 katına çıkarmak standart hatayı yarıya, 100 katına çıkarmak ise onda birine indirir. Uygulamada σ bilinmediğinden yerine örneklem standart sapması s kullanılır ve SH ≈ s/√n olarak tahmin edilir.</p>
+    </details>
+
+    <div class="card sd">
+      <h3 style="margin-top:0">Simülasyon: Hücre başına gen ifadesi</h3>
+      <p>Bu simülasyonda, bir dokuda 10 000 hücre bulunduğunu ve her hücrede bir genin ifade düzeyinin (0 ile 100 arasında, normalize edilmiş birim) bilindiğini varsayıyoruz. Bu 10 000 hücre bizim popülasyonumuzdur; gerçek bir deneyde ise bunlardan yalnızca n tanesi ölçülebilir. Popülasyonun şeklini ve örneklem büyüklüğünü seçtikten sonra örneklem çekebilir ve her örneklemin ortalamasının en alttaki grafikte nasıl biriktiğini izleyebilirsiniz.</p>
+      <div class="controls">
+        <div class="control-row">
+          <span class="block" id="shape-label">Popülasyonun şekli</span>
+          <div class="seg" id="shape-seg" role="group" aria-labelledby="shape-label">
+            <button type="button" data-value="normal" aria-pressed="true">Simetrik</button>
+            <button type="button" data-value="skewed" aria-pressed="false">Sağa çarpık</button>
+            <button type="button" data-value="uniform" aria-pressed="false">Düzgün</button>
+            <button type="button" data-value="bimodal" aria-pressed="false">İki tepeli</button>
+          </div>
+        </div>
+        <div class="slider-wrap">
+          <label for="n">Örneklem büyüklüğü (n)</label>
+          <output id="n-out" for="n">5</output>
+          <input type="range" id="n" min="1" max="100" step="1" value="5">
+          <p class="help">n = 1 ile başlayıp ardından 5, 30 ve 100 değerlerini denemek, farkı görmenin en kısa yoludur.</p>
+        </div>
+        <div class="control-row">
+          <span class="block" id="draw-label">Örneklem çekme</span>
+          <div class="seg" role="group" aria-labelledby="draw-label">
+            <button type="button" class="primary" id="d1">1 örneklem</button>
+            <button type="button" id="d100">100 örneklem</button>
+            <button type="button" id="d1000">1 000 örneklem</button>
+            <button type="button" id="d-reset">Sıfırlayınız</button>
+            <button type="button" data-reseed>Yeni örneklem</button>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="show-normal" checked><span>Kuramsal normal eğri (ortalama μ, standart sapma σ/√n) gösterilsin</span></label>
+      </div>
+      <div class="charts two">
+        <div class="chart">
+          <h4><span class="swatch" style="background:var(--c1)"></span>Popülasyon: 10 000 hücre</h4>
+          <canvas id="pop" role="img" aria-label="Popülasyonun histogramı; kesikli çizgi popülasyon ortalaması."></canvas>
+          <p class="caption" id="pop-cap"></p>
+        </div>
+        <div class="chart">
+          <h4><span class="swatch" style="background:var(--c2)"></span>Son çekilen örneklem</h4>
+          <canvas id="sample" role="img" aria-label="Son örneklemdeki hücrelerin değerleri nokta olarak, örneklem ortalaması dikey çizgi olarak."></canvas>
+          <p class="caption" id="sample-cap">Henüz örneklem çekilmedi.</p>
+        </div>
+        <div class="chart wide">
+          <h4><span class="swatch" style="background:var(--c3)"></span>Örneklem ortalamalarının dağılımı (örnekleme dağılımı)</h4>
+          <canvas id="means" role="img" aria-label="Çekilen tüm örneklemlerin ortalamalarının histogramı; kesikli çizgi popülasyon ortalaması, eğri kuramsal normal dağılım."></canvas>
+          <p class="caption">Yatay eksen üç grafikte de aynıdır (0 ile 100 arası); bu sayede ortalamaların dağılımının popülasyona göre ne kadar daraldığını doğrudan karşılaştırabiliriz.</p>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Çekilen örneklem sayısı</div><div class="v" id="st-count">0</div></div>
+        <div class="stat"><div class="k">Popülasyon ortalaması μ</div><div class="v" id="st-mu">-</div></div>
+        <div class="stat"><div class="k">Popülasyon standart sapması σ</div><div class="v" id="st-sigma">-</div></div>
+        <div class="stat"><div class="k">Ortalamaların ortalaması</div><div class="v" id="st-mom">-</div></div>
+        <div class="stat"><div class="k">Ortalamaların standart sapması <small>(gözlenen SH)</small></div><div class="v" id="st-sdm">-</div></div>
+        <div class="stat"><div class="k">Kuramsal standart hata <small>σ/√n</small></div><div class="v" id="st-se">-</div></div>
+      </div>
+      <div class="note">
+        <p><strong>Denenebilecekler:</strong></p>
+        <ol>
+          <li>Popülasyon şeklini <em>Sağa çarpık</em> olarak seçip n = 1 ile 1 000 örneklem çektiğimizde, ortalamaların dağılımının popülasyonla aynı şekli aldığını görüyoruz; çünkü tek bir değerin ortalaması kendisidir.</li>
+          <li>n değerini 30'a yükselttiğimizde biriken ortalamalar silinir; yeniden 1 000 örneklem çektiğimizde dağılım hem daralmakta hem de simetrik, çan biçimli bir görünüm kazanmaktadır.</li>
+          <li>Gözlenen standart hata ile kuramsal σ/√n değerini karşılaştırabilirsiniz; örneklem sayısı arttıkça ikisi birbirine yaklaşır.</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Okuma derinliği ve alel frekansı</h3>
+      <p>Bu örnekte, bir tümör örneğinde belirli bir konumdaki varyantın gerçek alel frekansının yüzde 30 olduğunu varsayıyoruz. Sekanslama sırasında bu konumu kapsayan her okuma, yüzde 30 olasılıkla varyant aleli taşır. Bir okuma varyant taşıyorsa 1, taşımıyorsa 0 yazdığımızda gözlenen alel frekansı, n okumanın ortalamasına dönüşmektedir; dolayısıyla bir örneklem ortalamasıdır ve bu bölümde ele aldığımız her sonuç ona da uygulanır. Popülasyon ortalaması μ = 0,30 (gerçek frekans), popülasyon standart sapması σ = √(0,30 × 0,70) ≈ 0,458 (bir 0/1 değişkeni için σ = √(p(1 − p))) ve standart hata 0,458 / √n'dir.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="depth">Okuma derinliği (n okuma)</label>
+          <output id="depth-out" for="depth">20</output>
+          <input type="range" id="depth" min="5" max="500" step="5" value="20">
+        </div>
+        <div class="slider-wrap">
+          <label for="vaf">Gerçek alel frekansı (p)</label>
+          <output id="vaf-out" for="vaf">0,30</output>
+          <input type="range" id="vaf" min="0.05" max="0.95" step="0.05" value="0.30">
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Standart hata</div><div class="v" id="vaf-se">-</div></div>
+        <div class="stat"><div class="k">Yaklaşık yüzde 95 aralık <small>(p ± 2 SH)</small></div><div class="v" id="vaf-range">-</div></div>
+        <div class="stat"><div class="k">Normal yaklaşım uygun mu? <small>(np ve n(1 − p) ≥ 10)</small></div><div class="v" id="vaf-ok">-</div></div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <caption class="visually-hidden">Farklı okuma derinlikleri için standart hata ve yaklaşık yüzde 95 aralık (p = 0,30)</caption>
+          <thead><tr><th>Okuma derinliği n</th><th>Standart hata</th><th>Yaklaşık yüzde 95 aralık</th><th>Yorum</th></tr></thead>
+          <tbody>
+            <tr><td>10</td><td>0,145</td><td>0,01-0,59</td><td>Tahmin neredeyse hiçbir şey söylemez (bu kadar az okumada normal yaklaşım da kabadır).</td></tr>
+            <tr><td>50</td><td>0,065</td><td>0,17-0,43</td><td>Yüzde 30'luk frekans, heterozigot değerden (0,50) ayırt edilmeye başlar.</td></tr>
+            <tr><td>200</td><td>0,032</td><td>0,24-0,36</td><td>Klinik raporlamada sık kullanılan derinlik aralığı.</td></tr>
+            <tr><td>1 000</td><td>0,014</td><td>0,27-0,33</td><td>Düşük frekanslı alt klonlar bile ayrışır.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>Bu tablo, sekanslama projelerinde okuma derinliği <span class="en">(read depth, sequencing depth)</span> konusunun neden bu kadar tartışıldığını göstermektedir: derinliği dört katına çıkarmak belirsizliği yalnızca yarıya indirir. Aynı ilke, RNA sekanslamada bir genin ortalama ifadesinin kaç biyolojik tekrar ile ölçüleceğine karar verilirken de geçerlidir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. Bir genin ortalama ifadesi n = 4 hücre ile ölçülmektedir. Hücre sayısı 16'ya çıkarıldığında örneklem ortalamasının standart hatası ne olur?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>Dörtte birine iner.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>Yarıya iner.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>Değişmez; standart hata yalnızca σ'ya bağlıdır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>İki katına çıkar.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Standart hata σ/√n ile hesaplanmaktadır; n dört katına çıktığında √n iki katına çıkar, dolayısıyla standart hata yarıya iner (σ/2'den σ/4'e).</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yarıya iner. Standart hata σ/√n ile hesaplanmaktadır. Belirsizliği azaltan şey n değil √n olduğundan, n'i dört katına çıkarmak belirsizliği yalnızca yarıya indirir.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 2. Hücre başına transkript sayısı popülasyonda belirgin biçimde sağa çarpıktır. n = 50 hücrelik örneklemlerin ortalamalarının dağılımı için hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Popülasyon gibi sağa çarpık kalır.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>Yaklaşık normaldir ve merkezi popülasyon ortalamasına yakındır.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Düzgün (her değer eşit olasılıklı) olur.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Tüm ortalamalar tam olarak μ'ye eşit çıkar.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Merkezi limit teoremi gereği, popülasyon çarpık olsa bile n = 50 gibi makul bir büyüklükte örneklem ortalamalarının dağılımı yaklaşık normaldir ve merkezi μ'ye yakındır. Simülasyonda "Sağa çarpık" seçeneğiyle bunu doğrulayabilirsiniz.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yaklaşık normaldir ve merkezi popülasyon ortalamasına yakındır. Değerler toplanıp ortalandığında uç değerlerin etkisi azalmakta ve dağılım çan biçimine yaklaşmaktadır. Buna karşın ortalamalar hiçbir zaman tam olarak μ'ye eşit çıkmaz; her örneklemde biraz farklıdır.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 3. Merkezi limit teoremi aşağıdakilerden hangisini söyler?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>Örneklem yeterince büyükse örneklemdeki tek tek ölçümler normal dağılır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>Örneklem yeterince büyükse örneklem ortalamalarının dağılımı normale yaklaşır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Her biyolojik popülasyon aslında normal dağılır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>Örneklem büyüdükçe popülasyonun standart sapması küçülür.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Teorem yalnızca ortalamaların (ve toplamların) dağılımı hakkındadır; örneklemdeki tek tek ölçümler, popülasyon ne şekildeyse o şekli korur.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Örneklem ortalamalarının dağılımı normale yaklaşır. En yaygın yanılgı, büyük örneklemde verinin kendisinin normal olacağını düşünmektir. Oysa 1 000 hücre ölçüldüğünde de sağa çarpık bir gen ifadesi sağa çarpık kalır; normale yaklaşan şey, bu 1 000 hücrenin ortalamasının tekrar tekrar hesaplandığında aldığı değerlerin dağılımıdır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. Güven aralığı ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Güven aralığı</h2>
+    <p>Bu bölümde, elimizdeki tek örneklemden popülasyon ortalaması için "makul değerler aralığı" verebilmek amacıyla güven aralığına bakıyoruz. Gerçek bir çalışmada örnekleme dağılımını göremeyiz; ancak önceki bölümden onun şeklini (yaklaşık normal) ve genişliğini (standart hata) biliyoruz. Dolayısıyla tek bir örneklem ortalamasının μ'den tipik olarak bir standart hata kadar saptığını, iki standart hatadan fazla sapmasının ise seyrek (yaklaşık yüzde 5) olduğunu söyleyebiliriz.</p>
+    <p>Bu bilgiyi tersine çevirdiğimizde <span class="term">güven aralığı</span> <span class="en">(confidence interval, GA)</span> ortaya çıkar: örneklem ortalamasının her iki yanında yaklaşık iki standart hata uzanan bu aralık, popülasyon ortalamasını çoğu zaman kapsar. "Çoğu zaman" sözünün ölçüsü <span class="term">güven düzeyi</span> <span class="en">(confidence level)</span> olarak adlandırılır; yüzde 95 güven düzeyi, 20 örneklemden 19'unda kapsama anlamına gelmektedir. Burada dikkat edilmesi gereken nokta, "yüzde 95"in tek bir aralığa değil yönteme ait bir özellik olmasıdır: aynı yöntemle çok sayıda çalışma yapılsa aralıkların yüzde 95'i μ'yü kapsar, yüzde 5'i kapsamaz. Elimizdeki tek aralık bu iki gruptan hangisine düşüyorsa o gruptadır ve bunu bilmenin bir yolu yoktur. Bu nedenle "μ, yüzde 95 olasılıkla bu aralıktadır" cümlesi, yaygın olmasına karşın yanlış bir yorumdur; μ sabit bir sayıdır, rastgele olan aralıktır.</p>
+    <p>Aralığın genişliği üç etkene bağlıdır: popülasyonun yayılımı (σ ya da onun tahmini s), örneklem büyüklüğü (√n) ve istenen güven düzeyi. Yüzde 99 güven daha geniş, yüzde 80 güven daha dar bir aralık gerektirir. Üç biyolojik tekrarlı bir deneyde aralıkların geniş çıkması bu nedenle şaşırtıcı değildir; az sayıda gözlemde hem √n küçüktür hem de s'nin kendisi gürültülü bir tahmin olduğundan aralık, normal dağılımın yaklaşık 2 çarpanı yerine daha büyük bir çarpanla hesaplanır. Bu çarpana <span class="term">t* çarpanı</span> <span class="en">(critical value)</span> denir; <span class="term">t dağılımından</span> <span class="en">(t distribution)</span> gelir, n = 3 için 4,30'dur ve n büyüdükçe 1,96'ya yaklaşır.</p>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Örneklem ortalaması x̄, örneklem standart sapması s ve örneklem büyüklüğü n olmak üzere ortalama için güven aralığı:</p>
+      <div class="formula">x̄ ± t* × <span class="frac"><span>s</span><span>√n</span></span></div>
+      <p>t* çarpanı, güven düzeyine ve n'e bağlı bir sayıdır; yüzde 95 için büyük n'de 1,96'ya yaklaşır, n = 3 için ise 4,30'dur. Bu çarpan, σ yerine s kullanılmasının getirdiği ek belirsizliği hesaba katan <span class="term">t dağılımından</span> <span class="en">(t distribution)</span> gelir; t dağılımı normal dağılıma benzer, ancak kuyrukları küçük n'de daha kalındır ve <span class="term">serbestlik derecesi</span> <span class="en">(degrees of freedom)</span> n − 1 büyüdükçe normale yaklaşır. Simülasyondaki aralıklar tam olarak bu formülle hesaplanmaktadır.</p>
+    </details>
+
+    <div class="card ci">
+      <h3 style="margin-top:0">Simülasyon: 100 çalışma, 100 güven aralığı</h3>
+      <p>Bu simülasyonda, 1. bölümdeki sağa çarpık popülasyondan (gerçek ortalama μ bilinmektedir) 100 bağımsız çalışma yapıldığını ve her çalışmanın kendi n hücrelik örnekleminden bir güven aralığı hesapladığını varsayıyoruz. Her yatay çizgi bir çalışmanın aralığıdır; μ'yü kapsamayan aralıklar turuncu renkte ve içi boş uçlarla gösterilmektedir.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="cin">Her çalışmanın örneklem büyüklüğü (n)</label>
+          <output id="cin-out" for="cin">10</output>
+          <input type="range" id="cin" min="3" max="100" step="1" value="10">
+        </div>
+        <div class="control-row">
+          <span class="block" id="lvl-label">Güven düzeyi</span>
+          <div class="seg" id="lvl-seg" role="group" aria-labelledby="lvl-label">
+            <button type="button" data-value="0.80" aria-pressed="false">Yüzde 80</button>
+            <button type="button" data-value="0.90" aria-pressed="false">Yüzde 90</button>
+            <button type="button" data-value="0.95" aria-pressed="true">Yüzde 95</button>
+            <button type="button" data-value="0.99" aria-pressed="false">Yüzde 99</button>
+          </div>
+        </div>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>μ'yü kapsayan ve <span class="swatch" style="background:var(--c2)"></span> kapsamayan aralıklar</h4>
+        <canvas id="cis" role="img" aria-label="100 yatay çizgi: her çalışmanın güven aralığı; dikey kesikli çizgi gerçek popülasyon ortalaması; kapsamayan aralıklar turuncu."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">μ'yü kapsayan aralık sayısı</div><div class="v" id="ci-cov">-</div></div>
+        <div class="stat"><div class="k">Kapsama oranı</div><div class="v" id="ci-rate">-</div></div>
+        <div class="stat"><div class="k">Ortalama aralık genişliği</div><div class="v" id="ci-width">-</div></div>
+        <div class="stat"><div class="k">Gerçek μ</div><div class="v" id="ci-mu">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Yüzde 95 güven düzeyinde ve n = 10 ile bu başlangıç örnekleminde 100 aralığın 95'inin μ'yü kapsadığını, hangilerinin kapsamadığının ise çalışmadan çalışmaya değiştiğini görüyoruz. n büyüdükçe aralıklar daralır; güven düzeyi yükseldikçe ise aralıklar genişler ve <span class="term">kapsama oranı</span> <span class="en">(coverage)</span> artar. Buna karşın bu sağa çarpık popülasyonda t aralığı küçük ve orta n'de yüzde 95'in biraz altında kalmaktadır: "Yeni örneklem" ile çok sayıda deneme yapıldığında uzun vadeli kapsama oranı n = 3-10 için yüzde 88-89, n = 30 için yüzde 92 dolayındadır ve ancak n = 100 civarında yüzde 94'e ulaşır; çünkü <span class="term">normal yaklaşım</span> <span class="en">(normal approximation)</span> küçük n'de henüz geçerli değildir ve t aralığı bu durumda biraz dar kalır. Normal dağılan bir popülasyonda ise aynı yöntem her n'de yüzde 95'i tutturur.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Üç tekrarla ölçülen ifade düzeyi</h3>
+      <p>Bu örnekte, bir genin log2 ifade düzeyinin üç biyolojik tekrarda 8,1; 8,9 ve 8,4 olarak ölçüldüğünü varsayıyoruz. Ortalama 8,47, örneklem standart sapması 0,40 ve standart hata 0,40 / √3 ≈ 0,23'tür. n = 3 için yüzde 95 güven aralığının t* çarpanı 4,30 olduğundan aralık 8,47 ± 4,30 × 0,23, yani yaklaşık 7,46 ile 9,47 arasındadır: iki log2 birimi, dört kata denk gelen bir genişlik. Aynı standart sapma ile 12 tekrarda t* 2,20'ye, standart hata 0,12'ye iner ve aralık 8,47 ± 0,26 olur. Dolayısıyla üç tekrarlı bir deneyin "genin ifadesi 8,5" biçimindeki raporu, aslında "4 kat belirsizlikle 8,5" demektir; bu belirsizlik, Ünite 9'da göreceğimiz gibi, hangi genlerin anlamlı çıkacağını doğrudan belirlemektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 4. Bir çalışma, bir genin ortalama ifadesi için yüzde 95 güven aralığını 7,5-9,5 olarak bildirmiştir. Aşağıdaki yorumlardan hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Popülasyon ortalaması yüzde 95 olasılıkla 7,5 ile 9,5 arasındadır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>Hücrelerin yüzde 95'inin ifadesi 7,5 ile 9,5 arasındadır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Aralığı üreten yöntem, tekrarlanan çalışmaların yüzde 95'inde popülasyon ortalamasını kapsar; bu aralığın kapsayıp kapsamadığı bilinemez.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>Çalışma tekrarlansa yeni ortalama yüzde 95 olasılıkla bu aralıkta çıkar.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Güven düzeyi yöntemin uzun vadeli kapsama oranıdır. Popülasyon ortalaması sabit bir sayıdır; "yüzde 95 olasılıkla aralıkta" ifadesi bu nedenle yanlıştır. Aralık tek tek hücrelerin değerleri hakkında değil, ortalama hakkındadır; yeni bir çalışmanın ortalamasının bu aralığa düşme olasılığı ise yüzde 95'ten düşüktür (aynı koşullarda yaklaşık yüzde 83).</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Yöntem, tekrarlanan çalışmaların yüzde 95'inde popülasyon ortalamasını kapsar. Popülasyon ortalaması rastgele değil sabittir; rastgele olan aralıktır. Aralık, tek tek hücrelerin yayılımını değil ortalamanın belirsizliğini gösterir ve gelecekteki bir örneklem ortalamasını kapsama olasılığı yüzde 95 değildir.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 5. Aynı veri için yüzde 99 güven aralığı, yüzde 95 güven aralığına göre nasıldır?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>Daha geniştir; daha yüksek kapsama, daha geniş aralık gerektirir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>Daha dardır; daha yüksek güven, daha kesin tahmin demektir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>Aynı genişliktedir; yalnızca etiketi farklıdır.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Örneklem büyüklüğüne bağlı olarak dar ya da geniş olabilir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Daha yüksek güven düzeyi daha büyük bir t* çarpanı demektir (yüzde 95 için 1,96'ya, yüzde 99 için 2,58'e yaklaşır); aynı veriyle aralık genişler. Güven ile kesinlik arasında bir değiş tokuş vardır.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Daha geniştir. Daha yüksek güven düzeyi, aralığın daha sık kapsamasını gerektirir ve bu yalnızca daha geniş bir aralıkla mümkündür. Aynı veri için örneklem büyüklüğü sabit olduğundan karşılaştırmayı belirleyen tek etken güven düzeyidir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Bootstrap ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Bootstrap: yeniden örnekleme ile belirsizlik</h2>
+    <p>Bu bölümde, formülü bilinmeyen ya da normal yaklaşımın geçerli olmadığı istatistikler için de belirsizlik tahmin edebilmek amacıyla bootstrap yöntemine bakıyoruz. Önceki bölümlerde standart hatayı σ/√n formülünden hesapladık; ancak medyan, bir oran farkı ya da bir korelasyon katsayısı için böyle basit bir formül her zaman yoktur. <span class="term">Bootstrap</span> yöntemi, elimizdeki tek örneklemi popülasyonun yerine koyar: örneklemden, aynı büyüklükte, <span class="term">yerine koyarak</span> <span class="en">(with replacement)</span> yeni örneklemler çekilir, her birinde istatistik yeniden hesaplanır ve elde edilen değerlerin dağılımı örnekleme dağılımının bir taklidi olarak kullanılır.</p>
+    <p>"Yerine koyarak" ifadesi, çekilen her gözlemin torbaya geri konulması anlamına gelmektedir; böylece bir bootstrap örnekleminde bazı gözlemler birkaç kez, bazıları hiç yer almaz. Bu, popülasyondan yeni bir örneklem çekmeyi taklit eder: nasıl ki gerçek bir ikinci çalışma bazı hücre tiplerini daha çok, bazılarını daha az yakalar, bootstrap örneklemi de aynı dengesizliği üretir. Bootstrap dağılımının standart sapması standart hatanın tahminidir; dağılımın yüzde 2,5 ve yüzde 97,5 noktaları ise yüzde 95 güven aralığının basit bir biçimini, <span class="term">yüzdelik aralığını</span> <span class="en">(percentile interval)</span> vermektedir. Yöntemin güçlü yanı genelliğidir; sınırı ise örneklemin popülasyonu temsil etmesine dayanmasıdır: çok küçük ya da yanlı bir örneklemden bootstrap, olmayan bilgiyi üretemez.</p>
+
+    <div class="card boot">
+      <h3 style="margin-top:0">Simülasyon: Tek örneklemden bootstrap</h3>
+      <p>Elimizde sağa çarpık popülasyondan çekilmiş tek bir örneklem bulunmaktadır. İstatistiği seçip yeniden örnekleme yaparak bootstrap dağılımının nasıl biriktiğini izleyebilirsiniz. Karşılaştırma için 1. bölümden bilinen gerçek popülasyon değeri kesikli çizgiyle gösterilmektedir.</p>
+      <div class="controls">
+        <div class="slider-wrap">
+          <label for="bn">Örneklem büyüklüğü (n)</label>
+          <output id="bn-out" for="bn">30</output>
+          <input type="range" id="bn" min="5" max="200" step="5" value="30">
+        </div>
+        <div class="control-row">
+          <span class="block" id="stat-label">İstatistik</span>
+          <div class="seg" id="stat-seg" role="group" aria-labelledby="stat-label">
+            <button type="button" data-value="mean" aria-pressed="true">Ortalama</button>
+            <button type="button" data-value="median" aria-pressed="false">Medyan</button>
+          </div>
+        </div>
+        <div class="control-row">
+          <span class="block" id="boot-label">Yeniden örnekleme</span>
+          <div class="seg" role="group" aria-labelledby="boot-label">
+            <button type="button" class="primary" id="bs1">1 kez</button>
+            <button type="button" id="bs100">100 kez</button>
+            <button type="button" id="bs1000">1 000 kez</button>
+            <button type="button" id="bs-reset">Sıfırlayınız</button>
+            <button type="button" data-reseed>Yeni örneklem</button>
+          </div>
+        </div>
+      </div>
+      <div class="charts two">
+        <div class="chart">
+          <h4><span class="swatch" style="background:var(--c2)"></span>Elimizdeki örneklem</h4>
+          <canvas id="orig" role="img" aria-label="Orijinal örneklemin gözlemleri nokta olarak; büyük noktalar son bootstrap örnekleminde birden fazla kez seçilen gözlemler."></canvas>
+          <p class="caption" id="orig-cap"></p>
+        </div>
+        <div class="chart">
+          <h4><span class="swatch" style="background:var(--c3)"></span>Bootstrap dağılımı</h4>
+          <canvas id="bootd" role="img" aria-label="Bootstrap istatistiklerinin histogramı; kesikli çizgi gerçek popülasyon değeri; turuncu çizgiler yüzde 2,5 ve 97,5 noktaları."></canvas>
+          <p class="caption" id="boot-cap">Henüz yeniden örnekleme yapılmadı.</p>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Örneklemdeki istatistik</div><div class="v" id="bs-stat">-</div></div>
+        <div class="stat"><div class="k">Bootstrap sayısı</div><div class="v" id="bs-n">0</div></div>
+        <div class="stat"><div class="k">Bootstrap standart hatası</div><div class="v" id="bs-se">-</div></div>
+        <div class="stat"><div class="k">Yüzde 95 yüzdelik aralığı</div><div class="v" id="bs-ci">-</div></div>
+        <div class="stat"><div class="k">Gerçek popülasyon değeri</div><div class="v" id="bs-true">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Ortalama için bootstrap standart hatasının s/√n formülüyle bulunan değere yakın çıktığını görüyoruz; bootstrap burada bilineni doğrulamaktadır. Medyan için ise basit bir formül yoktur ve bootstrap dağılımı belirsizliği yine de vermektedir. Küçük n'de bootstrap standart hatası formüldekinden biraz küçük çıkar; n büyüdükçe ikisi yakınlaşır. Bootstrap aralığı da her güven aralığı gibi gerçek değeri zaman zaman kaçırır; dahası bootstrap, temsil gücü düşük bir örneklemi iyi bir örnekleme dönüştürmez.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Medyan kütüphane boyutu için güven aralığı</h3>
+      <p>Bir çalışmada 24 örneğin kütüphane boyutları sağa çarpıktır ve bir örnek diğerlerinin çok altındadır. Araştırmacı, tipik kütüphane boyutunu ortalama yerine medyan ile raporlamak istemektedir; ancak medyanın standart hatası için basit bir formül bulunmamaktadır. 24 değerden yerine koyarak 1 000 kez 24'lü örneklem çekilip her birinde medyan hesaplandığında, bootstrap dağılımının yüzde 2,5 ve yüzde 97,5 noktaları medyan için bir güven aralığı vermektedir. Aynı yaklaşım, Ünite 8'de kümelerin kararlılığını sınamak ve Ünite 9'da sonuç listelerinin ne kadar tekrarlanabilir olduğunu görmek için de kullanılmaktadır; ortak fikir hep aynıdır: elimizdeki veriyi yeniden örnekleyerek "başka bir örneklemde ne olurdu?" sorusunu yanıtlamak.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 6. Bootstrap yönteminde "yerine koyarak örnekleme" ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Popülasyondan yeni gözlemler toplanır ve eski gözlemlerin yerine konur.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Örneklemdeki her gözlem tam olarak bir kez kullanılır; yalnızca sıraları karıştırılır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Örneklemden rastgele bir gözlem çekilir, kaydedilir ve geri konur; bu, örneklem büyüklüğü kadar tekrarlanır, dolayısıyla bazı gözlemler birden çok kez, bazıları hiç seçilmez.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Aykırı değerler çıkarılır ve yerine ortalama konur.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Yerine koyarak çekim, popülasyondan yeni bir örneklem almayı taklit eder: her bootstrap örneklemi orijinalin farklı bir "yeniden karışımı"dır ve bu nedenle istatistik, örneklemden örnekleme değişir. Sıraları karıştırmak ise istatistiği hiç değiştirmezdi.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Gözlemler geri konularak çekilir; bazıları birden çok, bazıları hiç seçilmez. Bootstrap yeni veri toplamaz ve veriyi değiştirmez; yalnızca eldeki örneklemi yeniden örnekler. Her gözlemin bir kez kullanıldığı bir karıştırma, aynı istatistiği verirdi ve belirsizlik hakkında hiçbir bilgi üretmezdi.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 7. Aşağıdaki durumların hangisinde bootstrap özellikle yararlıdır?</legend>
+        <label class="opt"><input type="radio" name="q7" value="a"><span>Büyük bir örneklemden ortalama için güven aralığı istendiğinde; çünkü formül yoktur.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="b"><span>Medyan ya da korelasyon gibi, standart hatası için basit formül bulunmayan bir istatistik için belirsizlik istendiğinde.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="c"><span>Örneklem yalnızca 3 gözlemden oluştuğunda; çünkü bootstrap küçük örneklemi büyütür.</span></label>
+        <label class="opt"><input type="radio" name="q7" value="d"><span>Örneklem popülasyonu temsil etmediğinde; çünkü bootstrap yanlılığı giderir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Bootstrap yönteminin gücü genelliğidir: formülü olmayan istatistikler için de belirsizlik verir. Ortalama için formül zaten vardır; çok küçük ya da yanlı bir örneklemde ise bootstrap, olmayan bilgiyi üretemez ve yanlılığı gideremez.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Standart hatası için basit formül bulunmayan istatistikler. Ortalama için s/√n formülü vardır; bootstrap orada yalnızca doğrulama sağlar. Bootstrap örneklemi büyütmez ve yanlı bir örneklemi düzeltmez; yalnızca eldeki örneklemin içindeki değişkenliği yeniden üretir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Örnekleme dağılımı, aynı büyüklükteki tüm olası örneklemlerden hesaplanan istatistiğin dağılımıdır; merkezi μ'ye yakındır, yayılımı standart hatadır (σ/√n).</li>
+        <li>Standart hata n ile değil √n ile azalır: dört kat veri, iki kat kesinlik.</li>
+        <li>Merkezi limit teoremi: n yeterince büyükse ortalamaların dağılımı normale yaklaşır; tek tek gözlemler değil.</li>
+        <li>Güven aralığı x̄ ± t* × s/√n; "yüzde 95" yöntemin kapsama oranıdır, tek bir aralığın olasılığı değil. n büyüdükçe aralık daralır, güven düzeyi yükseldikçe genişler.</li>
+        <li>Bootstrap, örneklemden yerine koyarak yeniden örnekleme yoluyla herhangi bir istatistiğin belirsizliğini tahmin eder; örneklemin temsil gücünden fazlasını üretemez.</li>
+      </ul>
+    </div>
+    <p class="meta">Bir sonraki ünitede, iki grup arasında gördüğümüz bir farkın rastlantıyla açıklanıp açıklanamayacağına karar verebilmek amacıyla hipotez testine, permütasyon testine ve p-değerine bakıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u03-olasilik/index.html">Önceki: Ünite 3</a><a href="../index.html">Dizin</a><a href="../u05-hipotez/index.html">Sonraki: Ünite 5, Hipotez testi ve karar</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 4. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  var POP_SIZE = 10000, X_MIN = 0, X_MAX = 100, BINS = 50;
+  function buildPopulation(shape) {
+    var rng = BI.rng(20241102), out = new Float64Array(POP_SIZE), v;
+    for (var i = 0; i < POP_SIZE; i++) {
+      do {
+        if (shape === "normal") { v = 50 + 12 * BI.randn(rng); }
+        else if (shape === "skewed") { v = 8 + 12 * Math.exp(0.85 * BI.randn(rng)); }
+        else if (shape === "uniform") { v = X_MIN + (X_MAX - X_MIN) * rng(); }
+        else { v = rng() < 0.5 ? 28 + 7 * BI.randn(rng) : 72 + 7 * BI.randn(rng); }
+      } while (v < X_MIN || v > X_MAX);
+      out[i] = v;
+    }
+    return out;
+  }
+  var pops = {};
+  function getPop(shape) { if (!pops[shape]) { pops[shape] = buildPopulation(shape); } return pops[shape]; }
+  var xt = [0, 25, 50, 75, 100];
+
+  /* ---------- 1. Örnekleme dağılımı ---------- */
+  var s = { shape: "normal", n: 5, pop: null, mu: 0, sigma: 0, popCounts: null, means: [], last: [], showNormal: true, rng: BI.rng(BI.DEFAULT_SEED) };
+  function setPop(shape) {
+    s.shape = shape; s.pop = getPop(shape); s.mu = BI.mean(s.pop); s.sigma = BI.sdPop(s.pop, s.mu);
+    s.popCounts = BI.hist(s.pop, BINS, X_MIN, X_MAX); resetDraws();
+  }
+  function resetDraws() { s.means = []; s.last = []; s.rng = BI.rng(BI.DEFAULT_SEED + s.n); render1(); }
+  function draw(k) {
+    var sample = new Array(s.n);
+    for (var j = 0; j < k; j++) {
+      var sum = 0;
+      for (var i = 0; i < s.n; i++) { var v = s.pop[Math.floor(s.rng() * POP_SIZE)]; sample[i] = v; sum += v; }
+      s.means.push(sum / s.n);
+    }
+    s.last = sample.slice(); render1();
+  }
+  function render1() {
+    var c = document.getElementById("pop");
+    var popMax = Math.max.apply(null, s.popCounts);
+    var p = BI.plot(c, { x: [X_MIN, X_MAX], y: [0, popMax * 1.1], pad: { l: 8, r: 8, t: 12, b: 26 } });
+    p.bars(s.popCounts, X_MIN, X_MAX, p.col.c1);
+    p.vline(s.mu, p.col.text2, { dashed: true, label: "μ = " + BI.fmt(s.mu, 1) });
+    p.axes({ xticks: xt, yaxis: false });
+    BI.text("pop-cap", "Ortalama μ = " + BI.fmt(s.mu, 1) + ", standart sapma σ = " + BI.fmt(s.sigma, 1) + ". Bu değerler gerçekte bilinmez; burada deney amacıyla bilindiğini varsayıyoruz.");
+
+    c = document.getElementById("sample");
+    var q = BI.plot(c, { x: [X_MIN, X_MAX], y: [0, 1], pad: { l: 8, r: 8, t: 12, b: 26 } });
+    if (s.last.length) {
+      var m = BI.mean(s.last), jr = BI.rng(7);
+      for (var i = 0; i < s.last.length; i++) { q.dot(s.last[i], 0.1 + 0.8 * jr(), q.col.c2, s.last.length > 40 ? 3 : 5); }
+      q.vline(m, q.col.c2, { label: "x̄ = " + BI.fmt(m, 1) });
+      q.vline(s.mu, q.col.text2, { dashed: true });
+      BI.text("sample-cap", "n = " + s.last.length + " hücre. Bu örneklemin ortalaması x̄ = " + BI.fmt(m, 1) + "; popülasyon ortalamasından farkı " + BI.fmt(m - s.mu, 1) + ".");
+    } else {
+      q.vline(s.mu, q.col.text2, { dashed: true, label: "μ" });
+      BI.text("sample-cap", "Henüz örneklem çekilmedi; yukarıdaki düğmelerden biriyle örneklem çekilebilir.");
+    }
+    q.axes({ xticks: xt, yaxis: false });
+
+    c = document.getElementById("means");
+    var se = s.sigma / Math.sqrt(s.n), binW = (X_MAX - X_MIN) / 100;
+    var MB = 100; var mc = s.means.length ? BI.hist(s.means, MB, X_MIN, X_MAX) : null;
+    var mMax = mc ? Math.max.apply(null, mc) : 1;
+    var peak = s.means.length ? s.means.length * binW / (se * Math.sqrt(2 * Math.PI)) : 0;
+    var top = Math.max(mMax, s.showNormal ? peak : 0, 1) * 1.08;
+    var r = BI.plot(c, { x: [X_MIN, X_MAX], y: [0, top], pad: { l: 8, r: 8, t: 12, b: 26 } });
+    if (mc) {
+      r.bars(mc, X_MIN, X_MAX, r.col.c3);
+      if (s.showNormal) { r.curve(function (x) { return BI.normPdf(x, s.mu, se) * s.means.length * binW; }, r.col.text2); }
+    }
+    r.vline(s.mu, r.col.text2, { dashed: true, label: "μ" });
+    r.axes({ xticks: xt, yaxis: false });
+
+    BI.text("st-count", BI.fmtInt(s.means.length)); BI.text("st-mu", BI.fmt(s.mu, 2)); BI.text("st-sigma", BI.fmt(s.sigma, 2));
+    BI.text("st-se", BI.fmt(se, 2)); BI.text("st-mom", s.means.length ? BI.fmt(BI.mean(s.means), 2) : "-");
+    BI.text("st-sdm", s.means.length >= 2 ? BI.fmt(BI.sd(s.means), 2) : "-");
+  }
+  BI.seg("#shape-seg", function (v) { setPop(v); });
+  BI.slider("n", function (v) { s.n = v; resetDraws(); });
+  BI.on("d1", "click", function () { draw(1); }); BI.on("d100", "click", function () { draw(100); }); BI.on("d1000", "click", function () { draw(1000); });
+  BI.on("d-reset", "click", resetDraws);
+  BI.on("show-normal", "change", function (e) { s.showNormal = e.target.checked; render1(); });
+  BI.onReseed(function (seed) { s.rng = BI.rng(seed); s.means = []; render1(); });
+  BI.onRedraw(render1);
+  setPop("normal");
+
+  /* ---------- Alel frekansı ---------- */
+  var vf = { n: 20, p: 0.3 };
+  function renderVaf() {
+    var se = Math.sqrt(vf.p * (1 - vf.p) / vf.n), lo = Math.max(0, vf.p - 2 * se), hi = Math.min(1, vf.p + 2 * se);
+    BI.text("vaf-se", BI.fmt(se, 3)); BI.text("vaf-range", BI.fmt(lo, 2) + "-" + BI.fmt(hi, 2));
+    BI.text("vaf-ok", (vf.n * vf.p >= 10 && vf.n * (1 - vf.p) >= 10) ? "Evet" : "Hayır, n küçük");
+  }
+  BI.slider("depth", function (v) { vf.n = v; renderVaf(); });
+  BI.slider("vaf", function (v) { vf.p = v; renderVaf(); }, { digits: 2 });
+  renderVaf();
+
+  /* ---------- 2. Güven aralıkları ---------- */
+  var ci = { n: 10, level: 0.95, seed: BI.DEFAULT_SEED + 5 };
+  function renderCi() {
+    var pop = getPop("skewed"), mu = BI.mean(pop);
+    var rng = BI.rng(ci.seed), rows = [], covered = 0, widthSum = 0;
+    var tstar = BI.tQuantile(1 - (1 - ci.level) / 2, ci.n - 1);
+    for (var k = 0; k < 100; k++) {
+      var sample = [];
+      for (var i = 0; i < ci.n; i++) { sample.push(pop[Math.floor(rng() * POP_SIZE)]); }
+      var m = BI.mean(sample), sd = BI.sd(sample), half = tstar * sd / Math.sqrt(ci.n);
+      var cov = m - half <= mu && mu <= m + half;
+      if (cov) { covered++; }
+      widthSum += 2 * half;
+      rows.push({ lo: m - half, hi: m + half, m: m, cov: cov });
+    }
+    var c = document.getElementById("cis");
+    var p = BI.plot(c, { x: [-20, 80], y: [0, 100], pad: { l: 8, r: 8, t: 10, b: 40 } });
+    p.axes({ xticks: [-20, 0, 20, 40, 60, 80].map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), yaxis: false, xlabel: "ortalama ifade düzeyi (birim)" });
+    rows.forEach(function (r, k) {
+      var y = 99 - k, color = r.cov ? p.col.c1 : p.col.c2;
+      p.line([[Math.max(-20, r.lo), y], [Math.min(80, r.hi), y]], color, { width: r.cov ? 1.5 : 2.5 });
+      p.dot(r.m, y, color, 2);
+      if (!r.cov) { p.dot(Math.max(-20, r.lo), y, color, 3, { hollow: true }); p.dot(Math.min(80, r.hi), y, color, 3, { hollow: true }); }
+    });
+    p.vline(mu, p.col.text, { dashed: true, label: "μ = " + BI.fmt(mu, 1) });
+    BI.text("ci-cov", covered + " / 100"); BI.text("ci-rate", "yüzde " + covered); BI.text("ci-width", BI.fmt(widthSum / 100, 1) + " birim"); BI.text("ci-mu", BI.fmt(mu, 1));
+  }
+  BI.slider("cin", function (v) { ci.n = v; renderCi(); });
+  BI.seg("#lvl-seg", function (v) { ci.level = parseFloat(v); renderCi(); });
+  BI.onReseed(function (seed) { ci.seed = seed; renderCi(); });
+  BI.onRedraw(renderCi);
+  renderCi();
+
+  /* ---------- 3. Bootstrap ---------- */
+  var bs = { n: 30, stat: "mean", seed: BI.DEFAULT_SEED + 9, sample: [], vals: [], lastCounts: null };
+  function statOf(arr) { return bs.stat === "mean" ? BI.mean(arr) : BI.median(arr); }
+  function drawSample() {
+    var pop = getPop("skewed"), rng = BI.rng(bs.seed); bs.sample = [];
+    for (var i = 0; i < bs.n; i++) { bs.sample.push(pop[Math.floor(rng() * POP_SIZE)]); }
+    bs.bootRng = BI.rng(bs.seed + 1); bs.vals = []; bs.lastCounts = null;
+  }
+  function boot(k) {
+    for (var j = 0; j < k; j++) {
+      var counts = new Array(bs.n), re = [];
+      for (var i = 0; i < bs.n; i++) { counts[i] = 0; }
+      for (i = 0; i < bs.n; i++) { var idx = Math.floor(bs.bootRng() * bs.n); counts[idx]++; re.push(bs.sample[idx]); }
+      bs.vals.push(statOf(re)); bs.lastCounts = counts;
+    }
+    renderBoot();
+  }
+  function renderBoot() {
+    var pop = getPop("skewed"), trueVal = bs.stat === "mean" ? BI.mean(pop) : BI.median(Array.prototype.slice.call(pop));
+    var c = document.getElementById("orig");
+    var p = BI.plot(c, { x: [0, 100], y: [0, 1], pad: { l: 8, r: 8, t: 12, b: 26 } });
+    var jr = BI.rng(11);
+    for (var i = 0; i < bs.sample.length; i++) {
+      var y = 0.1 + 0.8 * jr(), cnt = bs.lastCounts ? bs.lastCounts[i] : 1;
+      if (bs.lastCounts && cnt === 0) { p.dot(bs.sample[i], y, p.col.text3, 3, { hollow: true }); }
+      else { p.dot(bs.sample[i], y, p.col.c2, 3 + 1.5 * (cnt - 1)); }
+    }
+    p.vline(statOf(bs.sample), p.col.c2, { label: (bs.stat === "mean" ? "ortalama " : "medyan ") + BI.fmt(statOf(bs.sample), 1) });
+    p.axes({ xticks: xt, yaxis: false });
+    BI.text("orig-cap", bs.lastCounts ? "Son bootstrap örnekleminde birden fazla kez seçilen gözlemler büyük, hiç seçilmeyenler içi boş gösterilmektedir." : "n = " + bs.n + " gözlem; her nokta bir hücre.");
+    c = document.getElementById("bootd");
+    var q;
+    if (bs.vals.length) {
+      var lo = Math.min.apply(null, bs.vals), hi = Math.max.apply(null, bs.vals), range = Math.max(hi - lo, 1), xlo = Math.floor(lo - range * 0.1), xhi = Math.ceil(hi + range * 0.1);
+      var counts = BI.hist(bs.vals, 30, xlo, xhi);
+      q = BI.plot(c, { x: [xlo, xhi], y: [0, BI.niceMax(Math.max.apply(null, counts) * 1.1)], pad: { l: 8, r: 8, t: 12, b: 26 } });
+      q.bars(counts, xlo, xhi, q.col.c3);
+      var sorted = BI.sorted(bs.vals), l2 = BI.quantile(sorted, 0.025), h2 = BI.quantile(sorted, 0.975);
+      if (bs.vals.length >= 20) { q.vline(l2, q.col.c2, { width: 1.5 }); q.vline(h2, q.col.c2, { width: 1.5 }); }
+      q.vline(trueVal, q.col.text, { dashed: true, label: "gerçek " + BI.fmt(trueVal, 1) });
+      q.axes({ xticks: q.ticks(xlo, xhi, 4).map(function (v) { return { v: v, l: BI.fmt(v, 0) }; }), yaxis: false });
+      BI.text("boot-cap", BI.fmtInt(bs.vals.length) + " bootstrap örnekleminden hesaplanan " + (bs.stat === "mean" ? "ortalamaların" : "medyanların") + " dağılımı.");
+      BI.text("bs-se", bs.vals.length >= 2 ? BI.fmt(BI.sd(bs.vals), 2) + (bs.stat === "mean" ? " (formül: " + BI.fmt(BI.sd(bs.sample) / Math.sqrt(bs.n), 2) + ")" : "") : "-");
+      BI.text("bs-ci", bs.vals.length >= 20 ? BI.fmt(l2, 1) + "-" + BI.fmt(h2, 1) : "-");
+    } else {
+      q = BI.plot(c, { x: [0, 100], y: [0, 1], pad: { l: 8, r: 8, t: 12, b: 26 } });
+      q.vline(trueVal, q.col.text, { dashed: true, label: "gerçek " + BI.fmt(trueVal, 1) });
+      q.axes({ xticks: xt, yaxis: false });
+      BI.text("boot-cap", "Henüz yeniden örnekleme yapılmadı."); BI.text("bs-se", "-"); BI.text("bs-ci", "-");
+    }
+    BI.text("bs-stat", BI.fmt(statOf(bs.sample), 2)); BI.text("bs-n", BI.fmtInt(bs.vals.length)); BI.text("bs-true", BI.fmt(trueVal, 2));
+  }
+  BI.slider("bn", function (v) { bs.n = v; drawSample(); renderBoot(); });
+  BI.seg("#stat-seg", function (v) { bs.stat = v; bs.vals = []; bs.lastCounts = null; bs.bootRng = BI.rng(bs.seed + 1); renderBoot(); });
+  BI.on("bs1", "click", function () { boot(1); }); BI.on("bs100", "click", function () { boot(100); }); BI.on("bs1000", "click", function () { boot(1000); });
+  BI.on("bs-reset", "click", function () { bs.vals = []; bs.lastCounts = null; bs.bootRng = BI.rng(bs.seed + 1); renderBoot(); });
+  BI.onReseed(function (seed) { bs.seed = seed; drawSample(); renderBoot(); });
+  BI.onRedraw(renderBoot);
+  drawSample(); renderBoot();
+})();
+</script>
+</body>
+</html>

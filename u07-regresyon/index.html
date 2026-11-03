@@ -1,0 +1,1045 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Ünite 7: Regresyon ve karıştırıcılar</title>
+<meta name="description" content="Doğrusal regresyon: eğim, kesişim, artıklar ve en küçük kareler; açıklanan varyans; kovaryata göre düzeltme ve batch etkisi; t-testinin bir doğrusal model olarak görülmesi.">
+<style>
+/* biostat-intro: ortak stil. Derleme betiği bu dosyayı her sayfaya gömer. */
+:root {
+  color-scheme: light;
+  --bg: #f6f6f4; --surface: #ffffff; --surface-2: #f0f0ec; --border: #d9d8d2;
+  --text: #1a1a18; --text-2: #52514e; --text-3: #6f6e69;
+  --accent: #2a78d6; --accent-ink: #ffffff;
+  --c1: #2a78d6; --c2: #eb6834; --c3: #1baf7a; --c4: #eda100; --c5: #e87ba4; --c7: #6250d6;
+  --ok-bg: #e4f5ec; --ok-ink: #0d5a33; --no-bg: #fdeaea; --no-ink: #8a1f1f;
+  --warn-bg: #fff4dc; --warn-ink: #6b4a00; --grid: #e6e5e0; --focus: #2a78d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+    --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+    --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+    --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+    --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: #141413; --surface: #1e1e1c; --surface-2: #262624; --border: #3a3a37;
+  --text: #f0efec; --text-2: #c3c2b7; --text-3: #9d9c95;
+  --accent: #3987e5; --c1: #3987e5; --c2: #d95926; --c3: #199e70; --c4: #c98500; --c5: #d55181; --c7: #9085e9;
+  --ok-bg: #163a2a; --ok-ink: #a9e5c4; --no-bg: #46201f; --no-ink: #f3b3b1;
+  --warn-bg: #3d2f0a; --warn-ink: #ffd98a; --grid: #2e2e2b; --focus: #3987e5;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px; line-height: 1.6; }
+main { max-width: 880px; margin: 0 auto; padding: 0 16px 64px; }
+a { color: var(--accent); }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+  outline: 3px solid var(--focus); outline-offset: 2px; }
+.skip { position: absolute; left: -999px; top: 8px; background: var(--surface); padding: 8px 12px; border-radius: 8px; z-index: 10; }
+.skip:focus { left: 16px; }
+
+/* üst çubuk ve başlık */
+.topbar { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between;
+  padding: 12px 0; border-bottom: 1px solid var(--border); font-size: 0.9rem; color: var(--text-2); }
+.topbar a { text-decoration: none; }
+.topbar a:hover { text-decoration: underline; }
+.topbar .course { font-weight: 600; color: var(--text-2); }
+.pager { display: flex; gap: 12px; flex-wrap: wrap; }
+header.hero { padding: 28px 0 8px; margin-bottom: 20px; }
+.kicker { font-size: 0.85rem; letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-3); margin: 0 0 6px; }
+h1 { font-size: 1.75rem; line-height: 1.25; margin: 0 0 8px; }
+h2 { font-size: 1.35rem; line-height: 1.3; margin: 44px 0 12px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+h4 { font-size: 1rem; margin: 16px 0 6px; }
+p { margin: 0 0 12px; }
+ul, ol { padding-left: 22px; margin: 0 0 12px; }
+li { margin-bottom: 4px; }
+.lead { color: var(--text-2); font-size: 1.05rem; }
+.term { font-weight: 600; }
+.en { color: var(--text-3); font-style: italic; }
+.meta { color: var(--text-3); font-size: 0.9rem; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin: 16px 0; }
+.note { background: var(--surface-2); border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 14px; margin: 16px 0; }
+.note.warn { border-left-color: var(--c4); }
+.example { background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--c3); border-radius: 12px; padding: 16px; margin: 20px 0; }
+.example h3 { margin-top: 0; }
+details.math { background: var(--surface-2); border-radius: 8px; padding: 8px 14px; margin: 14px 0; }
+details.math summary { cursor: pointer; font-weight: 600; min-height: 36px; display: flex; align-items: center; }
+details.math[open] summary { margin-bottom: 8px; }
+.formula { font-family: "Cambria", "Georgia", "Times New Roman", serif; font-size: 1.15rem; text-align: center; padding: 10px 0; overflow-x: auto; }
+.formula .frac { display: inline-flex; flex-direction: column; vertical-align: middle; text-align: center; margin: 0 4px; }
+.formula .frac span:first-child { border-bottom: 1px solid currentColor; padding: 0 4px; }
+.formula .frac span:last-child { padding: 0 4px; }
+code, kbd { font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; font-size: 0.92em;
+  background: var(--surface-2); padding: 1px 5px; border-radius: 4px; }
+.objectives { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+.objectives ul { margin-bottom: 0; }
+.toc { font-size: 0.95rem; }
+.toc ol { margin-bottom: 0; }
+
+/* kontroller */
+.controls { display: grid; gap: 14px; }
+.control-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.control-row label.block, .control-row .block { font-weight: 600; width: 100%; }
+.seg { display: flex; flex-wrap: wrap; gap: 6px; }
+.seg button { flex: 1 1 auto; }
+button { font: inherit; font-size: 0.95rem; color: var(--text); background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 8px 12px; min-height: 44px; cursor: pointer; touch-action: manipulation; }
+button:hover { border-color: var(--text-3); }
+button[aria-pressed="true"], button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+button:disabled { opacity: 0.5; cursor: default; }
+.slider-wrap { display: grid; grid-template-columns: 1fr auto; gap: 6px 12px; align-items: center; width: 100%; }
+.slider-wrap label { font-weight: 600; }
+.slider-wrap output { font-variant-numeric: tabular-nums; font-weight: 600; min-width: 3ch; text-align: right; }
+.slider-wrap .help { grid-column: 1 / -1; color: var(--text-3); font-size: 0.9rem; margin: -2px 0 0; }
+input[type="range"] { width: 100%; grid-column: 1 / -1; accent-color: var(--accent); height: 44px; margin: 0; }
+.check { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.check input { width: 20px; height: 20px; accent-color: var(--accent); flex: none; }
+select { font: inherit; min-height: 44px; border-radius: 8px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); padding: 6px 10px; }
+
+/* grafikler */
+.charts { display: grid; grid-template-columns: 1fr; gap: 16px; margin-top: 16px; }
+@media (min-width: 720px) { .charts.two { grid-template-columns: 1fr 1fr; } .charts .wide { grid-column: 1 / -1; } }
+.chart { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 12px 12px 8px; min-width: 0; }
+.chart h3, .chart h4 { margin: 0 0 4px; font-size: 0.98rem; display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; }
+.swatch { display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; }
+.swatch.hatch { background-image: repeating-linear-gradient(45deg, currentColor 0 2px, transparent 2px 5px); }
+.chart canvas { display: block; width: 100%; height: 180px; }
+.chart.tall canvas { height: 240px; }
+.chart.wide canvas { height: 220px; }
+.chart .caption { color: var(--text-2); font-size: 0.9rem; margin: 6px 0 0; line-height: 1.45; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: 0.88rem; color: var(--text-2); margin: 6px 0 0; }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(126px, 1fr)); gap: 10px; margin-top: 12px; }
+.stat { background: var(--surface-2); border-radius: 8px; padding: 10px 12px; }
+.stat .k { color: var(--text-3); font-size: 0.82rem; }
+.stat .v { font-size: 1.25rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.stat .v small { font-size: 0.8rem; font-weight: 400; color: var(--text-3); }
+.readout { font-variant-numeric: tabular-nums; }
+table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.95rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); font-variant-numeric: tabular-nums; vertical-align: top; }
+th { color: var(--text-2); font-weight: 600; font-size: 0.88rem; }
+td.num, th.num { text-align: right; }
+.table-wrap { overflow-x: auto; }
+tr.hl td { background: var(--warn-bg); }
+
+/* öz-değerlendirme */
+.quiz fieldset { border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; margin: 0 0 16px; background: var(--surface); min-width: 0; }
+.quiz legend { font-weight: 600; float: left; width: 100%; padding: 0; margin: 0 0 8px; }
+.quiz legend + .opt { clear: both; }
+.quiz .opt { display: flex; gap: 10px; align-items: flex-start; padding: 8px 6px; border-radius: 8px; min-height: 44px; cursor: pointer; }
+.quiz .opt:hover { background: var(--surface-2); }
+.quiz .opt input { margin-top: 5px; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+.quiz .actions { margin-top: 8px; }
+.feedback { margin-top: 10px; padding: 10px 12px; border-radius: 8px; display: none; }
+.feedback.ok { display: block; background: var(--ok-bg); color: var(--ok-ink); }
+.feedback.no { display: block; background: var(--no-bg); color: var(--no-ink); }
+.feedback.info { display: block; background: var(--surface-2); color: var(--text); }
+.feedback p:last-child { margin-bottom: 0; }
+.quiz template { display: none; }
+
+/* sözlük, özet, alt bilgi */
+.glossary dt { font-weight: 600; margin-top: 10px; }
+.glossary dd { margin: 0 0 4px; color: var(--text-2); }
+.summary-box { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 18px; }
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-3); font-size: 0.88rem; }
+.visually-hidden { position: absolute !important; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+@media (prefers-reduced-motion: no-preference) { .feedback { animation: fade 180ms ease-out; } @keyframes fade { from { opacity: 0; } to { opacity: 1; } } }
+
+/* dizin sayfası */
+.unit-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+.unit-list li { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 14px 16px; }
+.unit-list .num { color: var(--text-3); font-size: 0.85rem; }
+.unit-list h3 { margin: 2px 0 4px; }
+.unit-list p { margin: 0; color: var(--text-2); font-size: 0.95rem; }
+.unit-list .soon { color: var(--text-3); font-size: 0.9rem; }
+.unit-list .done { color: var(--ok-ink); background: var(--ok-bg); padding: 2px 8px; border-radius: 999px; font-size: 0.8rem; margin-left: 6px; }
+
+</style>
+<style>
+  .reg canvas { height: 280px; }
+  .adj canvas { height: 260px; }
+</style>
+</head>
+<body>
+<a class="skip" href="#icerik">İçeriğe geçiniz</a>
+<main id="icerik">
+  <nav class="topbar" aria-label="Sayfa gezinme">
+    <span class="course"><a href="../index.html">Biyoinformatik için Temel İstatistik</a></span>
+    <span class="pager"><a href="../u06-kategorik/index.html">Önceki: Ünite 6</a><a href="../index.html">Dizin</a><a href="../u08-cokboyutlu/index.html">Sonraki: Ünite 8</a></span>
+  </nav>
+
+  <header class="hero">
+    <p class="kicker">Ünite 7 · yaklaşık 60 dakika</p>
+    <h1>Regresyon ve karıştırıcılar</h1>
+    <p class="lead">Bu ünitede, bir değişkenin diğerini ne kadar açıkladığını sayıya dökebilmek ve bir karıştırıcıyı modele ekleyerek etkisinden arındırabilmek amacıyla doğrusal regresyona bakıyoruz. Diferansiyel ifade (differential expression) araçlarının (limma, DESeq2) her gen için kurduğu model, bu modelin ifade verisine uyarlanmış biçimidir; dolayısıyla burada öğrenilenler Ünite 10'daki sonuç tablosunu okumanın ön koşuludur.</p>
+  </header>
+
+  <section class="objectives" aria-labelledby="hedefler">
+    <h2 id="hedefler" style="margin-top:0;border:0;padding-top:0">Bu ünitenin sonunda şunları yapabileceksiniz</h2>
+    <ul>
+      <li>Bir regresyon doğrusunun eğimini ve kesişimini biyolojik dille yorumlayabilirsiniz.</li>
+      <li>Artıkların ne olduğunu ve en küçük kareler ilkesini açıklayabilirsiniz.</li>
+      <li>R² değerinin ne ölçtüğünü ve neyi ölçmediğini söyleyebilirsiniz.</li>
+      <li>Bir karıştırıcının (batch, yaş) modele eklenmesinin tahmin edilen etkiyi neden değiştirdiğini ve ne zaman değiştiremeyeceğini açıklayabilirsiniz.</li>
+    </ul>
+  </section>
+
+  <nav class="toc" aria-label="Ünite içeriği">
+    <h2>İçerik</h2>
+    <ol>
+      <li><a href="#b1">Doğrusal regresyon: eğim, kesişim ve artıklar</a></li>
+      <li><a href="#b2">Açıklanan varyans ve modelin sınırları</a></li>
+      <li><a href="#b3">Kovaryata göre düzeltme ve batch etkisi</a></li>
+      <li><a href="#ozet">Özet</a></li>
+    </ol>
+  </nav>
+
+  <!-- ============ 1. Doğrusal regresyon ============ -->
+  <section aria-labelledby="b1">
+    <h2 id="b1">1. Doğrusal regresyon: eğim, kesişim ve artıklar</h2>
+    <p>Bu bölümde, korelasyonun ötesine geçip "x bir birim artınca y ne kadar değişir?" sorusunu yanıtlayabilmek amacıyla doğrusal regresyona bakıyoruz. <span class="term">Doğrusal regresyon</span> <span class="en">(linear regression)</span>, bir <span class="term">sonuç değişkenini</span> <span class="en">(outcome variable)</span> (y, örneğin bir genin ifadesi) bir <span class="term">açıklayıcı değişkenin</span> <span class="en">(explanatory variable)</span> (x, örneğin ilaç dozu) doğrusal fonksiyonu olarak modeller: y ≈ kesişim + eğim × x. <span class="term">Eğim</span> <span class="en">(slope)</span>, x'teki bir birimlik artışa karşılık y'de beklenen değişimdir ve modelin biyolojik içeriğini taşır; <span class="term">kesişim</span> <span class="en">(intercept)</span> ise x = 0 iken beklenen y'dir ve çoğu zaman yalnızca doğruyu yerine oturtan bir sabittir.</p>
+    <p>Hiçbir doğru tüm noktalardan geçmez. Her gözlemin doğrudan dikey uzaklığına <span class="term">artık</span> <span class="en">(residual)</span> denir: gözlenen y eksi modelin <span class="term">öngördüğü</span> <span class="en">(predicted)</span> y. <span class="term">En küçük kareler</span> <span class="en">(least squares)</span> yöntemi, artıkların karelerinin toplamını en küçük yapan doğruyu seçer; kareler alındığı için uzak noktalar doğruyu kendilerine doğru çeker ve tek bir uç değer eğimi belirgin biçimde değiştirebilir. Eğimin kendisi de bir istatistiktir: başka bir örneklemde biraz farklı çıkar, bir standart hatası ve bir güven aralığı vardır, "eğim sıfırdır" sıfır hipotezi t-testiyle sınanır. Bu nedenle bir regresyon çıktısında eğimin yanında standart hatası, güven aralığı ve p-değeri yer almaktadır.</p>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Model ve en küçük kareler çözümü:</p>
+      <div class="formula">yᵢ = β₀ + β₁ xᵢ + εᵢ &#8203; , &#8203; β̂₁ = <span class="frac"><span>Σ (xᵢ − x̄)(yᵢ − ȳ)</span><span>Σ (xᵢ − x̄)²</span></span> &#8203; , &#8203; β̂₀ = ȳ − β̂₁ x̄</div>
+      <p>β₁ eğim, β₀ kesişim, εᵢ ise modelin açıklayamadığı rastgele kısımdır. Eğimin payı Ünite 6'daki korelasyonun payıyla aynıdır; eğim, korelasyonun y'nin yayılımı ile x'in yayılımının oranıyla çarpımına eşittir (β̂₁ = r × sᵧ / sₓ). Dolayısıyla korelasyon ilişkinin kuvvetini, eğim ise birim başına büyüklüğünü verir.</p>
+    </details>
+
+    <div class="card reg">
+      <h3 style="margin-top:0">Simülasyon: Doz-yanıt doğrusu</h3>
+      <p>Aşağıdaki veri, 30 hücre kültüründe bir ilacın dozu (0-10 birim) ile bir genin log2 ifadesini göstermektedir. Doğruyu elle ayarlayarak artık karelerinin toplamını küçültmeye çalışabilir, ardından en küçük kareler çözümüyle karşılaştırabilirsiniz. Uç değer seçeneği, tek bir kültürün doğruyu nasıl çektiğini göstermektedir.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="m-slope">Deneme doğrusunun eğimi</label><output id="m-slope-out" for="m-slope">0,20</output><input type="range" id="m-slope" min="-0.5" max="1" step="0.01" value="0.2"></div>
+        <div class="slider-wrap"><label for="m-int">Deneme doğrusunun kesişimi</label><output id="m-int-out" for="m-int">6,0</output><input type="range" id="m-int" min="3" max="9" step="0.1" value="6"></div>
+        <div class="control-row"><div class="seg">
+          <button type="button" class="primary" id="fit">En küçük kareler doğrusuna geçiniz</button>
+          <button type="button" data-reseed>Yeni örneklem</button>
+        </div></div>
+        <label class="check"><input type="checkbox" id="resid" checked><span>Artıklar (dikey çizgiler) gösterilsin</span></label>
+        <label class="check"><input type="checkbox" id="r-outl"><span>Bir uç değer eklensin (doz 9, ifade 3)</span></label>
+      </div>
+      <div class="chart">
+        <h4><span class="swatch" style="background:var(--c1)"></span>Gözlemler, <span class="swatch" style="background:var(--c2)"></span> deneme doğrusu ve <span class="swatch" style="background:var(--c3)"></span> en küçük kareler doğrusu</h4>
+        <canvas id="regc" role="img" aria-label="Doz ve ifade saçılım grafiği; turuncu deneme doğrusu, yeşil kesikli en küçük kareler doğrusu, dikey çizgiler artıklar."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Deneme doğrusu: artık kareleri toplamı</div><div class="v" id="sse-try">-</div></div>
+        <div class="stat"><div class="k">En küçük kareler: artık kareleri toplamı</div><div class="v" id="sse-ls">-</div></div>
+        <div class="stat"><div class="k">En küçük kareler eğimi <small>(yüzde 95 GA)</small></div><div class="v" id="ls-slope">-</div></div>
+        <div class="stat"><div class="k">Eğim için p-değeri</div><div class="v" id="ls-p">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Deneme doğrusu nasıl ayarlanırsa ayarlansın artık karelerinin toplamı en küçük kareler değerinin altına inmemektedir; bu, yöntemin tanımıdır. Uç değer eklendiğinde en küçük kareler eğimi belirgin biçimde azalır ve güven aralığı genişler: tek bir kültür, 30 kültürün ortak eğilimini değiştirebilmektedir. Böyle bir gözlemi silmek yerine nedenini araştırmak ve etkisini raporlamak gerekir.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Gen ifadesi ve yaş</h3>
+      <p>Bir çalışmada 120 sağlıklı bireyde bir genin kan hücrelerindeki log2 ifadesi yaşa karşı modellenmiş ve eğim −0,02 (yüzde 95 güven aralığı −0,03 ile −0,01), p = 0,001 bulunmuştur. Eğim, her yaş yılı için ifadenin ortalama 0,02 log2 birim azaldığını söyler; 50 yıllık yaş farkı için bu, 1 log2 birim, yani yaklaşık iki katlık bir azalmadır. Kesişim (yaş 0'daki ifade) burada biyolojik bir anlam taşımaz; çalışmada yenidoğan yoktur. Güven aralığının 0'ı içermemesi ve küçük p-değeri, eğilimin rastlantıyla açıklanmasının zor olduğunu gösterir; ancak bu gözlemsel bir ilişkidir ve yaşla birlikte değişen başka etkenler (hücre tipi bileşimi gibi) gerçek neden olabilir. Bu nedenle, bu ünitenin 3. bölümünde göreceğimiz üzere, bu tür etkenler modele kovaryat olarak eklenmektedir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="b">
+        <legend>Soru 1. Bir regresyonda ilaç dozu (mikromolar) ile bir genin log2 ifadesi arasında eğim 0,3 bulunmuştur. Bu ne anlama gelir?</legend>
+        <label class="opt"><input type="radio" name="q1" value="a"><span>İfade dozun yüzde 30'u kadardır.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="b"><span>Doz 1 mikromolar arttığında log2 ifadenin ortalama 0,3 birim artması beklenir; 10 mikromolar için bu 3 log2 birim, yani 8 kat demektir.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="c"><span>Korelasyon 0,3'tür.</span></label>
+        <label class="opt"><input type="radio" name="q1" value="d"><span>Doz sıfırken ifade 0,3'tür.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Eğim, x'teki bir birimlik artışa karşılık y'deki beklenen değişimdir. Log2 ölçeğinde 3 birim, 2³ = 8 kat anlamına gelir. Korelasyon ayrı bir sayıdır; doz sıfırdaki ifade ise kesişimdir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Doz 1 birim arttığında log2 ifade ortalama 0,3 birim artar. Eğim bir oran değil, birim başına değişimdir; korelasyon katsayısıyla aynı sayı değildir ve kesişimle karıştırılmamalıdır. Log2 ölçeğinde 0,3 × 10 = 3 birim, 8 katlık bir artışa karşılık gelir.</p></template>
+      </fieldset>
+      <fieldset data-answer="c">
+        <legend>Soru 2. En küçük kareler doğrusu için hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q2" value="a"><span>Tüm gözlemlerden geçer.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="b"><span>Artıkların toplamını en küçük yapar.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="c"><span>Artıkların karelerinin toplamını en küçük yapar; bu nedenle uzak gözlemler doğruyu güçlü biçimde etkiler.</span></label>
+        <label class="opt"><input type="radio" name="q2" value="d"><span>Uç değerlerden etkilenmez.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Kareler alındığı için büyük bir artık, karesiyle orantılı biçimde "cezalandırılır" ve doğru ona doğru çekilir. Kesişimli bir modelde artıkların düz toplamı her zaman sıfırdır; bu nedenle o bir ölçüt olamaz.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Artıkların karelerinin toplamını en küçük yapar. Doğru tüm noktalardan geçmez; artıkların düz toplamı kesişimli en küçük kareler doğrusunda zaten sıfırdır ve ölçüt olamaz; kareler nedeniyle yöntem uç değerlere duyarlıdır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 2. R² ============ -->
+  <section aria-labelledby="b2">
+    <h2 id="b2">2. Açıklanan varyans ve modelin sınırları</h2>
+    <p>Bu bölümde, bir modelin veriyi ne kadar iyi açıkladığını tek bir sayıyla ifade edebilmek amacıyla R² değerine bakıyoruz. Sonuç değişkeninin toplam değişkenliği (varyansı) iki parçaya ayrılabilir: modelin açıkladığı kısım ve artıklarda kalan kısım. <span class="term">Açıklanan varyans</span> <span class="en">(explained variance, R²)</span>, birinci parçanın toplam içindeki payıdır ve 0 ile 1 arasında değer alır. Tek açıklayıcılı regresyonda R², korelasyon katsayısının karesine eşittir: r = 0,5 için R² = 0,25, yani y'deki değişkenliğin yalnızca dörtte biri x ile açıklanmaktadır.</p>
+    <p>R² yorumlanırken üç noktaya dikkat etmek özellikle önemlidir. Birincisi, yüksek R² nedensellik ya da doğruluk anlamına gelmez; batch etkisinden doğan sahte bir ilişki de yüksek R² verir. İkincisi, R² eğimin büyüklüğünü değil, noktaların doğruya ne kadar yakın olduğunu ölçer: çok küçük ancak çok tutarlı bir eğim yüksek R² verirken, büyük ancak gürültülü bir etki düşük R² verebilir. Üçüncüsü, doğrusal model eğrisel bir ilişkiyi kaçırır; artıkların doza göre sistematik bir desen (örneğin önce negatif, sonra pozitif, sonra yine negatif) göstermesi, doğrunun uygun olmadığının işaretidir. Bu nedenle bir regresyonun sayısal çıktısı kadar <span class="term">artık grafiği</span> <span class="en">(residual plot)</span> de incelenmelidir.</p>
+
+    <div class="card reg">
+      <h3 style="margin-top:0">Simülasyon: Gürültü ve R²</h3>
+      <p>Gerçek eğimi ve ölçüm gürültüsünü değiştirerek R² değerinin nasıl tepki verdiğini görebilirsiniz. Eğrisel ilişki seçeneği, doğrusal modelin bir doygunluk eğrisine uydurulduğunda artıkların nasıl desen oluşturduğunu göstermektedir.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="r2-slope">Gerçek eğim</label><output id="r2-slope-out" for="r2-slope">0,30</output><input type="range" id="r2-slope" min="0" max="0.6" step="0.05" value="0.3"></div>
+        <div class="slider-wrap"><label for="r2-noise">Gürültü (artıkların standart sapması)</label><output id="r2-noise-out" for="r2-noise">0,8</output><input type="range" id="r2-noise" min="0.1" max="2.5" step="0.1" value="0.8"></div>
+        <label class="check"><input type="checkbox" id="curved"><span>Gerçek ilişki eğrisel olsun (doygunluk eğrisi)</span></label>
+      </div>
+      <div class="charts two">
+        <div class="chart">
+          <h4><span class="swatch" style="background:var(--c1)"></span>Veri ve en küçük kareler doğrusu</h4>
+          <canvas id="r2c" role="img" aria-label="Doz-ifade saçılım grafiği ve uydurulan doğru."></canvas>
+        </div>
+        <div class="chart">
+          <h4><span class="swatch" style="background:var(--c2)"></span>Artık grafiği</h4>
+          <canvas id="resc" role="img" aria-label="Artıkların doza karşı grafiği; kesikli çizgi sıfır."></canvas>
+        </div>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Tahmin edilen eğim</div><div class="v" id="r2-b">-</div></div>
+        <div class="stat"><div class="k">R²</div><div class="v" id="r2-v">-</div></div>
+        <div class="stat"><div class="k">Korelasyon r</div><div class="v" id="r2-r">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Gerçek eğim sabitken gürültüyü artırdığımızda R²'nin düştüğünü, ancak tahmin edilen eğimin aynı değer çevresinde kaldığını görüyoruz: R² eğimi değil, veri ile doğru arasındaki uyumu ölçer. Eğrisel ilişkide doğru yine bir R² verir, ancak artık grafiği belirgin bir kavis göstermektedir; sayılar modelin yanlış olduğunu söylemez, artık grafiği söyler.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Poligenik risk skoru ve boy</h3>
+      <p>Boy için geliştirilen poligenik risk skorları (polygenic risk score), bir bireyin boyundaki değişkenliğin yaklaşık yüzde 40'ını açıklayabilmektedir (R² ≈ 0,40). Bu, genetik etkinin boy üzerinde güçlü olduğunu gösterir; ancak aynı zamanda değişkenliğin yüzde 60'ının skorda yer almayan genetik etkenler, çevre ve ölçüm hatasından geldiğini de söylemektedir. Bir hastalık için R² değerinin yüzde 5 olması, skorun işe yaramaz olduğu anlamına gelmez: popülasyon düzeyinde yüksek riskli grubu ayırmaya yetebilir, ancak bireysel öngörü için yetersizdir. Dolayısıyla "açıklanan varyans" ile "bireysel öngörü gücü" aynı şey değildir; R² ilkini ölçer.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 3. İki regresyonda eğim aynı (0,5), ancak birinde R² = 0,9, diğerinde R² = 0,2'dir. Fark neyi gösterir?</legend>
+        <label class="opt"><input type="radio" name="q3" value="a"><span>Birinci modelde etki daha büyüktür.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="b"><span>İkinci model yanlıştır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="c"><span>Birinci modelde noktalar doğruya çok yakın, ikincisinde gürültü büyüktür; etkinin büyüklüğü (eğim) aynıdır.</span></label>
+        <label class="opt"><input type="radio" name="q3" value="d"><span>İkinci modelde ilişki eğriseldir.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. R², doğrunun etrafındaki dağınıklığı ölçer; eğim aynıysa etki aynıdır. Düşük R² modelin yanlış olduğunu değil, y'deki değişkenliğin büyük kısmının x dışındaki kaynaklardan geldiğini gösterir. Eğrisellik ise yalnızca artık grafiğine bakıldığında fark edilebilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: İkinci modelde gürültü daha büyüktür; eğim aynı olduğundan etkinin büyüklüğü aynıdır. R² etkinin büyüklüğünü değil uyumu ölçer; düşük R² tek başına modelin yanlış ya da ilişkinin eğrisel olduğunu göstermez.</p></template>
+      </fieldset>
+      <fieldset data-answer="b">
+        <legend>Soru 4. Bir doğrusal regresyonun artık grafiğinde artıklar düşük dozlarda pozitif, orta dozlarda negatif, yüksek dozlarda yeniden pozitiftir. Hangisi doğrudur?</legend>
+        <label class="opt"><input type="radio" name="q4" value="a"><span>Model iyi uymuştur; artıklar her zaman böyle dağılır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="b"><span>İlişki doğrusal değildir; doğru, eğrisel bir deseni kaçırmaktadır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="c"><span>Veride uç değer vardır.</span></label>
+        <label class="opt"><input type="radio" name="q4" value="d"><span>R² sıfırdır.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. İyi uyan bir modelde artıklar sıfır çevresinde desensiz dağılır. Sistematik bir kavis, verinin doğru ile değil bir eğriyle açıklanması gerektiğini gösterir; R² bu durumda yüksek bile olabilir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: İlişki doğrusal değildir. Artıklardaki sistematik desen, modelin yakalayamadığı bir yapı olduğunu gösterir; uç değer tek bir noktada belirir, desen oluşturmaz. R² ise eğriselliği göstermez ve bu durumda sıfır olmak zorunda değildir.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <!-- ============ 3. Kovaryat ve batch ============ -->
+  <section aria-labelledby="b3">
+    <h2 id="b3">3. Kovaryata göre düzeltme ve batch etkisi</h2>
+    <p>Bu bölümde, Ünite 1'de tanıdığımız karıştırıcıların etkisinden arınmış bir tahmin elde edebilmek amacıyla regresyon modeline ikinci bir değişken eklemeye bakıyoruz. İki grubu karşılaştıran bir t-testi aslında bir regresyondur: grup değişkeni 0 (kontrol) ve 1 (tedavi) olarak kodlandığında eğim, iki grup ortalaması arasındaki farka eşittir ve eğim için p-değeri, eşit varyanslı t-testinin p-değeridir. Bu bakış açısının gücü, modele başka değişkenlerin de eklenebilmesidir. Yaş, cinsiyet ya da işlem günü gibi, ilgilendiğimiz etkiyi karıştırabilecek bir değişkene <span class="term">kovaryat</span> <span class="en">(covariate)</span> denir; kovaryat modele eklendiğinde tedavinin eğimi, "kovaryat sabit tutulduğunda tedavinin etkisi" anlamını kazanır. Bu işleme <span class="term">kovaryata göre düzeltme</span> <span class="en">(adjustment)</span> denir.</p>
+    <p>Batch etkisi için bu, "batch sabitken tedavi ile kontrol arasındaki fark" demektir ve yalnızca batch ile grup birebir çakışmadığında, en güvenli biçimde de her batch'te her iki gruptan örnek bulunduğunda hesaplanabilir. Batch ile grup tamamen çakışıyorsa (tüm kontroller 1. gün, tüm tedaviler 2. gün) model iki etkiyi birbirinden ayıramaz; matematiksel olarak sonsuz sayıda eşit derecede iyi çözüm vardır ve yazılım ya hata verir ya da sessizce birini seçer. Dolayısıyla düzeltme, kötü bir tasarımı kurtaran bir araç değil, iyi bir tasarımın (dengeli batch'ler) verdiği olanaktır. Diferansiyel ifade analizinde batch, modele tam olarak bu biçimde, bir kovaryat olarak eklenmekte ve tedavi etkisi batch'ten arındırılmış olarak tahmin edilmektedir.</p>
+    <details class="math">
+      <summary>Biraz matematik</summary>
+      <p>Grup (0/1) ve batch (0/1) kovaryatıyla model:</p>
+      <div class="formula">yᵢ = β₀ + β₁ × grupᵢ + β₂ × batchᵢ + εᵢ</div>
+      <p>β₁, batch sabit tutulduğunda tedavi ile kontrol arasındaki beklenen farktır; β₂ ise grup sabit tutulduğunda 2. gün ile 1. gün arasındaki farktır. Grup ile batch birebir çakıştığında grupᵢ = batchᵢ olur, iki sütun aynıdır ve β₁ ile β₂ ayrı ayrı belirlenemez; buna eşdoğrusallık <span class="en">(collinearity)</span> denir. Dengeli tasarımda sütunlar farklıdır ve her iki katsayı da tahmin edilebilir.</p>
+    </details>
+
+    <div class="card adj">
+      <h3 style="margin-top:0">Simülasyon: Batch kovaryatını modele eklemek</h3>
+      <p>Ünite 1'deki 6 tedavi ve 6 kontrol örneğine geri dönüyoruz. Batch'in dağılımını ve batch etkisinin büyüklüğünü belirleyip modele batch kovaryatını ekleyerek tahmin edilen tedavi etkisinin nasıl değiştiğini görebilirsiniz.</p>
+      <div class="controls">
+        <div class="slider-wrap"><label for="a-eff">Tedavinin gerçek etkisi (log2 birim)</label><output id="a-eff-out" for="a-eff">0,5</output><input type="range" id="a-eff" min="0" max="2" step="0.1" value="0.5"></div>
+        <div class="slider-wrap"><label for="a-batch">Batch etkisi (2. gün ölçümleri şu kadar yüksek)</label><output id="a-batch-out" for="a-batch">1,5</output><input type="range" id="a-batch" min="0" max="3" step="0.1" value="1.5"></div>
+        <div class="control-row">
+          <span class="block" id="a-dsg-label">Tasarım</span>
+          <div class="seg" id="a-dsg" role="group" aria-labelledby="a-dsg-label">
+            <button type="button" data-value="balanced" aria-pressed="true">Dengeli: her gün 3 kontrol, 3 tedavi</button>
+            <button type="button" data-value="partial" aria-pressed="false">Kısmen dengeli: 1. gün 4 kontrol 2 tedavi, 2. gün 2 kontrol 4 tedavi</button>
+            <button type="button" data-value="confounded" aria-pressed="false">Çakışık: kontroller 1. gün, tedavi 2. gün</button>
+          </div>
+        </div>
+        <label class="check"><input type="checkbox" id="a-adj"><span>Modele batch kovaryatı eklensin</span></label>
+        <div class="control-row"><div class="seg"><button type="button" data-reseed>Yeni örneklem</button></div></div>
+      </div>
+      <div class="chart">
+        <h4>Ölçümler (dolu: 1. gün, boş: 2. gün) ve modelin tahmin ettiği grup düzeyleri</h4>
+        <canvas id="adjc" role="img" aria-label="Kontrol ve tedavi ölçümleri batch'e göre dolu ve boş noktalarla; yatay çizgiler modelin tahmin ettiği düzeyler."></canvas>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat"><div class="k">Tahmin edilen tedavi etkisi</div><div class="v" id="a-est">-</div></div>
+        <div class="stat"><div class="k">Yüzde 95 güven aralığı</div><div class="v" id="a-ci">-</div></div>
+        <div class="stat"><div class="k">p-değeri</div><div class="v" id="a-p">-</div></div>
+        <div class="stat"><div class="k">Tahmin edilen batch etkisi</div><div class="v" id="a-b">-</div></div>
+      </div>
+      <div class="note"><p><strong>Gözlem:</strong> Dengeli tasarımda düzeltme tahmini değiştirmez, ancak batch etkisi varsa gürültüyü azaltarak güven aralığını daraltır; batch etkisi iki grupta eşit olduğundan zaten yanlılık yaratmamıştır. Kısmen dengeli tasarımda düzeltmesiz tahmin yanlıdır (batch etkisinin bir kısmı tedaviye karışır) ve düzeltme bu yanlılığı giderir. Çakışık tasarımda düzeltmesiz tahmin tedavi ile batch etkisinin toplamıdır ve gerçek etkiden çok uzaktır; düzeltme seçildiğinde ise model batch etkisini tedavi etkisinden ayıramaz ve tahmin edilemez hâle gelir. Bu durum, Ünite 1'deki, dengelemenin tasarım aşamasında yapılması gerektiği uyarısının matematiksel karşılığıdır.</p></div>
+    </div>
+
+    <div class="example">
+      <h3>Biyolojiden bir örnek: Diferansiyel ifade modelindeki tasarım formülü</h3>
+      <p>Bir RNA-seq analizinde her gen için kurulan model, araç çıktısında "~ batch + koşul" biçiminde bir <span class="term">tasarım formülüyle</span> <span class="en">(design formula)</span> görünür. Bu formül tam olarak yukarıdaki modeldir: koşulun katsayısı, batch sabit tutulduğunda tedavi ile kontrol arasındaki log2 kat değişimidir ve sonuç tablosundaki log2FoldChange sütunu bu katsayıdır. Formülde batch'in bulunması, örneklerin her batch'te her iki koşuldan geldiğini varsayar; çakışık bir tasarımda araç "model matrix is not full rank" (model matrisi tam dereceli değil) türünden bir hata verir. Aynı mantıkla yaş, cinsiyet ya da RNA kalitesi gibi sürekli kovaryatlar da formüle eklenebilir; her ek kovaryat bir karıştırıcıyı düzeltir, ancak az sayıda örnekte serbestlik derecesi tüketir ve gerçekte etkisi olmayan kovaryatlar gücü düşürebilir. Burada önemli olan, kovaryatları veriye bakıp sonuca göre seçmek yerine tasarım aşamasında, biyolojik gerekçeyle belirlemektir.</p>
+    </div>
+
+    <div class="quiz">
+      <h3>Öz-değerlendirme</h3>
+      <fieldset data-answer="c">
+        <legend>Soru 5. Tüm kontrol örnekleri 1. gün, tüm tedavi örnekleri 2. gün işlenmiştir. Analist modele batch kovaryatı eklemek istemektedir. Ne olur?</legend>
+        <label class="opt"><input type="radio" name="q5" value="a"><span>Batch etkisi düzeltilir ve tedavi etkisi doğru tahmin edilir.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="b"><span>Tedavi etkisi iki katına çıkar.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="c"><span>Batch ile tedavi birebir çakıştığından model ikisini ayıramaz; tedavi etkisi tahmin edilemez.</span></label>
+        <label class="opt"><input type="radio" name="q5" value="d"><span>Model batch etkisini otomatik olarak sıfır kabul eder.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Grup ve batch sütunları aynı olduğunda (eşdoğrusallık) katsayılar belirlenemez; yazılım hata verir ya da birini keyfî olarak düşürür. Düzeltme, yalnızca dengeli ya da kısmen dengeli tasarımlarda mümkündür.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Model ikisini ayıramaz. Çakışık tasarımda tedavi ile batch aynı bilgiyi taşır; hiçbir istatistiksel düzeltme bu bilgiyi ikiye bölemez. Sorun tasarım aşamasında, her batch'e her iki koşuldan örnek koyarak önlenir.</p></template>
+      </fieldset>
+      <fieldset data-answer="a">
+        <legend>Soru 6. Dengeli bir tasarımda (her batch'te eşit sayıda kontrol ve tedavi) batch kovaryatı eklemenin yararı nedir?</legend>
+        <label class="opt"><input type="radio" name="q6" value="a"><span>Tahmini değiştirmez, ancak batch kaynaklı gürültüyü modelden çıkararak güven aralığını daraltır ve gücü artırır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="b"><span>Yararı yoktur; dengeli tasarımda batch etkisi zaten sıfırdır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="c"><span>Tedavi etkisini batch etkisi kadar artırır.</span></label>
+        <label class="opt"><input type="radio" name="q6" value="d"><span>Modeli geçersiz kılar.</span></label>
+        <div class="actions"><button type="button" class="check-btn">Yanıtı kontrol ediniz</button></div>
+        <div class="feedback" role="status"></div>
+        <template class="fb-ok"><p>Doğru. Dengeli tasarımda batch etkisi yanlılık yaratmaz, ancak gruplar içi yayılımı artırır. Kovaryat bu yayılımı açıklayarak artıkları küçültür; sonuç daha dar bir güven aralığı ve daha yüksek güçtür. Batch etkisi dengeli tasarımda sıfır değildir, yalnızca iki grupta eşittir.</p></template>
+        <template class="fb-no"><p>Doğru yanıt: Tahmin aynı kalır, güven aralığı daralır. Dengeli tasarım batch etkisini ortadan kaldırmaz, iki grup arasında eşitler; etki hâlâ gruplar içi gürültü olarak vardır ve kovaryat bu gürültüyü modelden alır.</p></template>
+      </fieldset>
+    </div>
+  </section>
+
+  <section aria-labelledby="ozet">
+    <h2 id="ozet">Özet</h2>
+    <div class="summary-box">
+      <ul>
+        <li>Doğrusal regresyon y ≈ kesişim + eğim × x modelidir; eğim, x'teki bir birimlik artışa karşılık y'deki beklenen değişimdir ve kendi standart hatası, güven aralığı ve p-değeriyle raporlanır.</li>
+        <li>En küçük kareler, artıkların karelerinin toplamını en küçük yapar; bu nedenle uç değerlere duyarlıdır.</li>
+        <li>R², y'deki değişkenliğin modelce açıklanan payıdır; uyumu ölçer, etkinin büyüklüğünü ya da nedenselliği değil. Artık grafiği, doğrusallık varsayımını denetler.</li>
+        <li>t-testi, 0/1 kodlu grup değişkeniyle kurulmuş bir regresyondur; kovaryat eklemek, "kovaryat sabitken" etkiyi tahmin eder.</li>
+        <li>Batch kovaryatı dengeli tasarımda gücü artırır, kısmen dengeli tasarımda yanlılığı giderir, çakışık tasarımda ise hiçbir şey yapamaz; düzeltme, iyi tasarımın olanağıdır.</li>
+      </ul>
+    </div>
+    <p class="meta">Bir sonraki ünitede, yüzlerce örneği ve binlerce geni aynı anda görebilmek amacıyla uzaklığa, temel bileşen analizine ve kümelemeye; örnekleri karşılaştırılabilir kılan normalizasyona bakıyoruz.</p>
+    <nav class="pager" aria-label="Sayfa gezinme"><a href="../u06-kategorik/index.html">Önceki: Ünite 6</a><a href="../index.html">Dizin</a><a href="../u08-cokboyutlu/index.html">Sonraki: Ünite 8, Çok boyutlu veri</a></nav>
+  </section>
+
+  <footer>
+    <p>Biyoinformatik için Temel İstatistik ve Biyoistatistiğe Giriş, Ünite 7. Bu sayfa tek bir dosyadır; internet bağlantısı gerektirmez ve hiçbir dış kaynak yüklemez. Simülasyonlardaki veriler temsilidir ve her açılışta aynı başlangıçtan üretilir.</p>
+    <p>Hazırlayan: Orhan Nedim Kurt (2026). Bu içerik Creative Commons Atıf-GayriTicari-AynıLisanslaPaylaş 4.0 Uluslararası (CC BY-NC-SA 4.0) lisansı ile paylaşılmaktadır; kaynak gösterilerek, ticari olmayan amaçlarla ve aynı lisansla paylaşılabilir ve uyarlanabilir.</p>
+  </footer>
+</main>
+<script>
+/* biostat-intro: ortak betik. Derleme betiği bu dosyayı her sayfaya gömer.
+   Dışa açılan tek nesne: window.BI */
+(function () {
+  "use strict";
+  var BI = {};
+
+  /* ---------- rastgele sayılar (tohumlu, tekrarlanabilir) ---------- */
+  BI.DEFAULT_SEED = 20261103;
+  BI.rng = function (seed) {
+    var s = (seed === undefined ? BI.DEFAULT_SEED : seed) >>> 0;
+    return function () {
+      s = (s + 0x6D2B79F5) >>> 0;
+      var t = s;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  };
+  BI.randn = function (rng) {
+    var u = 0, v = 0;
+    while (u === 0) { u = rng(); }
+    while (v === 0) { v = rng(); }
+    return Math.sqrt(-2.0 * Math.log(u)) * Math.cos(2.0 * Math.PI * v);
+  };
+  BI.randExp = function (rng, rate) { return -Math.log(1 - rng()) / rate; };
+  BI.randPoisson = function (rng, lambda) {
+    if (lambda > 60) { return Math.max(0, Math.round(lambda + Math.sqrt(lambda) * BI.randn(rng))); }
+    var L = Math.exp(-lambda), k = 0, p = 1;
+    do { k++; p *= rng(); } while (p > L);
+    return k - 1;
+  };
+  BI.randBinom = function (rng, n, p) {
+    var k = 0;
+    for (var i = 0; i < n; i++) { if (rng() < p) { k++; } }
+    return k;
+  };
+  BI.shuffle = function (arr, rng) {
+    var a = arr.slice();
+    for (var i = a.length - 1; i > 0; i--) {
+      var j = Math.floor(rng() * (i + 1));
+      var t = a[i]; a[i] = a[j]; a[j] = t;
+    }
+    return a;
+  };
+  // "Yeni örneklem" düğmeleri: data-reseed özniteliği taşıyan her düğme kayıtlı işlevleri yeni tohumla çağırır.
+  var reseedFns = [];
+  var seedCounter = 0;
+  BI.onReseed = function (fn) { reseedFns.push(fn); };
+  BI.reseed = function () {
+    seedCounter++;
+    var seed = (BI.DEFAULT_SEED + 7919 * seedCounter + Date.now() % 100000) >>> 0;
+    for (var i = 0; i < reseedFns.length; i++) { reseedFns[i](seed); }
+  };
+
+  /* ---------- sayı biçimi (Türkçe ondalık virgül) ---------- */
+  BI.fmt = function (x, digits) {
+    if (x === null || x === undefined || isNaN(x) || !isFinite(x)) { return "-"; }
+    if (digits === undefined) { digits = 2; }
+    var s = Math.abs(x).toFixed(digits);
+    var parts = s.split(".");
+    parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, " ");
+    var out = parts.length > 1 ? parts[0] + "," + parts[1] : parts[0];
+    return (x < 0 ? "\u2212" : "") + out; // U+2212 eksi işareti, metinle tutarlı
+  };
+  BI.fmtInt = function (x) { return BI.fmt(Math.round(x), 0); };
+  BI.fmtP = function (p) {
+    if (p === null || p === undefined || isNaN(p)) { return "-"; }
+    if (p < 0.001) { return "< 0,001"; }
+    return BI.fmt(p, 3);
+  };
+  BI.fmtSci = function (x) { // "2,5 × 10⁻⁶" biçiminde
+    if (x === 0) { return "0"; }
+    var e = Math.floor(Math.log10(Math.abs(x)));
+    var m = x / Math.pow(10, e);
+    if (Math.abs(m) >= 9.95) { m /= 10; e += 1; }
+    var sup = { "-": "\u207B", "0": "\u2070", "1": "\u00B9", "2": "\u00B2", "3": "\u00B3", "4": "\u2074", "5": "\u2075", "6": "\u2076", "7": "\u2077", "8": "\u2078", "9": "\u2079" };
+    var es = String(e).split("").map(function (ch) { return sup[ch] || ch; }).join("");
+    return BI.fmt(m, 1) + " \u00D7 10" + es;
+  };
+  // Normal dağılımın iki yönlü kuyruk olasılığı; büyük |z| için taşmayı önleyen asimptotik biçim
+  BI.normTail2 = function (z) {
+    z = Math.abs(z);
+    if (z < 8) { return 2 * (1 - BI.normCdf(z)); }
+    return 2 * BI.normPdf(z, 0, 1) / z * (1 - 1 / (z * z) + 3 / Math.pow(z, 4));
+  };
+
+  /* ---------- istatistik yardımcıları ---------- */
+  BI.sum = function (a) { var s = 0; for (var i = 0; i < a.length; i++) { s += a[i]; } return s; };
+  BI.mean = function (a) { return a.length ? BI.sum(a) / a.length : NaN; };
+  BI.sd = function (a, m) {
+    if (a.length < 2) { return NaN; }
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / (a.length - 1));
+  };
+  BI.sdPop = function (a, m) {
+    if (m === undefined) { m = BI.mean(a); }
+    var s = 0; for (var i = 0; i < a.length; i++) { var d = a[i] - m; s += d * d; }
+    return Math.sqrt(s / a.length);
+  };
+  BI.sorted = function (a) { return Array.prototype.slice.call(a).sort(function (x, y) { return x - y; }); };
+  BI.quantile = function (sortedArr, q) {
+    var n = sortedArr.length;
+    if (!n) { return NaN; }
+    var pos = (n - 1) * q, lo = Math.floor(pos), hi = Math.ceil(pos);
+    return sortedArr[lo] + (sortedArr[hi] - sortedArr[lo]) * (pos - lo);
+  };
+  BI.median = function (a) { return BI.quantile(BI.sorted(a), 0.5); };
+  BI.hist = function (values, bins, lo, hi) {
+    var counts = new Array(bins);
+    for (var b = 0; b < bins; b++) { counts[b] = 0; }
+    var w = (hi - lo) / bins;
+    for (var i = 0; i < values.length; i++) {
+      var k = Math.floor((values[i] - lo) / w);
+      if (k >= bins) { k = bins - 1; }
+      if (k < 0) { k = 0; }
+      counts[k]++;
+    }
+    return counts;
+  };
+  BI.corr = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, syy = 0;
+    for (var i = 0; i < x.length; i++) { var dx = x[i] - mx, dy = y[i] - my; sxy += dx * dy; sxx += dx * dx; syy += dy * dy; }
+    return sxy / Math.sqrt(sxx * syy);
+  };
+  BI.linfit = function (x, y) {
+    var mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0;
+    for (var i = 0; i < x.length; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx;
+    return { slope: b, intercept: my - b * mx };
+  };
+  BI.normPdf = function (x, mu, sigma) { var z = (x - mu) / sigma; return Math.exp(-0.5 * z * z) / (sigma * Math.sqrt(2 * Math.PI)); };
+  // Standart normal birikimli dağılım (Abramowitz-Stegun 26.2.17, hata < 7,5e-8)
+  BI.normCdf = function (z) {
+    var sign = z < 0 ? -1 : 1; z = Math.abs(z);
+    var t = 1 / (1 + 0.2316419 * z);
+    var poly = t * (0.319381530 + t * (-0.356563782 + t * (1.781477937 + t * (-1.821255978 + t * 1.330274429))));
+    var p = 1 - BI.normPdf(z, 0, 1) * poly;
+    return sign > 0 ? p : 1 - p;
+  };
+  // log-gama (Lanczos) ve regularize edilmiş eksik beta: t ve binom için p-değerleri
+  function lgamma(x) {
+    var g = 7, c = [0.99999999999980993, 676.5203681218851, -1259.1392167224028, 771.32342877765313, -176.61502916214059, 12.507343278686905, -0.13857109526572012, 9.9843695780195716e-6, 1.5056327351493116e-7];
+    if (x < 0.5) { return Math.log(Math.PI / Math.sin(Math.PI * x)) - lgamma(1 - x); }
+    x -= 1;
+    var a = c[0], t = x + g + 0.5;
+    for (var i = 1; i < g + 2; i++) { a += c[i] / (x + i); }
+    return 0.5 * Math.log(2 * Math.PI) + (x + 0.5) * Math.log(t) - t + Math.log(a);
+  }
+  BI.lgamma = lgamma;
+  function betacf(a, b, x) {
+    var MAXIT = 200, EPS = 3e-12, FPMIN = 1e-300;
+    var qab = a + b, qap = a + 1, qam = a - 1, c = 1, d = 1 - qab * x / qap;
+    if (Math.abs(d) < FPMIN) { d = FPMIN; }
+    d = 1 / d; var h = d;
+    for (var m = 1; m <= MAXIT; m++) {
+      var m2 = 2 * m, aa = m * (b - m) * x / ((qam + m2) * (a + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; h *= d * c;
+      aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2));
+      d = 1 + aa * d; if (Math.abs(d) < FPMIN) { d = FPMIN; }
+      c = 1 + aa / c; if (Math.abs(c) < FPMIN) { c = FPMIN; }
+      d = 1 / d; var del = d * c; h *= del;
+      if (Math.abs(del - 1) < EPS) { break; }
+    }
+    return h;
+  }
+  BI.ibeta = function (x, a, b) {
+    if (x <= 0) { return 0; }
+    if (x >= 1) { return 1; }
+    var bt = Math.exp(lgamma(a + b) - lgamma(a) - lgamma(b) + a * Math.log(x) + b * Math.log(1 - x));
+    if (x < (a + 1) / (a + b + 2)) { return bt * betacf(a, b, x) / a; }
+    return 1 - bt * betacf(b, a, 1 - x) / b;
+  };
+  BI.tCdf = function (t, df) {
+    var x = df / (df + t * t);
+    var p = 0.5 * BI.ibeta(x, df / 2, 0.5);
+    return t > 0 ? 1 - p : p;
+  };
+  BI.tPvalue2 = function (t, df) { return 2 * (1 - BI.tCdf(Math.abs(t), df)); };
+  BI.tPdf = function (t, df) {
+    return Math.exp(lgamma((df + 1) / 2) - lgamma(df / 2)) / Math.sqrt(df * Math.PI) * Math.pow(1 + t * t / df, -(df + 1) / 2);
+  };
+  // t dağılımının kritik değeri (ikili arama)
+  BI.tQuantile = function (p, df) {
+    var lo = -50, hi = 50;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.tCdf(mid, df) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.normQuantile = function (p) {
+    var lo = -10, hi = 10;
+    for (var i = 0; i < 80; i++) { var mid = (lo + hi) / 2; if (BI.normCdf(mid) < p) { lo = mid; } else { hi = mid; } }
+    return (lo + hi) / 2;
+  };
+  BI.binomPmf = function (k, n, p) {
+    if (k < 0 || k > n) { return 0; }
+    return Math.exp(lgamma(n + 1) - lgamma(k + 1) - lgamma(n - k + 1) + k * Math.log(p) + (n - k) * Math.log(1 - p));
+  };
+  BI.poisPmf = function (k, lambda) { return Math.exp(k * Math.log(lambda) - lambda - lgamma(k + 1)); };
+  BI.chisqPvalue = function (x, df) { // üst kuyruk, regularize edilmiş gama ile
+    if (x <= 0) { return 1; }
+    return 1 - BI.gammaP(df / 2, x / 2);
+  };
+  BI.gammaP = function (a, x) {
+    if (x <= 0) { return 0; }
+    if (x < a + 1) {
+      var ap = a, sum = 1 / a, del = sum;
+      for (var n = 1; n < 500; n++) { ap += 1; del *= x / ap; sum += del; if (Math.abs(del) < Math.abs(sum) * 1e-14) { break; } }
+      return sum * Math.exp(-x + a * Math.log(x) - lgamma(a));
+    }
+    var b = x + 1 - a, c = 1e300, d = 1 / b, h = d;
+    for (var i = 1; i < 500; i++) {
+      var an = -i * (i - a); b += 2;
+      d = an * d + b; if (Math.abs(d) < 1e-300) { d = 1e-300; }
+      c = b + an / c; if (Math.abs(c) < 1e-300) { c = 1e-300; }
+      d = 1 / d; var dl = d * c; h *= dl;
+      if (Math.abs(dl - 1) < 1e-14) { break; }
+    }
+    return 1 - Math.exp(-x + a * Math.log(x) - lgamma(a)) * h;
+  };
+  // Benjamini-Hochberg düzeltmesi
+  BI.bh = function (pvals) {
+    var n = pvals.length, idx = [], i;
+    for (i = 0; i < n; i++) { idx.push(i); }
+    idx.sort(function (a, b) { return pvals[a] - pvals[b]; });
+    var adj = new Array(n), prev = 1;
+    for (i = n - 1; i >= 0; i--) {
+      var v = Math.min(prev, pvals[idx[i]] * n / (i + 1));
+      adj[idx[i]] = v; prev = v;
+    }
+    return adj;
+  };
+
+  /* ---------- tema ve CSS ---------- */
+  BI.cssVar = function (name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); };
+  BI.colors = function () {
+    return { c1: BI.cssVar("--c1"), c2: BI.cssVar("--c2"), c3: BI.cssVar("--c3"), c4: BI.cssVar("--c4"), c5: BI.cssVar("--c5"), c7: BI.cssVar("--c7"),
+      text: BI.cssVar("--text"), text2: BI.cssVar("--text-2"), text3: BI.cssVar("--text-3"), border: BI.cssVar("--border"), grid: BI.cssVar("--grid"), surface: BI.cssVar("--surface") };
+  };
+  var redrawFns = [];
+  BI.onRedraw = function (fn) { redrawFns.push(fn); };
+  var resizeTimer = null;
+  function redrawAll() { for (var i = 0; i < redrawFns.length; i++) { redrawFns[i](); } }
+  window.addEventListener("resize", function () { if (resizeTimer) { clearTimeout(resizeTimer); } resizeTimer = setTimeout(redrawAll, 80); });
+  if (window.matchMedia) {
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    if (mq.addEventListener) { mq.addEventListener("change", redrawAll); }
+  }
+
+  /* ---------- çizim ---------- */
+  // BI.plot(canvas, {x: [lo, hi], y: [lo, hi], pad: {l,r,t,b}}) -> çizim nesnesi
+  BI.plot = function (canvas, opt) {
+    var dpr = window.devicePixelRatio || 1;
+    var rect = canvas.getBoundingClientRect();
+    var w = Math.max(1, Math.round(rect.width)), h = Math.max(1, Math.round(rect.height));
+    if (canvas.width !== Math.round(w * dpr) || canvas.height !== Math.round(h * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
+    var ctx = canvas.getContext("2d");
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.clearRect(0, 0, w, h);
+    var pad = opt.pad || {};
+    var P = { l: pad.l === undefined ? 36 : pad.l, r: pad.r === undefined ? 10 : pad.r, t: pad.t === undefined ? 10 : pad.t, b: pad.b === undefined ? 28 : pad.b };
+    var xr = opt.x || [0, 1], yr = opt.y || [0, 1];
+    var col = BI.colors();
+    var p = { ctx: ctx, w: w, h: h, P: P, x: xr, y: yr, col: col };
+    p.sx = function (x) { return P.l + (x - xr[0]) / (xr[1] - xr[0]) * (w - P.l - P.r); };
+    p.sy = function (y) { return h - P.b - (y - yr[0]) / (yr[1] - yr[0]) * (h - P.t - P.b); };
+    p.plotW = w - P.l - P.r; p.plotH = h - P.t - P.b;
+    p.font = function (sz) { ctx.font = (sz || 11) + "px system-ui, sans-serif"; };
+    p.axes = function (o) {
+      o = o || {};
+      ctx.strokeStyle = col.border; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(P.l, h - P.b + 0.5); ctx.lineTo(w - P.r, h - P.b + 0.5); ctx.stroke();
+      if (o.yaxis !== false) { ctx.beginPath(); ctx.moveTo(P.l + 0.5, P.t); ctx.lineTo(P.l + 0.5, h - P.b); ctx.stroke(); }
+      ctx.fillStyle = col.text3; p.font(11);
+      var xt = o.xticks || [], yt = o.yticks || [], i;
+      ctx.textAlign = "center"; ctx.textBaseline = "top";
+      for (i = 0; i < xt.length; i++) {
+        var xv = typeof xt[i] === "object" ? xt[i].v : xt[i], xl = typeof xt[i] === "object" ? xt[i].l : BI.fmt(xt[i], o.xdigits || 0);
+        var xx = p.sx(xv);
+        ctx.strokeStyle = col.border; ctx.beginPath(); ctx.moveTo(xx, h - P.b); ctx.lineTo(xx, h - P.b + 4); ctx.stroke();
+        ctx.fillText(xl, xx, h - P.b + 6);
+      }
+      ctx.textAlign = "right"; ctx.textBaseline = "middle";
+      for (i = 0; i < yt.length; i++) {
+        var yv = typeof yt[i] === "object" ? yt[i].v : yt[i], yl = typeof yt[i] === "object" ? yt[i].l : BI.fmt(yt[i], o.ydigits || 0);
+        var yy = p.sy(yv);
+        if (o.grid) { ctx.strokeStyle = col.grid; ctx.beginPath(); ctx.moveTo(P.l, yy + 0.5); ctx.lineTo(w - P.r, yy + 0.5); ctx.stroke(); }
+        ctx.fillStyle = col.text3; ctx.fillText(yl, P.l - 5, yy);
+      }
+      if (o.xlabel) { ctx.textAlign = "center"; ctx.textBaseline = "bottom"; ctx.fillStyle = col.text2; ctx.fillText(o.xlabel, P.l + p.plotW / 2, h - 2); }
+      if (o.ylabel) { ctx.save(); ctx.translate(10, P.t); ctx.rotate(-Math.PI / 2); ctx.textAlign = "right"; ctx.textBaseline = "top"; ctx.fillStyle = col.text2; ctx.fillText(o.ylabel, 0, 0); ctx.restore(); }
+    };
+    p.ticks = function (lo, hi, n) { var out = [], step = (hi - lo) / n; for (var i = 0; i <= n; i++) { out.push(lo + i * step); } return out; };
+    p.bars = function (counts, lo, hi, color, o) { // histogram çubukları: counts dizisi [lo,hi] aralığını eşit böler
+      o = o || {};
+      var binW = (hi - lo) / counts.length;
+      ctx.fillStyle = color;
+      for (var b = 0; b < counts.length; b++) {
+        if (!counts[b]) { continue; }
+        var x0 = p.sx(lo + b * binW), x1 = p.sx(lo + (b + 1) * binW);
+        var gap = Math.min(1.5, (x1 - x0) * 0.15);
+        var y0 = p.sy(0), y1 = p.sy(counts[b]);
+        if (o.hatch) { p.hatchRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1, color); }
+        else { ctx.fillRect(x0 + gap / 2, y1, Math.max(1, x1 - x0 - gap), y0 - y1); }
+      }
+    };
+    p.hatchRect = function (x, y, wd, ht, color) {
+      ctx.save(); ctx.beginPath(); ctx.rect(x, y, wd, ht); ctx.clip();
+      ctx.strokeStyle = color; ctx.lineWidth = 1.5;
+      for (var d = -ht; d < wd + ht; d += 5) { ctx.beginPath(); ctx.moveTo(x + d, y + ht); ctx.lineTo(x + d + ht, y); ctx.stroke(); }
+      ctx.restore(); ctx.strokeStyle = color; ctx.lineWidth = 1; ctx.strokeRect(x, y, wd, ht);
+    };
+    p.barAt = function (xv, val, width, color, o) { // kesikli dağılım çubuğu, xv merkezli
+      o = o || {};
+      var x0 = p.sx(xv - width / 2), x1 = p.sx(xv + width / 2);
+      var gap = Math.min(2, (x1 - x0) * 0.2);
+      if (o.hatch) { p.hatchRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val), color); }
+      else { ctx.fillStyle = color; ctx.fillRect(x0 + gap / 2, p.sy(val), Math.max(1, x1 - x0 - gap), p.sy(0) - p.sy(val)); }
+    };
+    p.vline = function (xv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(p.sx(xv), P.t); ctx.lineTo(p.sx(xv), h - P.b); ctx.stroke(); ctx.restore();
+      if (o.label) {
+        ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textBaseline = "top";
+        var px = p.sx(xv); ctx.textAlign = px > w / 2 ? "right" : "left";
+        ctx.fillText(o.label, px + (px > w / 2 ? -5 : 5), P.t + (o.labelDy || 0));
+      }
+    };
+    p.hline = function (yv, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); ctx.moveTo(P.l, p.sy(yv)); ctx.lineTo(w - P.r, p.sy(yv)); ctx.stroke(); ctx.restore();
+      if (o.label) { ctx.fillStyle = o.labelColor || col.text2; p.font(11); ctx.textAlign = "left"; ctx.textBaseline = "bottom"; ctx.fillText(o.label, P.l + 5, p.sy(yv) - 3); }
+    };
+    p.curve = function (fn, color, o) { // fn(x) -> y, x ekseni boyunca
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath(); var first = true;
+      for (var px = P.l; px <= w - P.r; px += 1) {
+        var xv = xr[0] + (px - P.l) / p.plotW * (xr[1] - xr[0]);
+        var yv = fn(xv);
+        if (yv === null || isNaN(yv)) { first = true; continue; }
+        var py = p.sy(Math.min(yv, yr[1] * 1.5));
+        if (first) { ctx.moveTo(px, py); first = false; } else { ctx.lineTo(px, py); }
+      }
+      ctx.stroke(); ctx.restore();
+    };
+    p.fillUnder = function (fn, xa, xb, color, alpha) {
+      ctx.save(); ctx.globalAlpha = alpha === undefined ? 0.3 : alpha; ctx.fillStyle = color;
+      ctx.beginPath(); ctx.moveTo(p.sx(xa), p.sy(0));
+      var steps = 80;
+      for (var i = 0; i <= steps; i++) { var xv = xa + (xb - xa) * i / steps; ctx.lineTo(p.sx(xv), p.sy(Math.min(fn(xv), yr[1] * 1.5))); }
+      ctx.lineTo(p.sx(xb), p.sy(0)); ctx.closePath(); ctx.fill(); ctx.restore();
+    };
+    p.line = function (pts, color, o) {
+      o = o || {};
+      ctx.save(); ctx.strokeStyle = color; ctx.lineWidth = o.width || 2;
+      if (o.dashed) { ctx.setLineDash([5, 4]); }
+      ctx.beginPath();
+      for (var i = 0; i < pts.length; i++) { var px = p.sx(pts[i][0]), py = p.sy(pts[i][1]); if (i === 0) { ctx.moveTo(px, py); } else { ctx.lineTo(px, py); } }
+      ctx.stroke(); ctx.restore();
+    };
+    p.dot = function (xv, yv, color, r, o) {
+      o = o || {};
+      ctx.save(); ctx.fillStyle = color; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), r || 4, 0, 2 * Math.PI); ctx.fill();
+      if (o.ring) { ctx.strokeStyle = col.surface; ctx.lineWidth = 1.5; ctx.stroke(); }
+      if (o.hollow) { ctx.globalCompositeOperation = "destination-out"; ctx.beginPath(); ctx.arc(p.sx(xv), p.sy(yv), (r || 4) - 2, 0, 2 * Math.PI); ctx.fill(); }
+      ctx.restore();
+    };
+    p.square = function (xv, yv, color, r) { ctx.fillStyle = color; ctx.fillRect(p.sx(xv) - r, p.sy(yv) - r, 2 * r, 2 * r); };
+    p.text = function (str, xv, yv, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, p.sx(xv) + (o.dx || 0), p.sy(yv) + (o.dy || 0));
+    };
+    p.textPx = function (str, px, py, o) {
+      o = o || {};
+      ctx.fillStyle = o.color || col.text2; p.font(o.size || 11); ctx.textAlign = o.align || "left"; ctx.textBaseline = o.baseline || "middle";
+      ctx.fillText(str, px, py);
+    };
+    p.rect = function (x0, y0, x1, y1, color, alpha) { ctx.save(); ctx.globalAlpha = alpha === undefined ? 1 : alpha; ctx.fillStyle = color; ctx.fillRect(p.sx(x0), p.sy(y1), p.sx(x1) - p.sx(x0), p.sy(y0) - p.sy(y1)); ctx.restore(); }
+    return p;
+  };
+  BI.yTicks = function (max) { // 0, orta, üst; orta tam sayı değilse yalnızca 0 ve üst
+    var half = max / 2;
+    return Math.abs(half - Math.round(half)) < 1e-9 ? [0, half, max] : [0, max];
+  };
+  BI.niceMax = function (v) { // eksen üst sınırı için "güzel" sayı
+    if (v <= 0) { return 1; }
+    var e = Math.pow(10, Math.floor(Math.log10(v)));
+    var m = v / e;
+    var nm = m <= 1 ? 1 : m <= 2 ? 2 : m <= 2.5 ? 2.5 : m <= 5 ? 5 : 10;
+    return nm * e;
+  };
+
+  /* ---------- kontroller ---------- */
+  // Sürgü: output'u Türkçe biçimle günceller, değişince fn(value) çağırır.
+  BI.slider = function (id, fn, o) {
+    o = o || {};
+    var el = document.getElementById(id);
+    var out = document.getElementById(id + "-out") || (el.parentNode ? el.parentNode.querySelector("output") : null);
+    function val() { return parseFloat(el.value); }
+    function show() { if (out) { out.textContent = o.format ? o.format(val()) : BI.fmt(val(), o.digits || 0); } }
+    el.addEventListener("input", function () { show(); if (fn) { fn(val()); } });
+    show();
+    return { get: val, set: function (v) { el.value = String(v); show(); }, el: el };
+  };
+  // Düğme grubu (aria-pressed): fn(value) çağırır.
+  BI.seg = function (selector, fn) {
+    var btns = document.querySelectorAll(selector + " button[data-value]");
+    var current = null;
+    Array.prototype.forEach.call(btns, function (b) {
+      if (b.getAttribute("aria-pressed") === "true") { current = b.getAttribute("data-value"); }
+      b.addEventListener("click", function () {
+        Array.prototype.forEach.call(btns, function (x) { x.setAttribute("aria-pressed", "false"); });
+        b.setAttribute("aria-pressed", "true");
+        current = b.getAttribute("data-value");
+        if (fn) { fn(current); }
+      });
+    });
+    return { get: function () { return current; } };
+  };
+  BI.text = function (id, str) { var el = document.getElementById(id); if (el) { el.textContent = str; } };
+  BI.on = function (id, evt, fn) { var el = document.getElementById(id); if (el) { el.addEventListener(evt, fn); } };
+
+  /* ---------- öz-değerlendirme ---------- */
+  // Yapı: fieldset[data-answer="b"] > legend, label.opt > input[type=radio], button.check-btn, div.feedback,
+  // template.fb-ok ve template.fb-no (açıklamalar). Çoklu doğru için data-answer="a,c" ve checkbox'lar.
+  BI.quiz = function () {
+    var sets = document.querySelectorAll("fieldset[data-answer]");
+    Array.prototype.forEach.call(sets, function (fs, i) {
+      var btn = fs.querySelector(".check-btn");
+      var fb = fs.querySelector(".feedback");
+      if (!btn || !fb) { return; }
+      var ok = fs.querySelector("template.fb-ok"), no = fs.querySelector("template.fb-no");
+      btn.addEventListener("click", function () {
+        var chosen = Array.prototype.map.call(fs.querySelectorAll("input:checked"), function (x) { return x.value; }).sort().join(",");
+        fb.className = "feedback";
+        if (!chosen) { fb.className = "feedback info"; fb.innerHTML = "<p>Bir seçenek işaretlendikten sonra kontrol edilebilir.</p>"; return; }
+        var answer = fs.getAttribute("data-answer").split(",").sort().join(",");
+        var correct = chosen === answer;
+        fb.className = "feedback " + (correct ? "ok" : "no");
+        fb.innerHTML = correct ? (ok ? ok.innerHTML : "<p>Doğru.</p>") : (no ? no.innerHTML : "<p>Bu seçenek doğru değil.</p>");
+      });
+    });
+  };
+
+  /* ---------- sayfa başlangıcı ---------- */
+  BI.ready = function (fn) {
+    if (document.readyState === "loading") { document.addEventListener("DOMContentLoaded", fn); } else { fn(); }
+  };
+  BI.ready(function () {
+    Array.prototype.forEach.call(document.querySelectorAll("[data-reseed]"), function (b) { b.addEventListener("click", BI.reseed); });
+    BI.quiz();
+  });
+
+  window.BI = BI;
+})();
+
+</script>
+<script>
+(function () {
+  "use strict";
+  // Basit doğrusal regresyon: eğim, kesişim, SE, p, R²
+  function ols(x, y) {
+    var n = x.length, mx = BI.mean(x), my = BI.mean(y), sxy = 0, sxx = 0, i;
+    for (i = 0; i < n; i++) { sxy += (x[i] - mx) * (y[i] - my); sxx += (x[i] - mx) * (x[i] - mx); }
+    var b = sxy / sxx, a = my - b * mx, sse = 0, sst = 0;
+    for (i = 0; i < n; i++) { var r = y[i] - (a + b * x[i]); sse += r * r; sst += (y[i] - my) * (y[i] - my); }
+    var se = Math.sqrt(sse / (n - 2) / sxx), t = b / se, df = n - 2;
+    return { a: a, b: b, sse: sse, r2: 1 - sse / sst, se: se, t: t, p: BI.tPvalue2(t, df), tcrit: BI.tQuantile(0.975, df) };
+  }
+  function sseOf(x, y, a, b) { var s = 0; for (var i = 0; i < x.length; i++) { var r = y[i] - (a + b * x[i]); s += r * r; } return s; }
+
+  /* ---------- 1. Doz-yanıt ---------- */
+  var rg = { slope: 0.2, int: 6, seed: BI.DEFAULT_SEED + 31, resid: true, outl: false };
+  function genDose(seed) {
+    var rng = BI.rng(seed), x = [], y = [];
+    for (var i = 0; i < 30; i++) { var d = Math.round(rng() * 100) / 10; x.push(d); y.push(5.5 + 0.35 * d + 0.9 * BI.randn(rng)); }
+    return { x: x, y: y };
+  }
+  function renderReg() {
+    var d = genDose(rg.seed), x = d.x.slice(), y = d.y.slice();
+    if (rg.outl) { x.push(9); y.push(3); }
+    var fit = ols(x, y);
+    var c = document.getElementById("regc");
+    var p = BI.plot(c, { x: [0, 10], y: [2, 12], pad: { l: 40, r: 10, t: 10, b: 40 } });
+    p.axes({ xticks: [0, 2, 4, 6, 8, 10], yticks: [2, 4, 6, 8, 10, 12], grid: true, xlabel: "doz (birim)", ylabel: "log2 ifade" });
+    var i;
+    if (rg.resid) { for (i = 0; i < x.length; i++) { p.line([[x[i], y[i]], [x[i], rg.int + rg.slope * x[i]]], p.col.c2, { width: 1 }); } }
+    p.line([[0, rg.int], [10, rg.int + 10 * rg.slope]], p.col.c2, { width: 2 });
+    p.line([[0, fit.a], [10, fit.a + 10 * fit.b]], p.col.c3, { width: 2, dashed: true });
+    for (i = 0; i < x.length; i++) { p.dot(x[i], y[i], rg.outl && i === x.length - 1 ? p.col.c2 : p.col.c1, 5, { ring: true }); }
+    BI.text("sse-try", BI.fmt(sseOf(x, y, rg.int, rg.slope), 1)); BI.text("sse-ls", BI.fmt(fit.sse, 1));
+    BI.text("ls-slope", BI.fmt(fit.b, 2) + " (" + BI.fmt(fit.b - fit.tcrit * fit.se, 2) + " ile " + BI.fmt(fit.b + fit.tcrit * fit.se, 2) + ")");
+    BI.text("ls-p", BI.fmtP(fit.p));
+    rg.fit = fit;
+  }
+  var sl = BI.slider("m-slope", function (v) { rg.slope = v; renderReg(); }, { digits: 2 });
+  var it = BI.slider("m-int", function (v) { rg.int = v; renderReg(); }, { digits: 1 });
+  BI.on("fit", "click", function () { rg.slope = rg.fit.b; rg.int = rg.fit.a; sl.set(rg.slope); it.set(rg.int); renderReg(); });
+  BI.on("resid", "change", function (e) { rg.resid = e.target.checked; renderReg(); });
+  BI.on("r-outl", "change", function (e) { rg.outl = e.target.checked; renderReg(); });
+  BI.onReseed(function (seed) { rg.seed = seed; renderReg(); });
+  BI.onRedraw(renderReg);
+  renderReg();
+
+  /* ---------- 2. R² ---------- */
+  var r2 = { slope: 0.3, noise: 0.8, curved: false };
+  var r2z = (function () { var rng = BI.rng(BI.DEFAULT_SEED + 37), z = [], x = []; for (var i = 0; i < 40; i++) { x.push(Math.round(rng() * 100) / 10); z.push(BI.randn(rng)); }
+    // gürültünün x ile rastlantısal ilişkisini çıkar, böylece tahmin edilen eğim gürültü düzeyinden bağımsız kalır
+    var f = BI.linfit(x, z); z = z.map(function (v, i) { return v - (f.intercept + f.slope * x[i]); }); var sdz = BI.sdPop(z); z = z.map(function (v) { return v / sdz; });
+    return { x: x, z: z }; })();
+  function renderR2() {
+    var x = r2z.x, y = [], i;
+    for (i = 0; i < 40; i++) {
+      var mean = r2.curved ? 5 + 6 * (1 - Math.exp(-x[i] / 2)) : 5 + r2.slope * x[i];
+      y.push(mean + r2.noise * r2z.z[i]);
+    }
+    var fit = ols(x, y);
+    var c = document.getElementById("r2c");
+    var p = BI.plot(c, { x: [0, 10], y: [0, 14], pad: { l: 36, r: 8, t: 10, b: 40 } });
+    p.axes({ xticks: [0, 5, 10], yticks: [0, 7, 14], grid: true, xlabel: "doz", ylabel: "ifade" });
+    p.line([[0, fit.a], [10, fit.a + 10 * fit.b]], p.col.c3, { width: 2 });
+    for (i = 0; i < 40; i++) { p.dot(x[i], y[i], p.col.c1, 4, { ring: true }); }
+    var rc = document.getElementById("resc");
+    var q = BI.plot(rc, { x: [0, 10], y: [-5, 5], pad: { l: 36, r: 8, t: 10, b: 40 } });
+    q.axes({ xticks: [0, 5, 10], yticks: [{ v: -5, l: "−5" }, { v: 0, l: "0" }, { v: 5, l: "5" }], grid: true, xlabel: "doz", ylabel: "artık" });
+    q.hline(0, q.col.text2, { dashed: true });
+    for (i = 0; i < 40; i++) { q.dot(x[i], y[i] - (fit.a + fit.b * x[i]), q.col.c2, 4, { ring: true }); }
+    BI.text("r2-b", BI.fmt(fit.b, 2)); BI.text("r2-v", BI.fmt(fit.r2, 2)); BI.text("r2-r", BI.fmt(BI.corr(x, y), 2));
+  }
+  BI.slider("r2-slope", function (v) { r2.slope = v; renderR2(); }, { digits: 2 });
+  BI.slider("r2-noise", function (v) { r2.noise = v; renderR2(); }, { digits: 1 });
+  BI.on("curved", "change", function (e) { r2.curved = e.target.checked; renderR2(); });
+  BI.onRedraw(renderR2);
+  renderR2();
+
+  /* ---------- 3. Kovaryat düzeltmesi ---------- */
+  var ad = { eff: 0.5, batch: 1.5, design: "balanced", adj: false, seed: BI.DEFAULT_SEED + 94 };
+  // iki açıklayıcılı en küçük kareler (grup, batch) normal denklemlerle
+  function ols2(y, g, b) {
+    var n = y.length, i;
+    // sütunlar: 1, g, b
+    var X = [], j, k;
+    for (i = 0; i < n; i++) { X.push([1, g[i], b[i]]); }
+    var XtX = [[0, 0, 0], [0, 0, 0], [0, 0, 0]], Xty = [0, 0, 0];
+    for (i = 0; i < n; i++) { for (j = 0; j < 3; j++) { Xty[j] += X[i][j] * y[i]; for (k = 0; k < 3; k++) { XtX[j][k] += X[i][j] * X[i][k]; } } }
+    // 3x3 ters (kofaktör)
+    var m = XtX, det = m[0][0] * (m[1][1] * m[2][2] - m[1][2] * m[2][1]) - m[0][1] * (m[1][0] * m[2][2] - m[1][2] * m[2][0]) + m[0][2] * (m[1][0] * m[2][1] - m[1][1] * m[2][0]);
+    if (Math.abs(det) < 1e-9) { return null; }
+    var inv = [
+      [(m[1][1] * m[2][2] - m[1][2] * m[2][1]) / det, (m[0][2] * m[2][1] - m[0][1] * m[2][2]) / det, (m[0][1] * m[1][2] - m[0][2] * m[1][1]) / det],
+      [(m[1][2] * m[2][0] - m[1][0] * m[2][2]) / det, (m[0][0] * m[2][2] - m[0][2] * m[2][0]) / det, (m[0][2] * m[1][0] - m[0][0] * m[1][2]) / det],
+      [(m[1][0] * m[2][1] - m[1][1] * m[2][0]) / det, (m[0][1] * m[2][0] - m[0][0] * m[2][1]) / det, (m[0][0] * m[1][1] - m[0][1] * m[1][0]) / det]
+    ];
+    var beta = [0, 0, 0];
+    for (j = 0; j < 3; j++) { for (k = 0; k < 3; k++) { beta[j] += inv[j][k] * Xty[k]; } }
+    var sse = 0; for (i = 0; i < n; i++) { var r = y[i] - (beta[0] + beta[1] * g[i] + beta[2] * b[i]); sse += r * r; }
+    var df = n - 3, s2 = sse / df, se1 = Math.sqrt(s2 * inv[1][1]);
+    return { beta: beta, se1: se1, df: df, p: BI.tPvalue2(beta[1] / se1, df), tcrit: BI.tQuantile(0.975, df) };
+  }
+  function renderAdj() {
+    var rng = BI.rng(ad.seed), y = [], g = [], b = [], k;
+    for (k = 0; k < 12; k++) {
+      var treat = k >= 6 ? 1 : 0, batch;
+      if (ad.design === "balanced") { batch = (k % 6) < 3 ? 0 : 1; }
+      else if (ad.design === "partial") { batch = treat ? ((k % 6) < 2 ? 0 : 1) : ((k % 6) < 4 ? 0 : 1); }
+      else { batch = treat; }
+      g.push(treat); b.push(batch); y.push(8 + ad.eff * treat + ad.batch * batch + 0.5 * BI.randn(rng));
+    }
+    var c = document.getElementById("adjc");
+    var p = BI.plot(c, { x: [0, 2], y: [5, 14], pad: { l: 30, r: 8, t: 8, b: 24 } });
+    p.axes({ xticks: [{ v: 0.5, l: "kontrol" }, { v: 1.5, l: "tedavi" }], yticks: [5, 8, 11, 14], grid: true });
+    var jit = [-0.22, -0.13, -0.04, 0.04, 0.13, 0.22];
+    for (k = 0; k < 12; k++) { p.dot((g[k] ? 1.5 : 0.5) + jit[k % 6], y[k], g[k] ? p.col.c2 : p.col.c1, 6, { hollow: b[k] === 1 }); }
+    var est, lo, hi, pv, bEst;
+    if (ad.adj) {
+      var f = ols2(y, g, b);
+      if (!f) { est = null; }
+      else { est = f.beta[1]; lo = est - f.tcrit * f.se1; hi = est + f.tcrit * f.se1; pv = f.p; bEst = f.beta[2];
+        // batch'e göre düzeltilmiş grup düzeyleri (1. gün için)
+        p.line([[0.25, f.beta[0]], [0.75, f.beta[0]]], p.col.c1, { width: 3 }); p.line([[1.25, f.beta[0] + est], [1.75, f.beta[0] + est]], p.col.c2, { width: 3 });
+        p.line([[0.25, f.beta[0] + bEst], [0.75, f.beta[0] + bEst]], p.col.c1, { width: 2, dashed: true }); p.line([[1.25, f.beta[0] + est + bEst], [1.75, f.beta[0] + est + bEst]], p.col.c2, { width: 2, dashed: true });
+        p.text("düz çizgi: 1. gün düzeyi, kesikli: 2. gün düzeyi", 1, 13.5, { align: "center", size: 11 });
+      }
+    } else {
+      var c0 = [], c1 = []; for (k = 0; k < 12; k++) { (g[k] ? c1 : c0).push(y[k]); }
+      var m0 = BI.mean(c0), m1 = BI.mean(c1), se = Math.sqrt(BI.sd(c0) * BI.sd(c0) / 6 + BI.sd(c1) * BI.sd(c1) / 6), tcrit = BI.tQuantile(0.975, 10);
+      est = m1 - m0; lo = est - tcrit * se; hi = est + tcrit * se; pv = BI.tPvalue2(est / se, 10); bEst = null;
+      p.line([[0.25, m0], [0.75, m0]], p.col.c1, { width: 3 }); p.line([[1.25, m1], [1.75, m1]], p.col.c2, { width: 3 });
+    }
+    if (est === null) { BI.text("a-est", "tahmin edilemez"); BI.text("a-ci", "-"); BI.text("a-p", "-"); BI.text("a-b", "tahmin edilemez"); p.text("grup ile batch çakışık: model katsayıları ayıramaz", 1, 13.5, { align: "center", size: 11, color: p.col.c2 }); }
+    else { BI.text("a-est", BI.fmt(est, 2) + " (gerçek " + BI.fmt(ad.eff, 1) + ")"); BI.text("a-ci", BI.fmt(lo, 2) + " ile " + BI.fmt(hi, 2)); BI.text("a-p", BI.fmtP(pv)); BI.text("a-b", bEst === null ? "modelde yok" : BI.fmt(bEst, 2) + " (gerçek " + BI.fmt(ad.batch, 1) + ")"); }
+  }
+  BI.slider("a-eff", function (v) { ad.eff = v; renderAdj(); }, { digits: 1 });
+  BI.slider("a-batch", function (v) { ad.batch = v; renderAdj(); }, { digits: 1 });
+  BI.seg("#a-dsg", function (v) { ad.design = v; renderAdj(); });
+  BI.on("a-adj", "change", function (e) { ad.adj = e.target.checked; renderAdj(); });
+  BI.onReseed(function (seed) { ad.seed = seed; renderAdj(); });
+  BI.onRedraw(renderAdj);
+  renderAdj();
+})();
+</script>
+</body>
+</html>
